@@ -40,6 +40,11 @@ export interface ElectricalTopologyDescriptor {
   hint?: string;
 }
 
+export interface VoltageRange {
+  min?: number;
+  max?: number;
+}
+
 /**
  * 高压箱信息块。这里会在 UI 中绘制成独立的小卡片，保证肉眼可见。
  */
@@ -65,6 +70,10 @@ interface BmsNodeBase {
 export interface BatteryCellNode extends BmsNodeBase {
   seriesIndex?: number;
   parallelIndex?: number;
+  /** 单体电压，进度条会优先读取此字段；若未提供，会尝试从 metrics 中寻找。 */
+  voltage?: number;
+  /** 单体电压的告警范围（不同项目上下限不同，因此提供接口）。 */
+  voltageRange?: VoltageRange;
 }
 
 export interface BatteryPackNode extends BmsNodeBase {
@@ -187,13 +196,13 @@ const NodeCard = <T extends BmsNodeBase>({
   metaLines?: string[];
   children?: ReactNode;
 }) => (
-  <div className={cx('bms-node-card rounded-2xl border p-4 transition-colors', tokens.card)}>
+  <div className={cx('bms-node-card rounded-xl border px-3 py-3 md:px-4 md:py-4 transition-colors', tokens.card)}>
     <div className="flex items-start justify-between gap-4">
       <div className="space-y-1">
         <p className={cx('text-[11px] uppercase tracking-[0.35em]', tokens.muted)}>{levelLabel}</p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {node.icon}
-          <p className="text-lg font-semibold">{node.name}</p>
+          <p className="text-base font-semibold md:text-lg">{node.name}</p>
           {node.badges?.map((badge) => (
             <span
               key={badge}
@@ -203,7 +212,7 @@ const NodeCard = <T extends BmsNodeBase>({
             </span>
           ))}
         </div>
-        {node.subtitle && <p className={cx('text-sm', tokens.muted)}>{node.subtitle}</p>}
+        {node.subtitle && <p className={cx('text-xs md:text-sm', tokens.muted)}>{node.subtitle}</p>}
         {topology && (
           <p className="text-xs uppercase tracking-[0.3em] text-current/80">
             {describeTopology(topology)}
@@ -286,14 +295,14 @@ const MetricList = ({
     {metrics.map((metric, idx) => (
       <div
         key={`${metric.label ?? idx}-${metric.unit ?? ''}`}
-        className={cx('rounded-xl border px-3 py-2 text-sm', tokens.border, tokens.subtleCard)}
+        className={cx('rounded-lg border px-2.5 py-2 text-xs md:text-sm', tokens.border, tokens.subtleCard)}
       >
-        {metric.label && <dt className={cx('text-xs uppercase tracking-wider', tokens.muted)}>{metric.label}</dt>}
-        <dd className="text-base font-semibold">
+        {metric.label && <dt className={cx('text-[10px] uppercase tracking-wider', tokens.muted)}>{metric.label}</dt>}
+        <dd className="text-sm font-semibold md:text-base">
           {valueFormatter(metric.value)}
-          {metric.unit && <span className={cx('ml-1 text-xs', tokens.muted)}>{metric.unit}</span>}
+          {metric.unit && <span className={cx('ml-1 text-[11px]', tokens.muted)}>{metric.unit}</span>}
         </dd>
-        {metric.hint && <p className={cx('text-xs', tokens.muted)}>{metric.hint}</p>}
+        {metric.hint && <p className={cx('text-[11px]', tokens.muted)}>{metric.hint}</p>}
       </div>
     ))}
   </dl>
@@ -313,8 +322,8 @@ const HvBoxPanel = ({
   statusPalette?: StatusPalette;
   valueFormatter: (value?: number | string) => string;
 }) => (
-  <div className={cx('bms-hv-box mt-3 rounded-2xl border p-3 text-sm', tokens.subtleCard, tokens.border)}>
-    <div className="flex items-center justify-between gap-3">
+  <div className={cx('bms-hv-box mt-3 rounded-xl border px-3 py-2.5 text-xs md:text-sm', tokens.subtleCard, tokens.border)}>
+    <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2">
         <HvIcon />
         <p className="font-semibold">{descriptor.title ?? '高压箱'}</p>
@@ -374,7 +383,7 @@ const ConnectionLegend = ({
   type: 'parallel' | 'series' | 'hybrid';
   hint?: string;
 }) => (
-  <div className={cx('bms-connection-legend text-[11px] uppercase tracking-[0.25em]', `bms-connection-legend--${type}`)}>
+  <div className={cx('bms-connection-legend text-[10px] uppercase tracking-[0.2em] md:text-[11px]', `bms-connection-legend--${type}`)}>
     <span>{label}</span>
     {hint && <span className="text-[10px] normal-case tracking-normal">{hint}</span>}
   </div>
@@ -418,44 +427,92 @@ const CellGrid = ({
 }) => (
   <div className="bms-cell-grid">
     {cells.map((cell) => (
-      <div
+      <CellVoltageBar
         key={cell.id}
-        className={cx('bms-cell-chip rounded-2xl border px-3 py-2 text-xs', tokens.subtleCard, tokens.border)}
-      >
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-semibold">{cell.name}</p>
+        cell={cell}
+        tokens={tokens}
+        statusPalette={statusPalette}
+        valueFormatter={valueFormatter}
+      />
+    ))}
+  </div>
+);
+
+const CellVoltageBar = ({
+  cell,
+  tokens,
+  statusPalette,
+  valueFormatter,
+}: {
+  cell: BatteryCellNode;
+  tokens: VariantTokens;
+  statusPalette?: StatusPalette;
+  valueFormatter: (value?: number | string) => string;
+}) => {
+  const { min, max } = cell.voltageRange ?? {};
+  const voltage = resolveCellVoltage(cell);
+  const span = min !== undefined && max !== undefined && max > min ? max - min : undefined;
+  const ratio =
+    span !== undefined && typeof voltage === 'number'
+      ? Math.max(0, Math.min(1, (voltage - (min ?? 0)) / span))
+      : undefined;
+  const outOfRange =
+    typeof voltage === 'number' &&
+    ((min !== undefined && voltage < min) || (max !== undefined && voltage > max));
+
+  return (
+    <div className={cx('bms-cell-bar rounded-lg border px-2.5 py-2 text-[11px]', tokens.subtleCard, tokens.border)}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-semibold">{cell.name}</span>
+        <div className="flex items-center gap-1">
           {cell.status && (
             <span
               className={cx(
-                'bms-status-dot h-2.5 w-2.5 rounded-full border',
+                'bms-status-dot h-2 w-2 rounded-full border',
                 statusPalette?.[cell.status] ?? defaultStatusClasses[cell.status],
               )}
             />
           )}
+          {typeof voltage !== 'undefined' && (
+            <span className="font-semibold">
+              {valueFormatter(voltage)}
+              <span className={cx('ml-0.5 text-[10px]', tokens.muted)}>V</span>
+            </span>
+          )}
         </div>
-        {(cell.seriesIndex !== undefined || cell.parallelIndex !== undefined) && (
-          <p className={cx('mt-1 text-[10px]', tokens.muted)}>
-            {cell.seriesIndex !== undefined && `串 #${cell.seriesIndex + 1}`}
-            {cell.parallelIndex !== undefined && <span className="ml-1">并组 #{cell.parallelIndex + 1}</span>}
-          </p>
-        )}
-        {cell.metrics && cell.metrics.length > 0 && (
-          <dl className="mt-1 space-y-1">
-            {cell.metrics.slice(0, 2).map((metric, idx) => (
-              <div key={`${cell.id}-${metric.label ?? idx}`} className="flex justify-between gap-2">
-                {metric.label && <dt className={cx('text-[10px]', tokens.muted)}>{metric.label}</dt>}
-                <dd className="font-semibold">
-                  {valueFormatter(metric.value)}
-                  {metric.unit && <span className={cx('ml-0.5 text-[10px]', tokens.muted)}>{metric.unit}</span>}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        )}
       </div>
-    ))}
-  </div>
-);
+      {(cell.seriesIndex !== undefined || cell.parallelIndex !== undefined) && (
+        <p className={cx('mt-0.5 text-[10px]', tokens.muted)}>
+          {cell.seriesIndex !== undefined && `串 #${cell.seriesIndex + 1}`}
+          {cell.parallelIndex !== undefined && <span className="ml-1">并组 #{cell.parallelIndex + 1}</span>}
+        </p>
+      )}
+      <div className="bms-cell-bar__track mt-1.5">
+        <div
+          className={cx('bms-cell-bar__fill', outOfRange && 'bms-cell-bar__fill--alert')}
+          style={{ width: ratio !== undefined ? `${ratio * 100}%` : '100%' }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-current/70">
+        <span>{min !== undefined ? `${valueFormatter(min)}V` : '下限未知'}</span>
+        <span>{max !== undefined ? `${valueFormatter(max)}V` : '上限未知'}</span>
+      </div>
+    </div>
+  );
+};
+
+const resolveCellVoltage = (cell: BatteryCellNode): number | undefined => {
+  if (typeof cell.voltage === 'number') return cell.voltage;
+  const metric = cell.metrics?.find((item) => {
+    const label = item.label?.toLowerCase() ?? '';
+    const unit = item.unit?.toLowerCase() ?? '';
+    return label.includes('v') || label.includes('压') || unit.includes('v');
+  });
+  if (!metric) return undefined;
+  if (typeof metric.value === 'number') return metric.value;
+  const parsed = Number(metric.value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
 
 const ChevronIcon = ({ direction }: { direction: 'up' | 'down' }) => (
   <svg
@@ -586,7 +643,7 @@ export const BmsThreeLevelTopology = ({
 
   return (
     <section
-      className={cx('bms-topology flex flex-col gap-6 rounded-3xl border bg-transparent p-6', tokens.container, className)}
+      className={cx('bms-topology flex flex-col gap-5 rounded-3xl border bg-transparent p-4 md:p-5', tokens.container, className)}
       style={cssVars}
     >
       <header className="flex flex-wrap items-center justify-between gap-4">
@@ -754,7 +811,7 @@ export const BmsTwoLevelTopology = ({
 
   return (
     <section
-      className={cx('bms-topology flex flex-col gap-6 rounded-3xl border bg-transparent p-6', tokens.container, className)}
+      className={cx('bms-topology flex flex-col gap-5 rounded-3xl border bg-transparent p-4 md:p-5', tokens.container, className)}
       style={cssVars}
     >
       <header className="flex flex-wrap items-center justify-between gap-4">
@@ -845,7 +902,7 @@ export const BmsTwoLevelTopology = ({
 };
 
 const StatBadge = ({ label, value }: { label: string; value: number }) => (
-  <span className="rounded-full border border-current/20 px-3 py-1 text-xs uppercase tracking-[0.3em]">
+  <span className="rounded-full border border-current/20 px-2.5 py-0.5 text-[11px] uppercase tracking-[0.2em]">
     {label} · {value}
   </span>
 );

@@ -12,25 +12,25 @@
 
 .bms-branch-grid {
   display: grid;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 @media (min-width: 768px) {
   .bms-branch-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 }
 
 .bms-pack-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .bms-cell-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.65rem;
 }
 
 .bms-connection-legend {
@@ -72,12 +72,34 @@
   gap: 0.35rem;
 }
 
-.bms-cell-chip {
-  backdrop-filter: blur(8px);
+.bms-node-card,
+.bms-cell-bar {
+  backdrop-filter: blur(10px);
 }
 
-.bms-node-card {
-  backdrop-filter: blur(12px);
+.bms-cell-bar__track {
+  position: relative;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.3);
+  overflow: hidden;
+}
+
+.bms-cell-bar__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--bms-series-color), var(--bms-parallel-color));
+  transition: width 0.3s ease;
+}
+
+.bms-cell-bar__fill--alert {
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(248, 113, 113, 0.9),
+    rgba(248, 113, 113, 0.9) 8px,
+    rgba(248, 113, 113, 0.3) 16px
+  );
 }
 
 .bms-status-chip,
