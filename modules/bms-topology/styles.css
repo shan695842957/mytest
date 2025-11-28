@@ -27,10 +27,15 @@
   gap: 0.75rem;
 }
 
-.bms-cell-grid {
+.bms-cell-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.65rem;
+  gap: 0.6rem;
+}
+
+.bms-cell-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
 .bms-connection-legend {
@@ -67,22 +72,17 @@
   );
 }
 
-.bms-temperature-grid {
-  display: grid;
-  gap: 0.35rem;
-}
-
 .bms-node-card,
 .bms-cell-bar {
   backdrop-filter: blur(10px);
 }
 
-.bms-cell-bar[data-tooltip] {
+.bms-topology [data-tooltip] {
   position: relative;
   cursor: help;
 }
 
-.bms-cell-bar[data-tooltip]::after {
+.bms-topology [data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   left: 0;
@@ -99,11 +99,11 @@
   transform: translateY(0.2rem);
   pointer-events: none;
   transition: opacity 0.15s ease, transform 0.15s ease;
-  z-index: 10;
+  z-index: 20;
 }
 
-.bms-cell-bar[data-tooltip]:hover::after,
-.bms-cell-bar[data-tooltip]:focus-visible::after {
+.bms-topology [data-tooltip]:hover::after,
+.bms-topology [data-tooltip]:focus-visible::after {
   opacity: 1;
   transform: translateY(0);
 }
@@ -142,6 +142,25 @@
   border-width: 1px;
   background-color: currentColor;
   box-shadow: 0 0 6px currentColor;
+}
+
+.bms-action-btn--blink {
+  animation: bms-alert-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes bms-alert-blink {
+  0% {
+    opacity: 1;
+    box-shadow: 0 0 10px currentColor;
+  }
+  50% {
+    opacity: 0.3;
+    box-shadow: 0 0 2px currentColor;
+  }
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 10px currentColor;
+  }
 }
 
 /**

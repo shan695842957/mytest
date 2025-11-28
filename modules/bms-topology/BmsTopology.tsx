@@ -65,6 +65,10 @@ interface BmsNodeBase {
   icon?: ReactNode;
   metrics?: ValueDatum[];
   indicators?: NodeIndicator[];
+  /** 悬停展示的详情指标（例如总体概览）。 */
+  detailMetrics?: ValueDatum[];
+  /** 当前激活的故障列表。 */
+  faultEvents?: NodeIndicator[];
 }
 
 export interface BatteryCellNode extends BmsNodeBase {
@@ -165,6 +169,34 @@ const defaultFormat = (value?: number | string): string => {
   return String(value);
 };
 
+interface HoverAction {
+  id: string;
+  label: string;
+  intent?: 'info' | 'fault' | 'temperature';
+  icon?: ReactNode;
+  description?: string;
+  metrics?: ValueDatum[];
+  indicators?: NodeIndicator[];
+  blink?: boolean;
+}
+
+interface NodeCardProps<T extends BmsNodeBase> {
+  node: T;
+  levelLabel: string;
+  tokens: VariantTokens;
+  statusPalette?: StatusPalette;
+  valueFormatter: (value?: number | string) => string;
+  isExpandable?: boolean;
+  isExpanded?: boolean;
+  onToggle?: () => void;
+  hvBox?: HvBoxDescriptor;
+  topology?: ElectricalTopologyDescriptor;
+  metaLines?: string[];
+  children?: ReactNode;
+  showTopologyLabel?: boolean;
+  actions?: HoverAction[];
+}
+
 /**
  * NodeCard 是所有节点（堆/簇/包/单体）的 UI 容器。
  * 根据 isExpandable/isExpanded 决定是否展示子层级，用 button 控制展开收起。
@@ -182,20 +214,9 @@ const NodeCard = <T extends BmsNodeBase>({
   topology,
   metaLines = [],
   children,
-}: {
-  node: T;
-  levelLabel: string;
-  tokens: VariantTokens;
-  statusPalette?: StatusPalette;
-  valueFormatter: (value?: number | string) => string;
-  isExpandable?: boolean;
-  isExpanded?: boolean;
-  onToggle?: () => void;
-  hvBox?: HvBoxDescriptor;
-  topology?: ElectricalTopologyDescriptor;
-  metaLines?: string[];
-  children?: ReactNode;
-}) => (
+  showTopologyLabel = true,
+  actions,
+}: NodeCardProps<T>) => (
   <div className={cx('bms-node-card rounded-xl border px-3 py-3 md:px-4 md:py-4 transition-colors', tokens.card)}>
     <div className="flex items-start justify-between gap-4">
       <div className="space-y-1">
@@ -213,7 +234,7 @@ const NodeCard = <T extends BmsNodeBase>({
           ))}
         </div>
         {node.subtitle && <p className={cx('text-xs md:text-sm', tokens.muted)}>{node.subtitle}</p>}
-        {topology && (
+        {showTopologyLabel && topology && (
           <p className="text-xs uppercase tracking-[0.3em] text-current/80">
             {describeTopology(topology)}
           </p>
@@ -229,6 +250,9 @@ const NodeCard = <T extends BmsNodeBase>({
           >
             {statusLabel[node.status]}
           </span>
+        )}
+        {actions && actions.length > 0 && (
+          <ActionButtonGroup actions={actions} valueFormatter={valueFormatter} />
         )}
         {isExpandable && (
           <button
@@ -281,6 +305,72 @@ const NodeCard = <T extends BmsNodeBase>({
     {isExpanded && children && <div className="mt-4 space-y-3">{children}</div>}
   </div>
 );
+
+const ActionButtonGroup = ({
+  actions,
+  valueFormatter,
+}: {
+  actions: HoverAction[];
+  valueFormatter: (value?: number | string) => string;
+}) => {
+  if (!actions || actions.length === 0) return null;
+  return (
+    <div className="flex items-center gap-1.5">
+      {actions.map((action) => (
+        <ActionButton key={action.id} action={action} valueFormatter={valueFormatter} />
+      ))}
+    </div>
+  );
+};
+
+const actionIntentClass: Record<NonNullable<HoverAction['intent']>, string> = {
+  info: 'border-sky-400/60 text-sky-200',
+  fault: 'border-rose-400/70 text-rose-300',
+  temperature: 'border-amber-400/60 text-amber-200',
+};
+
+const ActionButton = ({
+  action,
+  valueFormatter,
+}: {
+  action: HoverAction;
+  valueFormatter: (value?: number | string) => string;
+}) => {
+  const tooltipLines: string[] = [];
+  if (action.description) tooltipLines.push(action.description);
+  if (action.metrics) {
+    action.metrics.forEach((metric) => {
+      const label = metric.label ? `${metric.label}: ` : '';
+      const val = valueFormatter(metric.value);
+      const unit = metric.unit ? `${metric.unit}` : '';
+      tooltipLines.push(`${label}${val}${unit}`);
+    });
+  }
+  if (action.indicators) {
+    action.indicators.forEach((indicator) => {
+      const label = indicator.label ? `${indicator.label}: ` : '';
+      const status = statusLabel[indicator.status];
+      const value = indicator.value ? ` ${indicator.value}` : '';
+      tooltipLines.push(`${label}${status}${value}`);
+    });
+  }
+  const tooltip = tooltipLines.join('\n') || action.label;
+  const intentClass = action.intent ? actionIntentClass[action.intent] : 'border-white/30 text-white/80';
+  return (
+    <button
+      type="button"
+      className={cx(
+        'bms-action-btn flex h-7 w-7 items-center justify-center rounded-full border text-[10px]',
+        intentClass,
+        action.intent === 'fault' && action.blink && 'bms-action-btn--blink',
+      )}
+      aria-label={action.label}
+      data-tooltip={tooltip}
+    >
+      {action.icon ?? <InfoIcon />}
+    </button>
+  );
+};
 
 const MetricList = ({
   metrics,
@@ -416,27 +506,39 @@ const TemperatureList = ({
 
 const CellGrid = ({
   cells,
+  topology,
   tokens,
   statusPalette,
   valueFormatter,
 }: {
   cells: BatteryCellNode[];
+  topology?: ElectricalTopologyDescriptor;
   tokens: VariantTokens;
   statusPalette?: StatusPalette;
   valueFormatter: (value?: number | string) => string;
-}) => (
-  <div className="bms-cell-grid">
-    {cells.map((cell) => (
-      <CellVoltageBar
-        key={cell.id}
-        cell={cell}
-        tokens={tokens}
-        statusPalette={statusPalette}
-        valueFormatter={valueFormatter}
-      />
-    ))}
-  </div>
-);
+}) => {
+  const columns = buildCellColumns(cells, topology);
+  return (
+    <div
+      className="bms-cell-columns"
+      style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(120px, 1fr))` }}
+    >
+      {columns.map((column, colIdx) => (
+        <div className="bms-cell-column" key={`column-${colIdx}`}>
+          {column.map((cell) => (
+            <CellVoltageBar
+              key={cell.id}
+              cell={cell}
+              tokens={tokens}
+              statusPalette={statusPalette}
+              valueFormatter={valueFormatter}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const CellVoltageBar = ({
   cell,
@@ -536,6 +638,35 @@ const resolveCellVoltage = (cell: BatteryCellNode): number | undefined => {
   if (typeof metric.value === 'number') return metric.value;
   const parsed = Number(metric.value);
   return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const buildCellColumns = (cells: BatteryCellNode[], topology?: ElectricalTopologyDescriptor) => {
+  const inferredParallel =
+    topology?.parallel ??
+    (cells.some((cell) => typeof cell.parallelIndex === 'number')
+      ? Math.max(...cells.map((cell) => (cell.parallelIndex ?? 0))) + 1
+      : Math.min(cells.length, 3));
+  const parallelCount = Math.max(1, inferredParallel || 1);
+  const columns: BatteryCellNode[][] = Array.from({ length: parallelCount }, () => []);
+
+  cells.forEach((cell, idx) => {
+    const columnIndex =
+      typeof cell.parallelIndex === 'number'
+        ? Math.min(parallelCount - 1, Math.max(0, cell.parallelIndex))
+        : idx % parallelCount;
+    columns[columnIndex].push(cell);
+  });
+
+  columns.forEach((column, columnIdx) => {
+    column.sort((a, b) => {
+      const aIdx = a.seriesIndex ?? cells.indexOf(a);
+      const bIdx = b.seriesIndex ?? cells.indexOf(b);
+      return aIdx - bIdx;
+    });
+  });
+
+  const filtered = columns.filter((column) => column.length > 0);
+  return filtered.length > 0 ? filtered : [[]];
 };
 
 const ChevronIcon = ({ direction }: { direction: 'up' | 'down' }) => (
@@ -686,6 +817,26 @@ export const BmsThreeLevelTopology = ({
       <div className="space-y-5">
         {stacks.map((stack) => {
           const expandedStack = expanded.has(stack.id);
+          const stackActions: HoverAction[] = [];
+          if (stack.detailMetrics?.length) {
+            stackActions.push({
+              id: `${stack.id}-detail`,
+              label: '详情',
+              intent: 'info',
+              icon: <InfoIcon />,
+              metrics: stack.detailMetrics,
+            });
+          }
+          if (stack.faultEvents?.length) {
+            stackActions.push({
+              id: `${stack.id}-fault`,
+              label: '故障',
+              intent: 'fault',
+              icon: <AlertIcon />,
+              indicators: stack.faultEvents,
+              blink: true,
+            });
+          }
           return (
             <NodeCard
               key={stack.id}
@@ -696,10 +847,12 @@ export const BmsThreeLevelTopology = ({
               valueFormatter={valueFormatter}
               hvBox={stack.hvBox}
               topology={stack.topology}
-              metaLines={stack.topology?.hint ? [stack.topology.hint] : []}
+              metaLines={stack.topology?.hint ? [stack.topology.hint] : undefined}
               isExpandable={(stack.clusters?.length ?? 0) > 0}
               isExpanded={expandedStack}
               onToggle={() => toggleNode(stack.id)}
+              showTopologyLabel={false}
+              actions={stackActions}
             >
               {expandedStack && stack.clusters && stack.clusters.length > 0 && (
                 <>
@@ -711,6 +864,26 @@ export const BmsThreeLevelTopology = ({
                   <div className="bms-branch-grid">
                     {stack.clusters.map((cluster) => {
                       const clusterExpanded = expanded.has(cluster.id);
+                      const clusterActions: HoverAction[] = [];
+                      if (cluster.detailMetrics?.length) {
+                        clusterActions.push({
+                          id: `${cluster.id}-detail`,
+                          label: '详情',
+                          intent: 'info',
+                          icon: <InfoIcon />,
+                          metrics: cluster.detailMetrics,
+                        });
+                      }
+                      if (cluster.faultEvents?.length) {
+                        clusterActions.push({
+                          id: `${cluster.id}-fault`,
+                          label: '故障',
+                          intent: 'fault',
+                          icon: <AlertIcon />,
+                          indicators: cluster.faultEvents,
+                          blink: true,
+                        });
+                      }
                       return (
                         <NodeCard
                           key={cluster.id}
@@ -725,6 +898,8 @@ export const BmsThreeLevelTopology = ({
                           isExpandable={(cluster.packs?.length ?? 0) > 0}
                           isExpanded={clusterExpanded}
                           onToggle={() => toggleNode(cluster.id)}
+                          showTopologyLabel={false}
+                          actions={clusterActions}
                         >
                           {clusterExpanded && cluster.packs && cluster.packs.length > 0 && (
                             <>
@@ -732,6 +907,35 @@ export const BmsThreeLevelTopology = ({
                               <div className="bms-pack-row">
                                 {cluster.packs.map((pack) => {
                                   const packExpanded = expanded.has(pack.id);
+                                  const packActions: HoverAction[] = [];
+                                  if (pack.temperatureSensors?.length) {
+                                    packActions.push({
+                                      id: `${pack.id}-temp`,
+                                      label: '温度',
+                                      intent: 'temperature',
+                                      icon: <ThermoIcon />,
+                                      metrics: pack.temperatureSensors,
+                                    });
+                                  }
+                                  if (pack.faultEvents?.length) {
+                                    packActions.push({
+                                      id: `${pack.id}-fault`,
+                                      label: '故障',
+                                      intent: 'fault',
+                                      icon: <AlertIcon />,
+                                      indicators: pack.faultEvents,
+                                      blink: true,
+                                    });
+                                  }
+                                  if (pack.detailMetrics?.length) {
+                                    packActions.push({
+                                      id: `${pack.id}-detail`,
+                                      label: '详情',
+                                      intent: 'info',
+                                      icon: <InfoIcon />,
+                                      metrics: pack.detailMetrics,
+                                    });
+                                  }
                                   return (
                                     <NodeCard
                                       key={pack.id}
@@ -740,20 +944,14 @@ export const BmsThreeLevelTopology = ({
                                       tokens={tokens}
                                       statusPalette={statusPalette}
                                       valueFormatter={valueFormatter}
-                                      hvBox={pack.hvBox}
+                                      hvBox={undefined}
                                       topology={pack.topology}
                                       metaLines={pack.topology?.hint ? [pack.topology.hint] : undefined}
                                       isExpandable={(pack.cells?.length ?? 0) > 0}
                                       isExpanded={packExpanded}
                                       onToggle={() => toggleNode(pack.id)}
+                                      actions={packActions}
                                     >
-                                      {pack.temperatureSensors && pack.temperatureSensors.length > 0 && (
-                                        <TemperatureList
-                                          sensors={pack.temperatureSensors}
-                                          tokens={tokens}
-                                          valueFormatter={valueFormatter}
-                                        />
-                                      )}
                                       {packExpanded && pack.cells && pack.cells.length > 0 && (
                                         <>
                                           <ConnectionLegend
@@ -763,6 +961,7 @@ export const BmsThreeLevelTopology = ({
                                           />
                                           <CellGrid
                                             cells={pack.cells}
+                                            topology={pack.topology}
                                             tokens={tokens}
                                             statusPalette={statusPalette}
                                             valueFormatter={valueFormatter}
@@ -853,11 +1052,31 @@ export const BmsTwoLevelTopology = ({
       <div className="space-y-5">
         {clusters.map((cluster) => {
           const clusterExpanded = expanded.has(cluster.id);
+          const clusterActions: HoverAction[] = [];
+          if (cluster.detailMetrics?.length) {
+            clusterActions.push({
+              id: `${cluster.id}-detail`,
+              label: '详情',
+              intent: 'info',
+              icon: <InfoIcon />,
+              metrics: cluster.detailMetrics,
+            });
+          }
+          if (cluster.faultEvents?.length) {
+            clusterActions.push({
+              id: `${cluster.id}-fault`,
+              label: '故障',
+              intent: 'fault',
+              icon: <AlertIcon />,
+              indicators: cluster.faultEvents,
+              blink: true,
+            });
+          }
           return (
             <NodeCard
               key={cluster.id}
               node={cluster}
-              levelLabel='Cluster HV Box'
+              levelLabel="Cluster HV Box"
               tokens={tokens}
               statusPalette={statusPalette}
               valueFormatter={valueFormatter}
@@ -867,6 +1086,8 @@ export const BmsTwoLevelTopology = ({
               isExpandable={(cluster.packs?.length ?? 0) > 0}
               isExpanded={clusterExpanded}
               onToggle={() => toggleNode(cluster.id)}
+              showTopologyLabel={false}
+              actions={clusterActions}
             >
               {clusterExpanded && cluster.packs && cluster.packs.length > 0 && (
                 <>
@@ -874,6 +1095,35 @@ export const BmsTwoLevelTopology = ({
                   <div className="bms-pack-row">
                     {cluster.packs.map((pack) => {
                       const packExpanded = expanded.has(pack.id);
+                      const packActions: HoverAction[] = [];
+                      if (pack.temperatureSensors?.length) {
+                        packActions.push({
+                          id: `${pack.id}-temp`,
+                          label: '温度',
+                          intent: 'temperature',
+                          icon: <ThermoIcon />,
+                          metrics: pack.temperatureSensors,
+                        });
+                      }
+                      if (pack.faultEvents?.length) {
+                        packActions.push({
+                          id: `${pack.id}-fault`,
+                          label: '故障',
+                          intent: 'fault',
+                          icon: <AlertIcon />,
+                          indicators: pack.faultEvents,
+                          blink: true,
+                        });
+                      }
+                      if (pack.detailMetrics?.length) {
+                        packActions.push({
+                          id: `${pack.id}-detail`,
+                          label: '详情',
+                          intent: 'info',
+                          icon: <InfoIcon />,
+                          metrics: pack.detailMetrics,
+                        });
+                      }
                       return (
                         <NodeCard
                           key={pack.id}
@@ -882,20 +1132,14 @@ export const BmsTwoLevelTopology = ({
                           tokens={tokens}
                           statusPalette={statusPalette}
                           valueFormatter={valueFormatter}
-                          hvBox={pack.hvBox}
+                          hvBox={undefined}
                           topology={pack.topology}
                           metaLines={pack.topology?.hint ? [pack.topology.hint] : undefined}
                           isExpandable={(pack.cells?.length ?? 0) > 0}
                           isExpanded={packExpanded}
                           onToggle={() => toggleNode(pack.id)}
+                          actions={packActions}
                         >
-                          {pack.temperatureSensors && pack.temperatureSensors.length > 0 && (
-                            <TemperatureList
-                              sensors={pack.temperatureSensors}
-                              tokens={tokens}
-                              valueFormatter={valueFormatter}
-                            />
-                          )}
                           {packExpanded && pack.cells && pack.cells.length > 0 && (
                             <>
                               <ConnectionLegend
@@ -905,6 +1149,7 @@ export const BmsTwoLevelTopology = ({
                               />
                               <CellGrid
                                 cells={pack.cells}
+                                topology={pack.topology}
                                 tokens={tokens}
                                 statusPalette={statusPalette}
                                 valueFormatter={valueFormatter}
@@ -929,4 +1174,41 @@ const StatBadge = ({ label, value }: { label: string; value: number }) => (
   <span className="rounded-full border border-current/20 px-2.5 py-0.5 text-[11px] uppercase tracking-[0.2em]">
     {label} · {value}
   </span>
+);
+
+const InfoIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true">
+    <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    <line x1="10" y1="8" x2="10" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="10" cy="5" r="0.9" fill="currentColor" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true">
+    <path
+      d="M10 3l7 13H3l7-13z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    <line x1="10" y1="8" x2="10" y2="11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="10" cy="14.2" r="0.9" fill="currentColor" />
+  </svg>
+);
+
+const ThermoIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true">
+    <path
+      d="M8 4a2 2 0 114 0v6.2a3 3 0 11-4 0V4z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle cx="10" cy="14" r="1.7" fill="currentColor" opacity="0.2" />
+    <line x1="10" y1="6" x2="10" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
 );
