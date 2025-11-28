@@ -1,31 +1,71 @@
 /**
- * 三级架构BMS可视化组件
- * 电池堆 -> 电池簇 -> 电池包 -> 电池单体
+ * BMS可视化组件
+ * 包含三级架构和二级架构两个组件
+ * 使用动态字段数组格式，支持不同供应商和不同语言的字段名
  */
 
 import React from 'react';
-import { BatteryStackData, BreakerStatus } from '@/types/bms';
+import { BatteryStackData, BatteryClusterDataLevel2, BreakerStatus, DataField } from '@/types/bms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 
-interface Level3BMSProps {
-  /** 电池堆数据 */
-  data: BatteryStackData;
-  /** 配置信息 */
-  config: {
-    packCountPerCluster: number;
-    cellCountPerPack: number;
-    temperaturePointCountPerPack: number;
-    cellConfiguration?: { series: number; parallel: number };
-  };
-}
+// ========== 共享组件 ==========
+
+/**
+ * 渲染动态字段数组
+ */
+const FieldsDisplay: React.FC<{ fields: DataField[]; className?: string }> = ({ fields, className = '' }) => {
+  if (!fields || fields.length === 0) return null;
+  
+  return (
+    <div className={`grid grid-cols-2 md:grid-cols-4 gap-2 ${className}`}>
+      {fields.map((field, idx) => (
+        <div key={idx}>
+          <span className="text-sm text-gray-600">{field.name}:</span>
+          <span className="ml-2 font-semibold">
+            {typeof field.value === 'number' 
+              ? field.value.toFixed(2) 
+              : typeof field.value === 'boolean'
+              ? field.value ? '是' : '否'
+              : field.value}
+            {field.unit && <span className="ml-1 text-gray-500">{field.unit}</span>}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/**
+ * 渲染大号字段数组（用于高压箱）
+ */
+const LargeFieldsDisplay: React.FC<{ fields: DataField[]; className?: string }> = ({ fields, className = '' }) => {
+  if (!fields || fields.length === 0) return null;
+  
+  return (
+    <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${className}`}>
+      {fields.map((field, idx) => (
+        <div key={idx}>
+          <span className="text-sm text-gray-600">{field.name}:</span>
+          <div className="text-2xl font-bold text-blue-600">
+            {typeof field.value === 'number' 
+              ? field.value.toFixed(2) 
+              : typeof field.value === 'boolean'
+              ? field.value ? '是' : '否'
+              : field.value}
+            {field.unit && <span className="ml-1 text-lg text-gray-500">{field.unit}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 /**
  * 渲染断路器状态
  */
 const BreakerStatusDisplay: React.FC<{ breaker: BreakerStatus }> = ({ breaker }) => {
-  // 某些供应商使用单个合闸标志位
   if (breaker.closed !== undefined) {
     return (
       <div className="flex items-center gap-2">
@@ -45,7 +85,6 @@ const BreakerStatusDisplay: React.FC<{ breaker: BreakerStatus }> = ({ breaker })
     );
   }
   
-  // 某些供应商使用正负极分别控制
   return (
     <div className="flex items-center gap-4">
       <div className="flex items-center gap-2">
@@ -87,17 +126,17 @@ const CellDisplay: React.FC<{ cell: any; index: number }> = ({ cell, index }) =>
   return (
     <div className="p-2 border rounded bg-white hover:bg-gray-50 transition-colors">
       <div className="text-xs font-semibold text-gray-700 mb-1">单体 {index + 1}</div>
-      {cell.voltage !== undefined && (
-        <div className="text-xs text-gray-600">电压: {cell.voltage.toFixed(2)}V</div>
-      )}
-      {cell.temperature !== undefined && (
-        <div className="text-xs text-gray-600">温度: {cell.temperature.toFixed(1)}°C</div>
-      )}
-      {cell.soc !== undefined && (
-        <div className="text-xs text-gray-600">SOC: {cell.soc.toFixed(1)}%</div>
-      )}
-      {cell.soh !== undefined && (
-        <div className="text-xs text-gray-600">SOH: {cell.soh.toFixed(1)}%</div>
+      {cell.fields && cell.fields.length > 0 ? (
+        <div className="space-y-1">
+          {cell.fields.map((field: DataField, idx: number) => (
+            <div key={idx} className="text-xs text-gray-600">
+              {field.name}: {typeof field.value === 'number' ? field.value.toFixed(2) : String(field.value)}
+              {field.unit && <span className="ml-1">{field.unit}</span>}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-xs text-gray-400">无数据</div>
       )}
     </div>
   );
@@ -123,33 +162,11 @@ const PackDisplay: React.FC<{ pack: any; config: any }> = ({ pack, config }) => 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* 包级数据 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 text-sm">
-          {pack.voltage !== undefined && (
-            <div>
-              <span className="text-gray-600">电压:</span>
-              <span className="ml-2 font-semibold">{pack.voltage.toFixed(2)}V</span>
-            </div>
-          )}
-          {pack.current !== undefined && (
-            <div>
-              <span className="text-gray-600">电流:</span>
-              <span className="ml-2 font-semibold">{pack.current.toFixed(2)}A</span>
-            </div>
-          )}
-          {pack.power !== undefined && (
-            <div>
-              <span className="text-gray-600">功率:</span>
-              <span className="ml-2 font-semibold">{pack.power.toFixed(2)}W</span>
-            </div>
-          )}
-          {pack.soc !== undefined && (
-            <div>
-              <span className="text-gray-600">SOC:</span>
-              <span className="ml-2 font-semibold">{pack.soc.toFixed(1)}%</span>
-            </div>
-          )}
-        </div>
+        {pack.fields && pack.fields.length > 0 && (
+          <div className="mb-4">
+            <FieldsDisplay fields={pack.fields} />
+          </div>
+        )}
         
         {pack.faultMessage && (
           <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
@@ -157,7 +174,6 @@ const PackDisplay: React.FC<{ pack: any; config: any }> = ({ pack, config }) => 
           </div>
         )}
         
-        {/* 单体显示 - 使用滚动容器避免整屏滚动 */}
         <div className="mb-4">
           <div className="text-sm font-semibold mb-2 text-gray-700">
             电池单体
@@ -176,7 +192,6 @@ const PackDisplay: React.FC<{ pack: any; config: any }> = ({ pack, config }) => 
           </div>
         </div>
         
-        {/* 温度测点显示 */}
         {pack.temperaturePoints && pack.temperaturePoints.length > 0 && (
           <div>
             <div className="text-sm font-semibold mb-2 text-gray-700">温度测点</div>
@@ -184,7 +199,7 @@ const PackDisplay: React.FC<{ pack: any; config: any }> = ({ pack, config }) => 
               {pack.temperaturePoints.map((tp: any, idx: number) => (
                 <div key={tp.id || idx} className="px-3 py-1 bg-blue-50 border border-blue-200 rounded text-sm">
                   <span className="text-gray-600">测点{tp.id}:</span>
-                  <span className="ml-2 font-semibold">{tp.temperature.toFixed(1)}°C</span>
+                  <span className="ml-2 font-semibold">{tp.temperature.toFixed(1)}{tp.unit || '°C'}</span>
                 </div>
               ))}
             </div>
@@ -195,9 +210,18 @@ const PackDisplay: React.FC<{ pack: any; config: any }> = ({ pack, config }) => 
   );
 };
 
-/**
- * 电池簇显示组件
- */
+// ========== 三级架构组件 ==========
+
+interface Level3BMSProps {
+  data: BatteryStackData;
+  config: {
+    packCountPerCluster: number;
+    cellCountPerPack: number;
+    temperaturePointCountPerPack: number;
+    cellConfiguration?: { series: number; parallel: number };
+  };
+}
+
 const ClusterDisplay: React.FC<{ cluster: any; config: any }> = ({ cluster, config }) => {
   return (
     <Card className="mb-6 border-2 border-blue-300">
@@ -213,35 +237,13 @@ const ClusterDisplay: React.FC<{ cluster: any; config: any }> = ({ cluster, conf
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
-        {/* 簇高压箱数据 */}
         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
           <div className="text-lg font-semibold mb-3 text-gray-800">簇高压箱</div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-            {cluster.highVoltageBox.voltage !== undefined && (
-              <div>
-                <span className="text-sm text-gray-600">簇电压:</span>
-                <div className="text-lg font-bold text-blue-600">{cluster.highVoltageBox.voltage.toFixed(2)}V</div>
-              </div>
-            )}
-            {cluster.highVoltageBox.current !== undefined && (
-              <div>
-                <span className="text-sm text-gray-600">簇电流:</span>
-                <div className="text-lg font-bold text-blue-600">{cluster.highVoltageBox.current.toFixed(2)}A</div>
-              </div>
-            )}
-            {cluster.highVoltageBox.power !== undefined && (
-              <div>
-                <span className="text-sm text-gray-600">簇功率:</span>
-                <div className="text-lg font-bold text-blue-600">{cluster.highVoltageBox.power.toFixed(2)}W</div>
-              </div>
-            )}
-            {cluster.highVoltageBox.soc !== undefined && (
-              <div>
-                <span className="text-sm text-gray-600">簇SOC:</span>
-                <div className="text-lg font-bold text-blue-600">{cluster.highVoltageBox.soc.toFixed(1)}%</div>
-              </div>
-            )}
-          </div>
+          {cluster.highVoltageBox.fields && cluster.highVoltageBox.fields.length > 0 && (
+            <div className="mb-3">
+              <LargeFieldsDisplay fields={cluster.highVoltageBox.fields} />
+            </div>
+          )}
           <div className="mb-3">
             <BreakerStatusDisplay breaker={cluster.highVoltageBox.breaker} />
           </div>
@@ -252,7 +254,6 @@ const ClusterDisplay: React.FC<{ cluster: any; config: any }> = ({ cluster, conf
           )}
         </div>
         
-        {/* 电池包列表 - 包与包之间串联 */}
         <div className="mb-2">
           <div className="text-sm text-gray-600 mb-2">电池包（串联连接）</div>
           <div className="space-y-2">
@@ -275,14 +276,10 @@ const ClusterDisplay: React.FC<{ cluster: any; config: any }> = ({ cluster, conf
   );
 };
 
-/**
- * 三级架构BMS主组件
- */
 export const Level3BMS: React.FC<Level3BMSProps> = ({ data, config }) => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* 电池堆标题 */}
         <Card className="mb-6 border-2 border-green-400">
           <CardHeader className="bg-green-50">
             <CardTitle className="text-2xl flex items-center justify-between">
@@ -296,60 +293,16 @@ export const Level3BMS: React.FC<Level3BMSProps> = ({ data, config }) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            {/* 总高压箱数据 */}
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <div className="text-xl font-semibold mb-4 text-gray-800">总高压箱</div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                {data.mainHighVoltageBox.voltage !== undefined && (
-                  <div>
-                    <span className="text-sm text-gray-600">总电压:</span>
-                    <div className="text-2xl font-bold text-green-600">{data.mainHighVoltageBox.voltage.toFixed(2)}V</div>
-                  </div>
-                )}
-                {data.mainHighVoltageBox.current !== undefined && (
-                  <div>
-                    <span className="text-sm text-gray-600">总电流:</span>
-                    <div className="text-2xl font-bold text-green-600">{data.mainHighVoltageBox.current.toFixed(2)}A</div>
-                  </div>
-                )}
-                {data.mainHighVoltageBox.power !== undefined && (
-                  <div>
-                    <span className="text-sm text-gray-600">总功率:</span>
-                    <div className="text-2xl font-bold text-green-600">{data.mainHighVoltageBox.power.toFixed(2)}W</div>
-                  </div>
-                )}
-                {data.mainHighVoltageBox.soc !== undefined && (
-                  <div>
-                    <span className="text-sm text-gray-600">总SOC:</span>
-                    <div className="text-2xl font-bold text-green-600">{data.mainHighVoltageBox.soc.toFixed(1)}%</div>
-                  </div>
-                )}
-              </div>
+              {data.mainHighVoltageBox.fields && data.mainHighVoltageBox.fields.length > 0 && (
+                <div className="mb-4">
+                  <LargeFieldsDisplay fields={data.mainHighVoltageBox.fields} />
+                </div>
+              )}
               <div className="mb-4">
                 <BreakerStatusDisplay breaker={data.mainHighVoltageBox.breaker} />
               </div>
-              {data.mainHighVoltageBox.loadBalancing && (
-                <div className="mb-2">
-                  <span className="text-sm text-gray-600">负载均衡:</span>
-                  <Badge variant={data.mainHighVoltageBox.loadBalancing.enabled ? "success" : "secondary"} className="ml-2">
-                    {data.mainHighVoltageBox.loadBalancing.enabled ? "启用" : "禁用"}
-                  </Badge>
-                  {data.mainHighVoltageBox.loadBalancing.status && (
-                    <span className="ml-2 text-sm text-gray-600">{data.mainHighVoltageBox.loadBalancing.status}</span>
-                  )}
-                </div>
-              )}
-              {data.mainHighVoltageBox.protection && (
-                <div className="mb-2">
-                  <span className="text-sm text-gray-600">保护状态:</span>
-                  {data.mainHighVoltageBox.protection.shortCircuit && (
-                    <Badge variant="destructive" className="ml-2">短路保护</Badge>
-                  )}
-                  {data.mainHighVoltageBox.protection.overload && (
-                    <Badge variant="warning" className="ml-2">过载保护</Badge>
-                  )}
-                </div>
-              )}
               {data.mainHighVoltageBox.faultMessage && (
                 <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
                   {data.mainHighVoltageBox.faultMessage}
@@ -357,7 +310,6 @@ export const Level3BMS: React.FC<Level3BMSProps> = ({ data, config }) => {
               )}
             </div>
             
-            {/* 电池簇列表 - 簇与簇之间并联 */}
             <div>
               <div className="text-sm text-gray-600 mb-3">电池簇（并联连接）</div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -371,6 +323,76 @@ export const Level3BMS: React.FC<Level3BMSProps> = ({ data, config }) => {
                       </div>
                     )}
                     <ClusterDisplay cluster={cluster} config={config} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+// ========== 二级架构组件 ==========
+
+interface Level2BMSProps {
+  data: BatteryClusterDataLevel2;
+  config: {
+    packCount: number;
+    cellCountPerPack: number;
+    temperaturePointCountPerPack: number;
+    cellConfiguration?: { series: number; parallel: number };
+  };
+}
+
+export const Level2BMS: React.FC<Level2BMSProps> = ({ data, config }) => {
+  return (
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <Card className="mb-6 border-2 border-blue-400">
+          <CardHeader className="bg-blue-50">
+            <CardTitle className="text-2xl flex items-center justify-between">
+              <span>电池簇 {data.id}</span>
+              {data.highVoltageBox.fault && (
+                <Badge variant="destructive" className="flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  故障
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="text-xl font-semibold mb-4 text-gray-800">簇高压箱</div>
+              {data.highVoltageBox.fields && data.highVoltageBox.fields.length > 0 && (
+                <div className="mb-4">
+                  <LargeFieldsDisplay fields={data.highVoltageBox.fields} />
+                </div>
+              )}
+              <div className="mb-3">
+                <BreakerStatusDisplay breaker={data.highVoltageBox.breaker} />
+              </div>
+              {data.highVoltageBox.faultMessage && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                  {data.highVoltageBox.faultMessage}
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <div className="text-sm text-gray-600 mb-3">电池包（串联连接）</div>
+              <div className="space-y-2">
+                {data.packs.map((pack, idx) => (
+                  <div key={pack.id || idx}>
+                    {idx > 0 && (
+                      <div className="flex justify-center my-1">
+                        <div className="w-8 h-0.5 bg-gray-400"></div>
+                        <div className="px-2 text-xs text-gray-500">串联</div>
+                        <div className="w-8 h-0.5 bg-gray-400"></div>
+                      </div>
+                    )}
+                    <PackDisplay pack={pack} config={config} />
                   </div>
                 ))}
               </div>

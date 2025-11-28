@@ -1,6 +1,7 @@
 /**
  * BMS数据工厂函数
  * 用于根据配置创建初始BMS数据结构
+ * 使用动态字段数组格式
  */
 
 import {
@@ -21,7 +22,7 @@ export function createLevel3BMSData(config: BMSConfig['level3']): BatteryStackDa
     throw new Error('三级架构配置不能为空');
   }
 
-  const { clusterCount, packCountPerCluster, cellCountPerPack, temperaturePointCountPerPack, cellConfiguration } = config;
+  const { clusterCount, packCountPerCluster, cellCountPerPack, temperaturePointCountPerPack } = config;
 
   // 创建电池簇
   const clusters: BatteryClusterData[] = [];
@@ -29,12 +30,12 @@ export function createLevel3BMSData(config: BMSConfig['level3']): BatteryStackDa
     // 创建电池包
     const packs: BatteryPackData[] = [];
     for (let j = 1; j <= packCountPerCluster; j++) {
-      // 创建电池单体
+      // 创建电池单体（初始为空字段数组，由外部填充）
       const cells: CellData[] = [];
       for (let k = 1; k <= cellCountPerPack; k++) {
         cells.push({
           id: `C${i}-P${j}-Cell${k}`,
-          voltage: 3.7, // 默认电压
+          fields: [], // 初始为空，由外部通过API填充
         });
       }
 
@@ -44,6 +45,7 @@ export function createLevel3BMSData(config: BMSConfig['level3']): BatteryStackDa
         temperaturePoints.push({
           id: `T${t}`,
           temperature: 25, // 默认温度
+          unit: '°C',
         });
       }
 
@@ -51,9 +53,7 @@ export function createLevel3BMSData(config: BMSConfig['level3']): BatteryStackDa
         id: `C${i}-P${j}`,
         cells,
         temperaturePoints,
-        voltage: 0,
-        current: 0,
-        power: 0,
+        fields: [], // 初始为空，由外部通过API填充
       });
     }
 
@@ -61,9 +61,7 @@ export function createLevel3BMSData(config: BMSConfig['level3']): BatteryStackDa
       id: `Cluster${i}`,
       packs,
       highVoltageBox: {
-        voltage: 0,
-        current: 0,
-        power: 0,
+        fields: [], // 初始为空，由外部通过API填充
         breaker: {
           closed: false,
         },
@@ -75,16 +73,10 @@ export function createLevel3BMSData(config: BMSConfig['level3']): BatteryStackDa
     id: 'Stack1',
     clusters,
     mainHighVoltageBox: {
-      voltage: 0,
-      current: 0,
-      power: 0,
+      fields: [], // 初始为空，由外部通过API填充
       breaker: {
         closed: false,
       },
-      loadBalancing: {
-        enabled: false,
-      },
-      protection: {},
     },
   };
 }
@@ -97,17 +89,17 @@ export function createLevel2BMSData(config: BMSConfig['level2']): BatteryCluster
     throw new Error('二级架构配置不能为空');
   }
 
-  const { packCount, cellCountPerPack, temperaturePointCountPerPack, cellConfiguration } = config;
+  const { packCount, cellCountPerPack, temperaturePointCountPerPack } = config;
 
   // 创建电池包
   const packs: BatteryPackData[] = [];
   for (let j = 1; j <= packCount; j++) {
-    // 创建电池单体
+    // 创建电池单体（初始为空字段数组，由外部填充）
     const cells: CellData[] = [];
     for (let k = 1; k <= cellCountPerPack; k++) {
       cells.push({
         id: `P${j}-Cell${k}`,
-        voltage: 3.7, // 默认电压
+        fields: [], // 初始为空，由外部通过API填充
       });
     }
 
@@ -117,6 +109,7 @@ export function createLevel2BMSData(config: BMSConfig['level2']): BatteryCluster
       temperaturePoints.push({
         id: `T${t}`,
         temperature: 25, // 默认温度
+        unit: '°C',
       });
     }
 
@@ -124,9 +117,7 @@ export function createLevel2BMSData(config: BMSConfig['level2']): BatteryCluster
       id: `P${j}`,
       cells,
       temperaturePoints,
-      voltage: 0,
-      current: 0,
-      power: 0,
+      fields: [], // 初始为空，由外部通过API填充
     });
   }
 
@@ -134,9 +125,7 @@ export function createLevel2BMSData(config: BMSConfig['level2']): BatteryCluster
     id: 'Cluster1',
     packs,
     highVoltageBox: {
-      voltage: 0,
-      current: 0,
-      power: 0,
+      fields: [], // 初始为空，由外部通过API填充
       breaker: {
         closed: false,
       },

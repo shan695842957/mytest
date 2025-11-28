@@ -1,13 +1,14 @@
 /**
  * BMS数据管理Hook
  * 提供数据更新接口供外部调用
+ * 支持动态字段数组格式
  */
 
 import { useState, useCallback } from 'react';
 import {
   BatteryStackData,
   BatteryClusterDataLevel2,
-  BMSConfig,
+  DataField,
 } from '@/types/bms';
 
 /**
@@ -24,36 +25,51 @@ export function useLevel3BMS(initialData: BatteryStackData) {
   }, []);
 
   /**
-   * 更新总高压箱数据
+   * 更新总高压箱的字段数组
    */
-  const updateMainHighVoltageBox = useCallback((updates: Partial<BatteryStackData['mainHighVoltageBox']>) => {
+  const updateMainHighVoltageBoxFields = useCallback((fields: DataField[]) => {
     setData(prev => ({
       ...prev,
       mainHighVoltageBox: {
         ...prev.mainHighVoltageBox,
-        ...updates,
+        fields,
       },
     }));
   }, []);
 
   /**
-   * 更新指定簇的数据
+   * 更新总高压箱的断路器状态
    */
-  const updateCluster = useCallback((clusterId: string, updates: Partial<BatteryStackData['clusters'][0]>) => {
+  const updateMainHighVoltageBoxBreaker = useCallback((breaker: BatteryStackData['mainHighVoltageBox']['breaker']) => {
     setData(prev => ({
       ...prev,
-      clusters: prev.clusters.map(cluster =>
-        cluster.id === clusterId ? { ...cluster, ...updates } : cluster
-      ),
+      mainHighVoltageBox: {
+        ...prev.mainHighVoltageBox,
+        breaker,
+      },
     }));
   }, []);
 
   /**
-   * 更新指定簇的高压箱数据
+   * 更新总高压箱的故障状态
    */
-  const updateClusterHighVoltageBox = useCallback((
+  const updateMainHighVoltageBoxFault = useCallback((fault: boolean, faultMessage?: string) => {
+    setData(prev => ({
+      ...prev,
+      mainHighVoltageBox: {
+        ...prev.mainHighVoltageBox,
+        fault,
+        faultMessage,
+      },
+    }));
+  }, []);
+
+  /**
+   * 更新指定簇的高压箱字段数组
+   */
+  const updateClusterHighVoltageBoxFields = useCallback((
     clusterId: string,
-    updates: Partial<BatteryStackData['clusters'][0]['highVoltageBox']>
+    fields: DataField[]
   ) => {
     setData(prev => ({
       ...prev,
@@ -63,7 +79,7 @@ export function useLevel3BMS(initialData: BatteryStackData) {
               ...cluster,
               highVoltageBox: {
                 ...cluster.highVoltageBox,
-                ...updates,
+                fields,
               },
             }
           : cluster
@@ -72,12 +88,60 @@ export function useLevel3BMS(initialData: BatteryStackData) {
   }, []);
 
   /**
-   * 更新指定包的数据
+   * 更新指定簇的高压箱断路器状态
    */
-  const updatePack = useCallback((
+  const updateClusterHighVoltageBoxBreaker = useCallback((
+    clusterId: string,
+    breaker: BatteryStackData['clusters'][0]['highVoltageBox']['breaker']
+  ) => {
+    setData(prev => ({
+      ...prev,
+      clusters: prev.clusters.map(cluster =>
+        cluster.id === clusterId
+          ? {
+              ...cluster,
+              highVoltageBox: {
+                ...cluster.highVoltageBox,
+                breaker,
+              },
+            }
+          : cluster
+      ),
+    }));
+  }, []);
+
+  /**
+   * 更新指定簇的高压箱故障状态
+   */
+  const updateClusterHighVoltageBoxFault = useCallback((
+    clusterId: string,
+    fault: boolean,
+    faultMessage?: string
+  ) => {
+    setData(prev => ({
+      ...prev,
+      clusters: prev.clusters.map(cluster =>
+        cluster.id === clusterId
+          ? {
+              ...cluster,
+              highVoltageBox: {
+                ...cluster.highVoltageBox,
+                fault,
+                faultMessage,
+              },
+            }
+          : cluster
+      ),
+    }));
+  }, []);
+
+  /**
+   * 更新指定包的字段数组
+   */
+  const updatePackFields = useCallback((
     clusterId: string,
     packId: string,
-    updates: Partial<BatteryStackData['clusters'][0]['packs'][0]>
+    fields: DataField[]
   ) => {
     setData(prev => ({
       ...prev,
@@ -86,7 +150,7 @@ export function useLevel3BMS(initialData: BatteryStackData) {
           ? {
               ...cluster,
               packs: cluster.packs.map(pack =>
-                pack.id === packId ? { ...pack, ...updates } : pack
+                pack.id === packId ? { ...pack, fields } : pack
               ),
             }
           : cluster
@@ -95,13 +159,39 @@ export function useLevel3BMS(initialData: BatteryStackData) {
   }, []);
 
   /**
-   * 更新指定单体的数据
+   * 更新指定包的故障状态
    */
-  const updateCell = useCallback((
+  const updatePackFault = useCallback((
+    clusterId: string,
+    packId: string,
+    fault: boolean,
+    faultMessage?: string
+  ) => {
+    setData(prev => ({
+      ...prev,
+      clusters: prev.clusters.map(cluster =>
+        cluster.id === clusterId
+          ? {
+              ...cluster,
+              packs: cluster.packs.map(pack =>
+                pack.id === packId
+                  ? { ...pack, fault, faultMessage }
+                  : pack
+              ),
+            }
+          : cluster
+      ),
+    }));
+  }, []);
+
+  /**
+   * 更新指定单体的字段数组
+   */
+  const updateCellFields = useCallback((
     clusterId: string,
     packId: string,
     cellId: string,
-    updates: Partial<BatteryStackData['clusters'][0]['packs'][0]['cells'][0]>
+    fields: DataField[]
   ) => {
     setData(prev => ({
       ...prev,
@@ -114,7 +204,7 @@ export function useLevel3BMS(initialData: BatteryStackData) {
                   ? {
                       ...pack,
                       cells: pack.cells.map(cell =>
-                        cell.id === cellId ? { ...cell, ...updates } : cell
+                        cell.id === cellId ? { ...cell, fields } : cell
                       ),
                     }
                   : pack
@@ -128,11 +218,15 @@ export function useLevel3BMS(initialData: BatteryStackData) {
   return {
     data,
     updateData,
-    updateMainHighVoltageBox,
-    updateCluster,
-    updateClusterHighVoltageBox,
-    updatePack,
-    updateCell,
+    updateMainHighVoltageBoxFields,
+    updateMainHighVoltageBoxBreaker,
+    updateMainHighVoltageBoxFault,
+    updateClusterHighVoltageBoxFields,
+    updateClusterHighVoltageBoxBreaker,
+    updateClusterHighVoltageBoxFault,
+    updatePackFields,
+    updatePackFault,
+    updateCellFields,
   };
 }
 
@@ -150,40 +244,83 @@ export function useLevel2BMS(initialData: BatteryClusterDataLevel2) {
   }, []);
 
   /**
-   * 更新簇高压箱数据
+   * 更新簇高压箱的字段数组
    */
-  const updateHighVoltageBox = useCallback((updates: Partial<BatteryClusterDataLevel2['highVoltageBox']>) => {
+  const updateHighVoltageBoxFields = useCallback((fields: DataField[]) => {
     setData(prev => ({
       ...prev,
       highVoltageBox: {
         ...prev.highVoltageBox,
-        ...updates,
+        fields,
       },
     }));
   }, []);
 
   /**
-   * 更新指定包的数据
+   * 更新簇高压箱的断路器状态
    */
-  const updatePack = useCallback((
+  const updateHighVoltageBoxBreaker = useCallback((breaker: BatteryClusterDataLevel2['highVoltageBox']['breaker']) => {
+    setData(prev => ({
+      ...prev,
+      highVoltageBox: {
+        ...prev.highVoltageBox,
+        breaker,
+      },
+    }));
+  }, []);
+
+  /**
+   * 更新簇高压箱的故障状态
+   */
+  const updateHighVoltageBoxFault = useCallback((fault: boolean, faultMessage?: string) => {
+    setData(prev => ({
+      ...prev,
+      highVoltageBox: {
+        ...prev.highVoltageBox,
+        fault,
+        faultMessage,
+      },
+    }));
+  }, []);
+
+  /**
+   * 更新指定包的字段数组
+   */
+  const updatePackFields = useCallback((
     packId: string,
-    updates: Partial<BatteryClusterDataLevel2['packs'][0]>
+    fields: DataField[]
   ) => {
     setData(prev => ({
       ...prev,
       packs: prev.packs.map(pack =>
-        pack.id === packId ? { ...pack, ...updates } : pack
+        pack.id === packId ? { ...pack, fields } : pack
       ),
     }));
   }, []);
 
   /**
-   * 更新指定单体的数据
+   * 更新指定包的故障状态
    */
-  const updateCell = useCallback((
+  const updatePackFault = useCallback((
+    packId: string,
+    fault: boolean,
+    faultMessage?: string
+  ) => {
+    setData(prev => ({
+      ...prev,
+      packs: prev.packs.map(pack =>
+        pack.id === packId ? { ...pack, fault, faultMessage } : pack
+      ),
+    }));
+  }, []);
+
+  /**
+   * 更新指定单体的字段数组
+   */
+  const updateCellFields = useCallback((
     packId: string,
     cellId: string,
-    updates: Partial<BatteryClusterDataLevel2['packs'][0]['cells'][0]>
+    fields: DataField[]
   ) => {
     setData(prev => ({
       ...prev,
@@ -192,7 +329,7 @@ export function useLevel2BMS(initialData: BatteryClusterDataLevel2) {
           ? {
               ...pack,
               cells: pack.cells.map(cell =>
-                cell.id === cellId ? { ...cell, ...updates } : cell
+                cell.id === cellId ? { ...cell, fields } : cell
               ),
             }
           : pack
@@ -203,8 +340,11 @@ export function useLevel2BMS(initialData: BatteryClusterDataLevel2) {
   return {
     data,
     updateData,
-    updateHighVoltageBox,
-    updatePack,
-    updateCell,
+    updateHighVoltageBoxFields,
+    updateHighVoltageBoxBreaker,
+    updateHighVoltageBoxFault,
+    updatePackFields,
+    updatePackFault,
+    updateCellFields,
   };
 }

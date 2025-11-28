@@ -1,7 +1,20 @@
 /**
  * BMS 数据类型定义
- * 支持不同供应商的数据结构差异
+ * 支持不同供应商的数据结构差异和不同语言的字段名
  */
+
+/**
+ * 动态字段项
+ * 用于支持不同供应商和不同语言的字段名
+ */
+export interface DataField {
+  /** 字段名（可以是任何语言，如"电压"、"Voltage"、"Grid Voltage"等） */
+  name: string;
+  /** 字段值 */
+  value: number | string | boolean;
+  /** 单位（可选，如"V"、"A"、"W"、"%"等） */
+  unit?: string;
+}
 
 /**
  * 断路器状态
@@ -23,14 +36,8 @@ export interface BreakerStatus {
 export interface CellData {
   /** 单体编号 */
   id: string;
-  /** 电压 (V) - 通常都有 */
-  voltage?: number;
-  /** 温度 (°C) - 某些供应商没有，使用包内温度测点 */
-  temperature?: number;
-  /** SOC (%) - 某些供应商提供 */
-  soc?: number;
-  /** SOH (%) - 某些供应商提供 */
-  soh?: number;
+  /** 动态字段数组（如电压、温度、SOC、SOH等，字段名和单位可自定义） */
+  fields: DataField[];
 }
 
 /**
@@ -40,8 +47,10 @@ export interface CellData {
 export interface TemperaturePoint {
   /** 测点编号 */
   id: string;
-  /** 温度值 (°C) */
+  /** 温度值 */
   temperature: number;
+  /** 温度单位（默认°C） */
+  unit?: string;
 }
 
 /**
@@ -54,16 +63,8 @@ export interface BatteryPackData {
   cells: CellData[];
   /** 温度测点数据 */
   temperaturePoints: TemperaturePoint[];
-  /** 包电压 (V) */
-  voltage?: number;
-  /** 包电流 (A) */
-  current?: number;
-  /** 包功率 (W) */
-  power?: number;
-  /** 包SOC (%) */
-  soc?: number;
-  /** 包SOH (%) */
-  soh?: number;
+  /** 包的动态字段数组（如电压、电流、功率、SOC、SOH等） */
+  fields: DataField[];
   /** 故障状态 */
   fault?: boolean;
   /** 故障信息 */
@@ -80,22 +81,14 @@ export interface BatteryClusterData {
   packs: BatteryPackData[];
   /** 簇高压箱数据 */
   highVoltageBox: {
-    /** 故障检测 */
+    /** 簇高压箱的动态字段数组 */
+    fields: DataField[];
+    /** 簇正负极断路器状态 */
+    breaker: BreakerStatus;
+    /** 故障状态 */
     fault?: boolean;
     /** 故障信息 */
     faultMessage?: string;
-    /** 簇电压 (V) */
-    voltage?: number;
-    /** 簇电流 (A) */
-    current?: number;
-    /** 簇功率 (W) */
-    power?: number;
-    /** 簇SOC (%) */
-    soc?: number;
-    /** 簇SOH (%) */
-    soh?: number;
-    /** 簇正负极断路器状态 */
-    breaker: BreakerStatus;
   };
 }
 
@@ -109,32 +102,14 @@ export interface BatteryStackData {
   clusters: BatteryClusterData[];
   /** 总高压箱数据 */
   mainHighVoltageBox: {
+    /** 总高压箱的动态字段数组 */
+    fields: DataField[];
     /** 正负极断路器状态 */
     breaker: BreakerStatus;
-    /** 总电压 (V) */
-    voltage?: number;
-    /** 总电流 (A) */
-    current?: number;
-    /** 总功率 (W) */
-    power?: number;
     /** 故障状态 */
     fault?: boolean;
     /** 故障信息 */
     faultMessage?: string;
-    /** 总SOC (%) */
-    soc?: number;
-    /** 总SOH (%) */
-    soh?: number;
-    /** 负载均衡状态 */
-    loadBalancing?: {
-      enabled: boolean;
-      status?: string;
-    };
-    /** 短路/过载保护状态 */
-    protection?: {
-      shortCircuit?: boolean;
-      overload?: boolean;
-    };
   };
 }
 
@@ -149,22 +124,14 @@ export interface BatteryClusterDataLevel2 {
   packs: BatteryPackData[];
   /** 簇高压箱数据 */
   highVoltageBox: {
-    /** 故障检测 */
+    /** 簇高压箱的动态字段数组 */
+    fields: DataField[];
+    /** 簇正负极断路器状态 */
+    breaker: BreakerStatus;
+    /** 故障状态 */
     fault?: boolean;
     /** 故障信息 */
     faultMessage?: string;
-    /** 簇电压 (V) */
-    voltage?: number;
-    /** 簇电流 (A) */
-    current?: number;
-    /** 簇功率 (W) */
-    power?: number;
-    /** 簇SOC (%) */
-    soc?: number;
-    /** 簇SOH (%) */
-    soh?: number;
-    /** 簇正负极断路器状态 */
-    breaker: BreakerStatus;
   };
 }
 
