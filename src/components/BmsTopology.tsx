@@ -1,0 +1,854 @@
+import { useMemo, useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import type { ValueDatum } from './PcsEnergyFlow';
+import './bms-topology.css';
+
+export type NodeStatus = 'normal' | 'warning' | 'fault' | 'offline';
+
+export interface NodeIndicator {
+  label: string;
+  status: NodeStatus;
+  value?: number | string;
+}
+
+export interface ElectricalTopologyDescriptor {
+  /** 串联的数量，例如 16 表示 16S。 */
+  series?: number;
+  /** 并联数量，例如 2 表示 2P。 */
+  parallel?: number;
+  /** 自定义展示文案（会覆盖 series/parallel 自动拼接）。 */
+  text?: string;
+  /** 额外提示，例如 “簇间并联共享母排”。 */
+  hint?: string;
+}
+
+export interface HvBoxDescriptor {
+  title?: string;
+  /** 简要描述，例如 “堆高压箱” 或 “接触器状态”。 */
+  summary?: string;
+  /** 接触器、断路器等状态指示。 */
+  indicators?: NodeIndicator[];
+  /** 高压箱监测的数值类指标。 */
+  metrics?: ValueDatum[];
+}
+
+interface BmsNodeBase {
+  id: string;
+  name: string;
+  subtitle?: string;
+  description?: string;
+  badges?: string[];
+  status?: NodeStatus;
+  icon?: ReactNode;
+  metrics?: ValueDatum[];
+  indicators?: NodeIndicator[];
+}
+
+export interface BatteryCellNode extends BmsNodeBase {
+  seriesIndex?: number;
+  parallelIndex?: number;
+}
+
+export interface BatteryPackNode extends BmsNodeBase {
+  topology?: ElectricalTopologyDescriptor;
+  hvBox?: HvBoxDescriptor;
+  temperatureSensors?: ValueDatum[];
+  cells?: BatteryCellNode[];
+}
+
+export interface BatteryClusterNode extends BmsNodeBase {
+  topology?: ElectricalTopologyDescriptor;
+  hvBox?: HvBoxDescriptor;
+  packs?: BatteryPackNode[];
+}
+
+export interface BatteryStackNode extends BmsNodeBase {
+  topology?: ElectricalTopologyDescriptor;
+  hvBox?: HvBoxDescriptor;
+  clusters?: BatteryClusterNode[];
+}
+
+type Variant = 'dark' | 'light';
+
+type StatusPalette = Partial<Record<NodeStatus, string>>;
+
+type VariantTokens = {
+  container: string;
+  card: string;
+  subtleCard: string;
+  muted: string;
+  accent: string;
+  border: string;
+  badge: string;
+  connectorColor: string;
+  seriesColor: string;
+  parallelColor: string;
+};
+
+const variantTokens: Record<Variant, VariantTokens> = {
+  dark: {
+    container: 'border-white/10 text-slate-100',
+    card: 'bg-white/5 border-white/10 shadow-[0_15px_80px_rgba(0,0,0,0.45)]',
+    subtleCard: 'bg-white/5 border-white/10',
+    muted: 'text-slate-400',
+    accent: 'text-cyan-300',
+    border: 'border-white/20',
+    badge: 'bg-white/10 text-slate-100 border-white/20',
+    connectorColor: 'rgba(148,163,184,0.55)',
+    seriesColor: '#f97316',
+    parallelColor: '#38bdf8',
+  },
+  light: {
+    container: 'border-slate-200 text-slate-900',
+    card: 'bg-white border-slate-200 shadow-[0_15px_60px_rgba(15,23,42,0.12)]',
+    subtleCard: 'bg-slate-50 border-slate-200',
+    muted: 'text-slate-500',
+    accent: 'text-emerald-500',
+    border: 'border-slate-300/70',
+    badge: 'bg-slate-100 text-slate-600 border-slate-200',
+    connectorColor: 'rgba(148,163,184,0.45)',
+    seriesColor: '#fb923c',
+    parallelColor: '#0ea5e9',
+  },
+};
+
+const defaultStatusClasses: Record<NodeStatus, string> = {
+  normal: 'border-emerald-400/50 bg-emerald-500/10 text-emerald-300',
+  warning: 'border-amber-400/60 bg-amber-500/10 text-amber-400',
+  fault: 'border-rose-400/60 bg-rose-500/10 text-rose-400',
+  offline: 'border-slate-500/40 bg-slate-500/10 text-slate-400',
+};
+
+const statusLabel: Record<NodeStatus, string> = {
+  normal: '正常',
+  warning: '告警',
+  fault: '故障',
+  offline: '离线',
+};
+
+const cx = (...classes: Array<string | boolean | undefined | null>) =>
+  classes.filter(Boolean).join(' ');
+
+const defaultFormat = (value?: number | string): string => {
+  if (value === undefined || value === null) return '--';
+  if (typeof value === 'number') {
+    const formatter = new Intl.NumberFormat('zh-CN', {
+      maximumFractionDigits: Math.abs(value) >= 100 ? 0 : 1,
+      minimumFractionDigits: Math.abs(value) >= 100 ? 0 : 1,
+    });
+    return formatter.format(value);
+  }
+  return String(value);
+};
+
+interface NodeCardProps<T extends BmsNodeBase> {
+  node: T;
+  levelLabel: string;
+  tokens: VariantTokens;
+  statusPalette?: StatusPalette;
+  valueFormatter: (value?: number | string) => string;
+  isExpandable?: boolean;
+  isExpanded?: boolean;
+  onToggle?: () => void;
+  hvBox?: HvBoxDescriptor;
+  topology?: ElectricalTopologyDescriptor;
+  metaLines?: string[];
+  children?: ReactNode;
+}
+
+const NodeCard = <T extends BmsNodeBase>({
+  node,
+  levelLabel,
+  tokens,
+  statusPalette,
+  valueFormatter,
+  isExpandable,
+  isExpanded,
+  onToggle,
+  hvBox,
+  topology,
+  metaLines = [],
+  children,
+}: NodeCardProps<T>) => (
+  <div className={cx('bms-node-card rounded-2xl border p-4 transition-colors', tokens.card)}>
+    <div className="flex items-start justify-between gap-4">
+      <div className="space-y-1">
+        <p className={cx('text-[11px] uppercase tracking-[0.35em]', tokens.muted)}>{levelLabel}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          {node.icon}
+          <p className="text-lg font-semibold">{node.name}</p>
+          {node.badges?.map((badge) => (
+            <span
+              key={badge}
+              className={cx(
+                'rounded-full border px-2 py-0.5 text-[11px] font-semibold tracking-wide',
+                tokens.badge,
+              )}
+            >
+              {badge}
+            </span>
+          ))}
+        </div>
+        {node.subtitle && <p className={cx('text-sm', tokens.muted)}>{node.subtitle}</p>}
+        {topology && (
+          <p className="text-xs uppercase tracking-[0.3em] text-current/70">
+            {describeTopology(topology)}
+          </p>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        {node.status && (
+          <span
+            className={cx(
+              'bms-status-chip rounded-full border px-3 py-1 text-xs font-semibold tracking-wide',
+              statusPalette?.[node.status] ?? defaultStatusClasses[node.status],
+            )}
+          >
+            {statusLabel[node.status]}
+          </span>
+        )}
+        {isExpandable && (
+          <button
+            type="button"
+            onClick={onToggle}
+            className="rounded-full border border-current/20 p-1 text-xs transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/50"
+            aria-label={isExpanded ? '折叠' : '展开'}
+          >
+            <ChevronIcon direction={isExpanded ? 'up' : 'down'} />
+          </button>
+        )}
+      </div>
+    </div>
+
+    {node.description && (
+      <p className={cx('mt-2 text-sm leading-relaxed', tokens.muted)}>{node.description}</p>
+    )}
+
+    {metaLines.length > 0 && (
+      <ul className="mt-3 flex flex-wrap gap-2 text-xs">
+        {metaLines.map((line) => (
+          <li
+            key={line}
+            className={cx(
+              'rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide',
+              tokens.border,
+            )}
+          >
+            {line}
+          </li>
+        ))}
+      </ul>
+    )}
+
+    {node.metrics && node.metrics.length > 0 && (
+      <MetricList metrics={node.metrics} tokens={tokens} valueFormatter={valueFormatter} />
+    )}
+
+    {hvBox && (
+      <HvBoxPanel
+        descriptor={hvBox}
+        tokens={tokens}
+        statusPalette={statusPalette}
+        valueFormatter={valueFormatter}
+      />
+    )}
+
+    {node.indicators && node.indicators.length > 0 && (
+      <IndicatorRow indicators={node.indicators} statusPalette={statusPalette} />
+    )}
+
+    {isExpanded && children && <div className="mt-4 space-y-3">{children}</div>}
+  </div>
+);
+
+const MetricList = ({
+  metrics,
+  tokens,
+  valueFormatter,
+}: {
+  metrics: ValueDatum[];
+  tokens: VariantTokens;
+  valueFormatter: (value?: number | string) => string;
+}) => (
+  <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+    {metrics.map((metric, idx) => (
+      <div
+        key={`${metric.label ?? idx}-${metric.unit ?? ''}`}
+        className={cx('rounded-xl border px-3 py-2 text-sm', tokens.border, tokens.subtleCard)}
+      >
+        {metric.label && <dt className={cx('text-xs uppercase tracking-wider', tokens.muted)}>{metric.label}</dt>}
+        <dd className="text-base font-semibold">
+          {valueFormatter(metric.value)}
+          {metric.unit && <span className={cx('ml-1 text-xs', tokens.muted)}>{metric.unit}</span>}
+        </dd>
+        {metric.hint && <p className={cx('text-xs', tokens.muted)}>{metric.hint}</p>}
+      </div>
+    ))}
+  </dl>
+);
+
+const HvBoxPanel = ({
+  descriptor,
+  tokens,
+  statusPalette,
+  valueFormatter,
+}: {
+  descriptor: HvBoxDescriptor;
+  tokens: VariantTokens;
+  statusPalette?: StatusPalette;
+  valueFormatter: (value?: number | string) => string;
+}) => (
+  <div className={cx('mt-3 rounded-2xl border p-3 text-sm', tokens.subtleCard, tokens.border)}>
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <p className="font-semibold">{descriptor.title ?? '高压箱'}</p>
+      {descriptor.summary && <span className={cx('text-xs', tokens.muted)}>{descriptor.summary}</span>}
+    </div>
+    {descriptor.indicators && descriptor.indicators.length > 0 && (
+      <IndicatorRow indicators={descriptor.indicators} statusPalette={statusPalette} compact />
+    )}
+    {descriptor.metrics && descriptor.metrics.length > 0 && (
+      <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+        {descriptor.metrics.map((metric, idx) => (
+          <div key={`${metric.label ?? idx}-hv`} className="flex items-baseline justify-between gap-2">
+            {metric.label && <dt className={cx('text-xs', tokens.muted)}>{metric.label}</dt>}
+            <dd className="text-sm font-semibold">
+              {valueFormatter(metric.value)}
+              {metric.unit && <span className={cx('ml-1 text-xs', tokens.muted)}>{metric.unit}</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    )}
+  </div>
+);
+
+const IndicatorRow = ({
+  indicators,
+  statusPalette,
+  compact,
+}: {
+  indicators: NodeIndicator[];
+  statusPalette?: StatusPalette;
+  compact?: boolean;
+}) => (
+  <div className={cx('mt-3 flex flex-wrap gap-2', compact && 'mt-2')}>
+    {indicators.map((indicator) => (
+      <div
+        key={indicator.label}
+        className={cx(
+          'bms-indicator rounded-full border px-3 py-1 text-[11px] font-semibold tracking-wide',
+          statusPalette?.[indicator.status] ?? defaultStatusClasses[indicator.status],
+        )}
+      >
+        <span>{indicator.label}</span>
+        {indicator.value !== undefined && (
+          <span className="ml-1 text-xs opacity-80">{indicator.value}</span>
+        )}
+      </div>
+    ))}
+  </div>
+);
+
+const ConnectionLegend = ({
+  label,
+  type,
+  hint,
+}: {
+  label: string;
+  type: 'parallel' | 'series' | 'hybrid';
+  hint?: string;
+}) => (
+  <div className={cx('bms-connection-legend text-[11px] uppercase tracking-[0.25em]', `bms-connection-legend--${type}`)}>
+    <span>{label}</span>
+    {hint && <span className="text-[10px] normal-case tracking-normal">{hint}</span>}
+  </div>
+);
+
+const TemperatureList = ({
+  sensors,
+  tokens,
+  valueFormatter,
+}: {
+  sensors: ValueDatum[];
+  tokens: VariantTokens;
+  valueFormatter: (value?: number | string) => string;
+}) => (
+  <div className={cx('rounded-2xl border px-3 py-2 text-xs', tokens.subtleCard, tokens.border)}>
+    <p className={cx('text-[10px] uppercase tracking-[0.3em]', tokens.muted)}>温度测点</p>
+    <div className="bms-temperature-grid mt-2">
+      {sensors.map((sensor, idx) => (
+        <div key={`${sensor.label ?? idx}-temp`} className="flex items-center justify-between gap-2">
+          {sensor.label && <span className={cx('text-[11px]', tokens.muted)}>{sensor.label}</span>}
+          <span className="font-semibold">
+            {valueFormatter(sensor.value)}
+            {sensor.unit && <span className={cx('ml-1 text-[11px]', tokens.muted)}>{sensor.unit}</span>}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const CellGrid = ({
+  cells,
+  tokens,
+  statusPalette,
+  valueFormatter,
+}: {
+  cells: BatteryCellNode[];
+  tokens: VariantTokens;
+  statusPalette?: StatusPalette;
+  valueFormatter: (value?: number | string) => string;
+}) => (
+  <div className="bms-cell-grid">
+    {cells.map((cell) => (
+      <div
+        key={cell.id}
+        className={cx('bms-cell-chip rounded-2xl border px-3 py-2 text-xs', tokens.subtleCard, tokens.border)}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-semibold">{cell.name}</p>
+          {cell.status && (
+            <span
+              className={cx(
+                'bms-status-dot h-2.5 w-2.5 rounded-full border',
+                statusPalette?.[cell.status] ?? defaultStatusClasses[cell.status],
+              )}
+            />
+          )}
+        </div>
+        {(cell.seriesIndex !== undefined || cell.parallelIndex !== undefined) && (
+          <p className={cx('mt-1 text-[10px]', tokens.muted)}>
+            {cell.seriesIndex !== undefined && `串 #${cell.seriesIndex + 1}`}
+            {cell.parallelIndex !== undefined && (
+              <span className="ml-1">并组 #{cell.parallelIndex + 1}</span>
+            )}
+          </p>
+        )}
+        {cell.metrics && cell.metrics.length > 0 && (
+          <dl className="mt-1 space-y-1">
+            {cell.metrics.slice(0, 2).map((metric, idx) => (
+              <div key={`${cell.id}-${metric.label ?? idx}`} className="flex justify-between gap-2">
+                {metric.label && <dt className={cx('text-[10px]', tokens.muted)}>{metric.label}</dt>}
+                <dd className="font-semibold">
+                  {valueFormatter(metric.value)}
+                  {metric.unit && <span className={cx('ml-0.5 text-[10px]', tokens.muted)}>{metric.unit}</span>}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+    ))}
+  </div>
+);
+
+const ChevronIcon = ({ direction }: { direction: 'up' | 'down' }) => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    role="img"
+    aria-hidden="true"
+    className={cx(direction === 'up' ? 'rotate-180' : '', 'transition-transform')}
+  >
+    <path
+      d="M6 9l6 6 6-6"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const describeTopology = (topology?: ElectricalTopologyDescriptor) => {
+  if (!topology) return undefined;
+  if (topology.text) return topology.text;
+  const parts = [];
+  if (topology.series !== undefined) parts.push(`${topology.series}串`);
+  if (topology.parallel !== undefined) parts.push(`${topology.parallel}并`);
+  return parts.length > 0 ? parts.join(' · ') : undefined;
+};
+
+const aggregateThreeLevelTotals = (stacks: BatteryStackNode[]) => {
+  let clusters = 0;
+  let packs = 0;
+  let cells = 0;
+  stacks.forEach((stack) => {
+    const clusterList = stack.clusters ?? [];
+    clusters += clusterList.length;
+    clusterList.forEach((cluster) => {
+      const packList = cluster.packs ?? [];
+      packs += packList.length;
+      packList.forEach((pack) => {
+        cells += pack.cells?.length ?? 0;
+      });
+    });
+  });
+  return { stacks: stacks.length, clusters, packs, cells };
+};
+
+const aggregateTwoLevelTotals = (clusters: BatteryClusterNode[]) => {
+  let packs = 0;
+  let cells = 0;
+  clusters.forEach((cluster) => {
+    const packList = cluster.packs ?? [];
+    packs += packList.length;
+    packList.forEach((pack) => {
+      cells += pack.cells?.length ?? 0;
+    });
+  });
+  return { clusters: clusters.length, packs, cells };
+};
+
+interface TopologyBaseProps {
+  className?: string;
+  style?: CSSProperties;
+  variant?: Variant;
+  statusPalette?: StatusPalette;
+  defaultExpandedIds?: string[];
+  valueFormatter?: (value?: number | string) => string;
+  onNodeToggle?: (id: string, expanded: boolean) => void;
+}
+
+export interface BmsThreeLevelTopologyProps extends TopologyBaseProps {
+  title?: string;
+  stacks: BatteryStackNode[];
+}
+
+export const BmsThreeLevelTopology = ({
+  title = '三级 BMS 架构拓扑',
+  stacks,
+  className,
+  style,
+  variant = 'dark',
+  statusPalette,
+  defaultExpandedIds,
+  valueFormatter = defaultFormat,
+  onNodeToggle,
+}: BmsThreeLevelTopologyProps) => {
+  const tokens = variantTokens[variant];
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set(defaultExpandedIds ?? []),
+  );
+
+  const toggleNode = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      const willExpand = !next.has(id);
+      if (willExpand) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      onNodeToggle?.(id, willExpand);
+      return next;
+    });
+  };
+
+  const totals = useMemo(() => aggregateThreeLevelTotals(stacks), [stacks]);
+  const cssVars: CSSProperties = {
+    '--bms-connector-color': tokens.connectorColor,
+    '--bms-series-color': tokens.seriesColor,
+    '--bms-parallel-color': tokens.parallelColor,
+  } as CSSProperties;
+
+  return (
+    <section
+      className={cx(
+        'bms-topology flex flex-col gap-6 rounded-3xl border bg-transparent p-6',
+        tokens.container,
+        className,
+      )}
+      style={{ ...cssVars, ...style }}
+    >
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-lg font-semibold">{title}</p>
+          <p className={cx('text-sm', tokens.muted)}>
+            点击任意节点展开/折叠，实时指标由外部数据源注入
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 text-sm">
+          <StatBadge label="堆" value={totals.stacks} />
+          <StatBadge label="簇" value={totals.clusters} />
+          <StatBadge label="包" value={totals.packs} />
+          <StatBadge label="单体" value={totals.cells} />
+        </div>
+      </header>
+
+      <div className="space-y-5">
+        {stacks.map((stack) => {
+          const expandedStack = expanded.has(stack.id);
+          return (
+            <NodeCard
+              key={stack.id}
+              node={stack}
+              levelLabel="Battery Stack"
+              tokens={tokens}
+              statusPalette={statusPalette}
+              valueFormatter={valueFormatter}
+              hvBox={stack.hvBox}
+              topology={stack.topology}
+              metaLines={stack.topology?.hint ? [stack.topology.hint] : []}
+              isExpandable={(stack.clusters?.length ?? 0) > 0}
+              isExpanded={expandedStack}
+              onToggle={() => toggleNode(stack.id)}
+            >
+              {expandedStack && stack.clusters && stack.clusters.length > 0 && (
+                <>
+                  <ConnectionLegend
+                    label="簇 · 并联"
+                    type="parallel"
+                    hint={stack.topology?.hint ?? '簇之间并联到堆母排'}
+                  />
+                  <div className="bms-branch-grid">
+                    {stack.clusters.map((cluster) => {
+                      const clusterExpanded = expanded.has(cluster.id);
+                      return (
+                        <NodeCard
+                          key={cluster.id}
+                          node={cluster}
+                          levelLabel="Battery Cluster"
+                          tokens={tokens}
+                          statusPalette={statusPalette}
+                          valueFormatter={valueFormatter}
+                          hvBox={cluster.hvBox}
+                          topology={cluster.topology}
+                          metaLines={
+                            cluster.topology?.hint ? [cluster.topology.hint] : undefined
+                          }
+                          isExpandable={(cluster.packs?.length ?? 0) > 0}
+                          isExpanded={clusterExpanded}
+                          onToggle={() => toggleNode(cluster.id)}
+                        >
+                          {clusterExpanded && cluster.packs && cluster.packs.length > 0 && (
+                            <>
+                              <ConnectionLegend
+                                label="包 · 串联"
+                                type="series"
+                                hint="簇内串联抬高电压"
+                              />
+                              <div className="bms-pack-row">
+                                {cluster.packs.map((pack) => {
+                                  const packExpanded = expanded.has(pack.id);
+                                  return (
+                                    <NodeCard
+                                      key={pack.id}
+                                      node={pack}
+                                      levelLabel="Battery Pack"
+                                      tokens={tokens}
+                                      statusPalette={statusPalette}
+                                      valueFormatter={valueFormatter}
+                                      hvBox={pack.hvBox}
+                                      topology={pack.topology}
+                                      metaLines={
+                                        pack.topology?.hint
+                                          ? [pack.topology.hint]
+                                          : undefined
+                                      }
+                                      isExpandable={(pack.cells?.length ?? 0) > 0}
+                                      isExpanded={packExpanded}
+                                      onToggle={() => toggleNode(pack.id)}
+                                    >
+                                      {pack.temperatureSensors &&
+                                        pack.temperatureSensors.length > 0 && (
+                                          <TemperatureList
+                                            sensors={pack.temperatureSensors}
+                                            tokens={tokens}
+                                            valueFormatter={valueFormatter}
+                                          />
+                                        )}
+                                      {packExpanded &&
+                                        pack.cells &&
+                                        pack.cells.length > 0 && (
+                                          <>
+                                            <ConnectionLegend
+                                              label="单体 · 串并组合"
+                                              type="hybrid"
+                                              hint={pack.topology?.text ?? '示意 2S × 15P 等组合'}
+                                            />
+                                            <CellGrid
+                                              cells={pack.cells}
+                                              tokens={tokens}
+                                              statusPalette={statusPalette}
+                                              valueFormatter={valueFormatter}
+                                            />
+                                          </>
+                                        )}
+                                    </NodeCard>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
+                        </NodeCard>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </NodeCard>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
+
+export interface BmsTwoLevelTopologyProps extends TopologyBaseProps {
+  title?: string;
+  clusters: BatteryClusterNode[];
+}
+
+export const BmsTwoLevelTopology = ({
+  title = '二级 BMS 架构拓扑',
+  clusters,
+  className,
+  style,
+  variant = 'dark',
+  statusPalette,
+  defaultExpandedIds,
+  valueFormatter = defaultFormat,
+  onNodeToggle,
+}: BmsTwoLevelTopologyProps) => {
+  const tokens = variantTokens[variant];
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set(defaultExpandedIds ?? []),
+  );
+
+  const toggleNode = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      const willExpand = !next.has(id);
+      if (willExpand) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      onNodeToggle?.(id, willExpand);
+      return next;
+    });
+  };
+
+  const totals = useMemo(() => aggregateTwoLevelTotals(clusters), [clusters]);
+  const cssVars: CSSProperties = {
+    '--bms-connector-color': tokens.connectorColor,
+    '--bms-series-color': tokens.seriesColor,
+    '--bms-parallel-color': tokens.parallelColor,
+  } as CSSProperties;
+
+  return (
+    <section
+      className={cx(
+        'bms-topology flex flex-col gap-6 rounded-3xl border bg-transparent p-6',
+        tokens.container,
+        className,
+      )}
+      style={{ ...cssVars, ...style }}
+    >
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-lg font-semibold">{title}</p>
+          <p className={cx('text-sm', tokens.muted)}>
+            二级架构直接对外呈现电池簇，簇下串联包、包下单体
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 text-sm">
+          <StatBadge label="簇" value={totals.clusters} />
+          <StatBadge label="包" value={totals.packs} />
+          <StatBadge label="单体" value={totals.cells} />
+        </div>
+      </header>
+
+      <div className="space-y-5">
+        {clusters.map((cluster) => {
+          const clusterExpanded = expanded.has(cluster.id);
+          return (
+            <NodeCard
+              key={cluster.id}
+              node={cluster}
+              levelLabel="Cluster HV Box"
+              tokens={tokens}
+              statusPalette={statusPalette}
+              valueFormatter={valueFormatter}
+              hvBox={cluster.hvBox}
+              topology={cluster.topology}
+              metaLines={
+                cluster.topology?.hint ? [cluster.topology.hint] : undefined
+              }
+              isExpandable={(cluster.packs?.length ?? 0) > 0}
+              isExpanded={clusterExpanded}
+              onToggle={() => toggleNode(cluster.id)}
+            >
+              {clusterExpanded && cluster.packs && cluster.packs.length > 0 && (
+                <>
+                  <ConnectionLegend
+                    label="包 · 串联"
+                    type="series"
+                    hint="簇内部包串联提升电压"
+                  />
+                  <div className="bms-pack-row">
+                    {cluster.packs.map((pack) => {
+                      const packExpanded = expanded.has(pack.id);
+                      return (
+                        <NodeCard
+                          key={pack.id}
+                          node={pack}
+                          levelLabel="Battery Pack"
+                          tokens={tokens}
+                          statusPalette={statusPalette}
+                          valueFormatter={valueFormatter}
+                          hvBox={pack.hvBox}
+                          topology={pack.topology}
+                          metaLines={
+                            pack.topology?.hint ? [pack.topology.hint] : undefined
+                          }
+                          isExpandable={(pack.cells?.length ?? 0) > 0}
+                          isExpanded={packExpanded}
+                          onToggle={() => toggleNode(pack.id)}
+                        >
+                          {pack.temperatureSensors &&
+                            pack.temperatureSensors.length > 0 && (
+                              <TemperatureList
+                                sensors={pack.temperatureSensors}
+                                tokens={tokens}
+                                valueFormatter={valueFormatter}
+                              />
+                            )}
+                          {packExpanded && pack.cells && pack.cells.length > 0 && (
+                            <>
+                              <ConnectionLegend
+                                label="单体 · 串并组合"
+                                type="hybrid"
+                                hint={pack.topology?.text ?? '单体串并示意'}
+                              />
+                              <CellGrid
+                                cells={pack.cells}
+                                tokens={tokens}
+                                statusPalette={statusPalette}
+                                valueFormatter={valueFormatter}
+                              />
+                            </>
+                          )}
+                        </NodeCard>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </NodeCard>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
+
+const StatBadge = ({ label, value }: { label: string; value: number }) => (
+  <span className="rounded-full border border-current/20 px-3 py-1 text-xs uppercase tracking-[0.3em]">
+    {label} · {value}
+  </span>
+);

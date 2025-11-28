@@ -1,0 +1,87 @@
+.bms-topology {
+  --bms-connector-color: rgba(148, 163, 184, 0.5);
+  --bms-series-color: #fb923c;
+  --bms-parallel-color: #0ea5e9;
+  background: transparent;
+}
+
+.bms-branch-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .bms-branch-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+.bms-pack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.bms-cell-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.bms-connection-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: inherit;
+}
+
+.bms-connection-legend::before {
+  content: '';
+  display: inline-block;
+  width: 48px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--bms-connector-color);
+}
+
+.bms-connection-legend--parallel::before {
+  background: var(--bms-parallel-color);
+}
+
+.bms-connection-legend--series::before {
+  background: var(--bms-series-color);
+}
+
+.bms-connection-legend--hybrid::before {
+  background: linear-gradient(
+    90deg,
+    var(--bms-series-color),
+    var(--bms-parallel-color)
+  );
+}
+
+.bms-temperature-grid {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.bms-cell-chip {
+  backdrop-filter: blur(8px);
+}
+
+.bms-node-card {
+  backdrop-filter: blur(12px);
+}
+
+.bms-status-chip,
+.bms-indicator {
+  border-width: 1px;
+}
+
+.bms-status-dot {
+  border-width: 1px;
+  background-color: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
