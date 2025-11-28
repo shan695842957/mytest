@@ -562,66 +562,46 @@ const CellVoltageBar = ({
     typeof voltage === 'number' &&
     ((min !== undefined && voltage < min) || (max !== undefined && voltage > max));
 
-  const hoverMetrics = cell.metrics?.filter((metric) => {
-    const label = metric.label?.toLowerCase() ?? '';
-    return !label.includes('电压') && !label.includes('voltage') && !label.includes('v');
+  const hoverLines: string[] = [];
+  const appendLine = (text?: string) => text && hoverLines.push(text);
+  appendLine(cell.name);
+  if (typeof voltage !== 'undefined') appendLine(`电压: ${valueFormatter(voltage)}V`);
+  if (cell.seriesIndex !== undefined) appendLine(`串号: ${cell.seriesIndex + 1}`);
+  if (cell.parallelIndex !== undefined) appendLine(`并组: ${cell.parallelIndex + 1}`);
+  if (min !== undefined || max !== undefined) {
+    appendLine(`范围: ${min !== undefined ? valueFormatter(min) : '?'}V ~ ${max !== undefined ? valueFormatter(max) : '?'}V`);
+  }
+  cell.metrics?.forEach((metric) => {
+    const label = metric.label ?? '';
+    const val = valueFormatter(metric.value);
+    const unit = metric.unit ? `${metric.unit}` : '';
+    appendLine(`${label ? `${label}: ` : ''}${val}${unit}`);
   });
+
+  const tooltip = hoverLines.join('\n');
 
   return (
     <div
       className={cx(
-        'bms-cell-bar rounded-lg border px-2.5 py-2 text-[11px]',
+        'bms-cell-bar flex items-center gap-2 rounded-full border px-2 py-1 text-[11px]',
         tokens.subtleCard,
         tokens.border,
       )}
-      {...(hoverMetrics && hoverMetrics.length > 0
-        ? {
-            'aria-haspopup': 'true',
-            'data-tooltip': hoverMetrics
-              .map((metric) => {
-                const label = metric.label ?? '';
-                const val = valueFormatter(metric.value);
-                const unit = metric.unit ? `${metric.unit}` : '';
-                return `${label ? `${label}: ` : ''}${val}${unit}`;
-              })
-              .join('\n'),
-          }
-        : {})}
+      data-tooltip={tooltip}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold">{cell.name}</span>
-        <div className="flex items-center gap-1">
-          {cell.status && (
-            <span
-              className={cx(
-                'bms-status-dot h-2 w-2 rounded-full border',
-                statusPalette?.[cell.status] ?? defaultStatusClasses[cell.status],
-              )}
-            />
+      {cell.status && (
+        <span
+          className={cx(
+            'bms-status-dot h-1.5 w-1.5 rounded-full border',
+            statusPalette?.[cell.status] ?? defaultStatusClasses[cell.status],
           )}
-          {typeof voltage !== 'undefined' && (
-            <span className="font-semibold">
-              {valueFormatter(voltage)}
-              <span className={cx('ml-0.5 text-[10px]', tokens.muted)}>V</span>
-            </span>
-          )}
-        </div>
-      </div>
-      {(cell.seriesIndex !== undefined || cell.parallelIndex !== undefined) && (
-        <p className={cx('mt-0.5 text-[10px]', tokens.muted)}>
-          {cell.seriesIndex !== undefined && `串 #${cell.seriesIndex + 1}`}
-          {cell.parallelIndex !== undefined && <span className="ml-1">并组 #{cell.parallelIndex + 1}</span>}
-        </p>
+        />
       )}
-      <div className="bms-cell-bar__track mt-1.5">
+      <div className="bms-cell-bar__track flex-1">
         <div
           className={cx('bms-cell-bar__fill', outOfRange && 'bms-cell-bar__fill--alert')}
           style={{ width: ratio !== undefined ? `${ratio * 100}%` : '100%' }}
         />
-      </div>
-      <div className="mt-1 flex justify-between text-[10px] text-current/70">
-        <span>{min !== undefined ? `${valueFormatter(min)}V` : '下限未知'}</span>
-        <span>{max !== undefined ? `${valueFormatter(max)}V` : '上限未知'}</span>
       </div>
     </div>
   );
