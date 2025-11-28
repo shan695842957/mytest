@@ -1,7 +1,52 @@
 /**
- * BMS可视化组件
- * 包含三级架构和二级架构两个组件
- * 使用动态字段数组格式，支持不同供应商和不同语言的字段名
+ * BMS 储能系统可视化组件
+ * 
+ * ============================================
+ * 使用说明
+ * ============================================
+ * 
+ * 本文件包含三级架构和二级架构两个可视化组件。
+ * 
+ * 组件列表：
+ * - Level3BMS: 三级架构组件（电池堆 → 电池簇 → 电池包 → 电池单体）
+ * - Level2BMS: 二级架构组件（电池簇 → 电池包 → 电池单体）
+ * 
+ * 使用方式：
+ * ```tsx
+ * import { Level3BMS, Level2BMS } from '@/components/bms/BMSVisualization';
+ * import { useLevel3BMS } from '@/hooks/useBMS';
+ * import { createLevel3BMSData } from '@/utils/bmsFactory';
+ * 
+ * // 创建初始数据
+ * const config = {
+ *   clusterCount: 3,
+ *   packCountPerCluster: 4,
+ *   cellCountPerPack: 30,
+ *   temperaturePointCountPerPack: 5,
+ * };
+ * const initialData = createLevel3BMSData(config);
+ * 
+ * // 使用Hook管理数据
+ * const bms = useLevel3BMS(initialData);
+ * 
+ * // 渲染组件
+ * <Level3BMS data={bms.data} config={config} />
+ * ```
+ * 
+ * 数据更新：
+ * 通过 useBMS Hook 提供的更新函数更新数据，详见 hooks/useBMS.ts
+ * 
+ * 特性：
+ * - 使用动态字段数组，支持多语言字段名
+ * - 清晰展示串并联关系（簇并联、包串联）
+ * - 避免整屏滚动，使用局部滚动容器
+ * - 支持不同供应商的数据结构差异
+ * 
+ * 依赖：
+ * - React 19+
+ * - Tailwind CSS
+ * - lucide-react (图标)
+ * - @radix-ui/react-tabs (标签页)
  */
 
 import React from 'react';

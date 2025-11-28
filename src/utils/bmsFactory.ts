@@ -1,7 +1,39 @@
 /**
  * BMS数据工厂函数
- * 用于根据配置创建初始BMS数据结构
- * 使用动态字段数组格式
+ * 
+ * ============================================
+ * 使用说明
+ * ============================================
+ * 
+ * 本文件提供了根据配置创建初始BMS数据结构的工厂函数。
+ * 
+ * 使用方式：
+ * ```tsx
+ * import { createLevel3BMSData, createLevel2BMSData } from '@/utils/bmsFactory';
+ * 
+ * // 三级架构
+ * const config = {
+ *   clusterCount: 3,
+ *   packCountPerCluster: 4,
+ *   cellCountPerPack: 30,
+ *   temperaturePointCountPerPack: 5,
+ *   cellConfiguration: { series: 2, parallel: 15 },
+ * };
+ * const initialData = createLevel3BMSData(config);
+ * 
+ * // 二级架构
+ * const config2 = {
+ *   packCount: 6,
+ *   cellCountPerPack: 30,
+ *   temperaturePointCountPerPack: 5,
+ * };
+ * const initialData2 = createLevel2BMSData(config2);
+ * ```
+ * 
+ * 注意事项：
+ * - 创建的数据结构中，所有字段数组（fields）初始为空
+ * - 需要通过 useBMS Hook 的更新函数填充数据
+ * - ID格式：三级架构为 "C{簇号}-P{包号}-Cell{单体号}"，二级架构为 "P{包号}-Cell{单体号}"
  */
 
 import {
