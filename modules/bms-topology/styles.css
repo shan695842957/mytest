@@ -1,3 +1,8 @@
+/**
+ * BMS 拓扑专用样式
+ * 这里全部使用纯 CSS，避免直接影响现有 Tailwind 配置。
+ * 容器默认透明背景，可随宿主页面的明暗风格自动切换。
+ */
 .bms-topology {
   --bms-connector-color: rgba(148, 163, 184, 0.5);
   --bms-series-color: #fb923c;
@@ -84,4 +89,36 @@
   border-width: 1px;
   background-color: currentColor;
   box-shadow: 0 0 6px currentColor;
+}
+
+/**
+ * 高压箱独立的视觉卡片：渐变描边 + 背景噪点，便于肉眼确认。
+ */
+.bms-hv-box {
+  position: relative;
+  overflow: hidden;
+}
+
+.bms-hv-box::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.5rem;
+  background: linear-gradient(
+    120deg,
+    rgba(251, 146, 60, 0.45),
+    rgba(14, 165, 233, 0.45)
+  );
+  opacity: 0.6;
+  z-index: -1;
+}
+
+.bms-hv-box::after {
+  content: '';
+  position: absolute;
+  inset: 0.4rem;
+  border-radius: 1.2rem;
+  background: rgba(15, 23, 42, 0.08);
+  pointer-events: none;
+  z-index: -1;
 }

@@ -1,34 +1,52 @@
 import { useMemo, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { ValueDatum } from './PcsEnergyFlow';
-import './bms-topology.css';
+import './styles.css';
 
+/**
+ * 统一的数据展示接口，方便把电压/电流/SOC 等数值传入组件。
+ * 保持简单，父组件只需要把 label/value/unit 显示文本传进来即可。
+ */
+export interface ValueDatum {
+  label?: string;
+  value?: number | string;
+  unit?: string;
+  hint?: string;
+}
+
+/**
+ * BMS 中所有节点（堆、簇、包、单体）都共享的健康状态。
+ * 颜色可通过 statusPalette 自定义。
+ */
 export type NodeStatus = 'normal' | 'warning' | 'fault' | 'offline';
 
+/**
+ * 一条简单的状态指示，例如“正极接触器：合闸”。
+ * value 可以放布尔、数字或字符串 —— 视觉上只做展示，不做逻辑判断。
+ */
 export interface NodeIndicator {
   label: string;
   status: NodeStatus;
   value?: number | string;
 }
 
+/**
+ * 串并联描述。多数 BMS 项目会以 16S2P/2P15S 这类形式呈现。
+ * 如果系列/并联信息无法准确表达，也可以直接传 text 来显示自定义内容。
+ */
 export interface ElectricalTopologyDescriptor {
-  /** 串联的数量，例如 16 表示 16S。 */
   series?: number;
-  /** 并联数量，例如 2 表示 2P。 */
   parallel?: number;
-  /** 自定义展示文案（会覆盖 series/parallel 自动拼接）。 */
   text?: string;
-  /** 额外提示，例如 “簇间并联共享母排”。 */
   hint?: string;
 }
 
+/**
+ * 高压箱信息块。这里会在 UI 中绘制成独立的小卡片，保证肉眼可见。
+ */
 export interface HvBoxDescriptor {
   title?: string;
-  /** 简要描述，例如 “堆高压箱” 或 “接触器状态”。 */
   summary?: string;
-  /** 接触器、断路器等状态指示。 */
   indicators?: NodeIndicator[];
-  /** 高压箱监测的数值类指标。 */
   metrics?: ValueDatum[];
 }
 
@@ -68,46 +86,43 @@ export interface BatteryStackNode extends BmsNodeBase {
   clusters?: BatteryClusterNode[];
 }
 
-type Variant = 'dark' | 'light';
+export type Variant = 'dark' | 'light';
 
-type StatusPalette = Partial<Record<NodeStatus, string>>;
+export type StatusPalette = Partial<Record<NodeStatus, string>>;
 
-type VariantTokens = {
+interface VariantTokens {
   container: string;
   card: string;
   subtleCard: string;
   muted: string;
-  accent: string;
-  border: string;
   badge: string;
+  border: string;
   connectorColor: string;
   seriesColor: string;
   parallelColor: string;
-};
+}
 
 const variantTokens: Record<Variant, VariantTokens> = {
   dark: {
     container: 'border-white/10 text-slate-100',
-    card: 'bg-white/5 border-white/10 shadow-[0_15px_80px_rgba(0,0,0,0.45)]',
+    card: 'bg-white/5 border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)]',
     subtleCard: 'bg-white/5 border-white/10',
     muted: 'text-slate-400',
-    accent: 'text-cyan-300',
+    badge: 'bg-white/10 border-white/20 text-slate-100',
     border: 'border-white/20',
-    badge: 'bg-white/10 text-slate-100 border-white/20',
     connectorColor: 'rgba(148,163,184,0.55)',
-    seriesColor: '#f97316',
-    parallelColor: '#38bdf8',
+    seriesColor: '#fb923c',
+    parallelColor: '#0ea5e9',
   },
   light: {
     container: 'border-slate-200 text-slate-900',
     card: 'bg-white border-slate-200 shadow-[0_15px_60px_rgba(15,23,42,0.12)]',
     subtleCard: 'bg-slate-50 border-slate-200',
     muted: 'text-slate-500',
-    accent: 'text-emerald-500',
+    badge: 'bg-slate-100 border-slate-200 text-slate-600',
     border: 'border-slate-300/70',
-    badge: 'bg-slate-100 text-slate-600 border-slate-200',
     connectorColor: 'rgba(148,163,184,0.45)',
-    seriesColor: '#fb923c',
+    seriesColor: '#f97316',
     parallelColor: '#0ea5e9',
   },
 };
@@ -141,21 +156,10 @@ const defaultFormat = (value?: number | string): string => {
   return String(value);
 };
 
-interface NodeCardProps<T extends BmsNodeBase> {
-  node: T;
-  levelLabel: string;
-  tokens: VariantTokens;
-  statusPalette?: StatusPalette;
-  valueFormatter: (value?: number | string) => string;
-  isExpandable?: boolean;
-  isExpanded?: boolean;
-  onToggle?: () => void;
-  hvBox?: HvBoxDescriptor;
-  topology?: ElectricalTopologyDescriptor;
-  metaLines?: string[];
-  children?: ReactNode;
-}
-
+/**
+ * NodeCard 是所有节点（堆/簇/包/单体）的 UI 容器。
+ * 根据 isExpandable/isExpanded 决定是否展示子层级，用 button 控制展开收起。
+ */
 const NodeCard = <T extends BmsNodeBase>({
   node,
   levelLabel,
@@ -169,7 +173,20 @@ const NodeCard = <T extends BmsNodeBase>({
   topology,
   metaLines = [],
   children,
-}: NodeCardProps<T>) => (
+}: {
+  node: T;
+  levelLabel: string;
+  tokens: VariantTokens;
+  statusPalette?: StatusPalette;
+  valueFormatter: (value?: number | string) => string;
+  isExpandable?: boolean;
+  isExpanded?: boolean;
+  onToggle?: () => void;
+  hvBox?: HvBoxDescriptor;
+  topology?: ElectricalTopologyDescriptor;
+  metaLines?: string[];
+  children?: ReactNode;
+}) => (
   <div className={cx('bms-node-card rounded-2xl border p-4 transition-colors', tokens.card)}>
     <div className="flex items-start justify-between gap-4">
       <div className="space-y-1">
@@ -180,10 +197,7 @@ const NodeCard = <T extends BmsNodeBase>({
           {node.badges?.map((badge) => (
             <span
               key={badge}
-              className={cx(
-                'rounded-full border px-2 py-0.5 text-[11px] font-semibold tracking-wide',
-                tokens.badge,
-              )}
+              className={cx('rounded-full border px-2 py-0.5 text-[11px] font-semibold tracking-wide', tokens.badge)}
             >
               {badge}
             </span>
@@ -191,7 +205,7 @@ const NodeCard = <T extends BmsNodeBase>({
         </div>
         {node.subtitle && <p className={cx('text-sm', tokens.muted)}>{node.subtitle}</p>}
         {topology && (
-          <p className="text-xs uppercase tracking-[0.3em] text-current/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-current/80">
             {describeTopology(topology)}
           </p>
         )}
@@ -212,7 +226,7 @@ const NodeCard = <T extends BmsNodeBase>({
             type="button"
             onClick={onToggle}
             className="rounded-full border border-current/20 p-1 text-xs transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/50"
-            aria-label={isExpanded ? '折叠' : '展开'}
+            aria-label={isExpanded ? '折叠节点' : '展开节点'}
           >
             <ChevronIcon direction={isExpanded ? 'up' : 'down'} />
           </button>
@@ -229,10 +243,7 @@ const NodeCard = <T extends BmsNodeBase>({
         {metaLines.map((line) => (
           <li
             key={line}
-            className={cx(
-              'rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide',
-              tokens.border,
-            )}
+            className={cx('rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-wide', tokens.border)}
           >
             {line}
           </li>
@@ -244,6 +255,7 @@ const NodeCard = <T extends BmsNodeBase>({
       <MetricList metrics={node.metrics} tokens={tokens} valueFormatter={valueFormatter} />
     )}
 
+    {/* 高压箱被绘制成单独的彩色小卡片，确保随时能看到 HV 关键信息 */}
     {hvBox && (
       <HvBoxPanel
         descriptor={hvBox}
@@ -287,6 +299,9 @@ const MetricList = ({
   </dl>
 );
 
+/**
+ * 高压箱卡片：包含一个醒目的 HV 徽章和 icon，让设备人员免费确认 HV 单独显示。
+ */
 const HvBoxPanel = ({
   descriptor,
   tokens,
@@ -298,9 +313,12 @@ const HvBoxPanel = ({
   statusPalette?: StatusPalette;
   valueFormatter: (value?: number | string) => string;
 }) => (
-  <div className={cx('mt-3 rounded-2xl border p-3 text-sm', tokens.subtleCard, tokens.border)}>
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <p className="font-semibold">{descriptor.title ?? '高压箱'}</p>
+  <div className={cx('bms-hv-box mt-3 rounded-2xl border p-3 text-sm', tokens.subtleCard, tokens.border)}>
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <HvIcon />
+        <p className="font-semibold">{descriptor.title ?? '高压箱'}</p>
+      </div>
       {descriptor.summary && <span className={cx('text-xs', tokens.muted)}>{descriptor.summary}</span>}
     </div>
     {descriptor.indicators && descriptor.indicators.length > 0 && (
@@ -341,9 +359,7 @@ const IndicatorRow = ({
         )}
       >
         <span>{indicator.label}</span>
-        {indicator.value !== undefined && (
-          <span className="ml-1 text-xs opacity-80">{indicator.value}</span>
-        )}
+        {indicator.value !== undefined && <span className="ml-1 text-xs opacity-80">{indicator.value}</span>}
       </div>
     ))}
   </div>
@@ -420,9 +436,7 @@ const CellGrid = ({
         {(cell.seriesIndex !== undefined || cell.parallelIndex !== undefined) && (
           <p className={cx('mt-1 text-[10px]', tokens.muted)}>
             {cell.seriesIndex !== undefined && `串 #${cell.seriesIndex + 1}`}
-            {cell.parallelIndex !== undefined && (
-              <span className="ml-1">并组 #{cell.parallelIndex + 1}</span>
-            )}
+            {cell.parallelIndex !== undefined && <span className="ml-1">并组 #{cell.parallelIndex + 1}</span>}
           </p>
         )}
         {cell.metrics && cell.metrics.length > 0 && (
@@ -463,10 +477,23 @@ const ChevronIcon = ({ direction }: { direction: 'up' | 'down' }) => (
   </svg>
 );
 
+const HvIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-hidden="true">
+    <path
+      d="M13 2L4 14h6l-1 8 9-12h-6z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const describeTopology = (topology?: ElectricalTopologyDescriptor) => {
   if (!topology) return undefined;
   if (topology.text) return topology.text;
-  const parts = [];
+  const parts: string[] = [];
   if (topology.series !== undefined) parts.push(`${topology.series}串`);
   if (topology.parallel !== undefined) parts.push(`${topology.parallel}并`);
   return parts.length > 0 ? parts.join(' · ') : undefined;
@@ -513,13 +540,16 @@ interface TopologyBaseProps {
   onNodeToggle?: (id: string, expanded: boolean) => void;
 }
 
+/**
+ * 三级架构：堆 -> 簇 -> 包 -> 单体。
+ */
 export interface BmsThreeLevelTopologyProps extends TopologyBaseProps {
   title?: string;
   stacks: BatteryStackNode[];
 }
 
 export const BmsThreeLevelTopology = ({
-  title = '三级 BMS 架构拓扑',
+  title = '三级 BMS 拓扑',
   stacks,
   className,
   style,
@@ -530,9 +560,7 @@ export const BmsThreeLevelTopology = ({
   onNodeToggle,
 }: BmsThreeLevelTopologyProps) => {
   const tokens = variantTokens[variant];
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () => new Set(defaultExpandedIds ?? []),
-  );
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(defaultExpandedIds ?? []));
 
   const toggleNode = (id: string) => {
     setExpanded((prev) => {
@@ -553,23 +581,18 @@ export const BmsThreeLevelTopology = ({
     '--bms-connector-color': tokens.connectorColor,
     '--bms-series-color': tokens.seriesColor,
     '--bms-parallel-color': tokens.parallelColor,
-  } as CSSProperties;
+    ...style,
+  };
 
   return (
     <section
-      className={cx(
-        'bms-topology flex flex-col gap-6 rounded-3xl border bg-transparent p-6',
-        tokens.container,
-        className,
-      )}
-      style={{ ...cssVars, ...style }}
+      className={cx('bms-topology flex flex-col gap-6 rounded-3xl border bg-transparent p-6', tokens.container, className)}
+      style={cssVars}
     >
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-lg font-semibold">{title}</p>
-          <p className={cx('text-sm', tokens.muted)}>
-            点击任意节点展开/折叠，实时指标由外部数据源注入
-          </p>
+          <p className={cx('text-sm', tokens.muted)}>点击节点即可展开下一层，所有数据从 props 注入</p>
         </div>
         <div className="flex flex-wrap gap-3 text-sm">
           <StatBadge label="堆" value={totals.stacks} />
@@ -602,7 +625,7 @@ export const BmsThreeLevelTopology = ({
                   <ConnectionLegend
                     label="簇 · 并联"
                     type="parallel"
-                    hint={stack.topology?.hint ?? '簇之间并联到堆母排'}
+                    hint={stack.topology?.hint ?? '簇之间通过母排并联'}
                   />
                   <div className="bms-branch-grid">
                     {stack.clusters.map((cluster) => {
@@ -617,20 +640,14 @@ export const BmsThreeLevelTopology = ({
                           valueFormatter={valueFormatter}
                           hvBox={cluster.hvBox}
                           topology={cluster.topology}
-                          metaLines={
-                            cluster.topology?.hint ? [cluster.topology.hint] : undefined
-                          }
+                          metaLines={cluster.topology?.hint ? [cluster.topology.hint] : undefined}
                           isExpandable={(cluster.packs?.length ?? 0) > 0}
                           isExpanded={clusterExpanded}
                           onToggle={() => toggleNode(cluster.id)}
                         >
                           {clusterExpanded && cluster.packs && cluster.packs.length > 0 && (
                             <>
-                              <ConnectionLegend
-                                label="包 · 串联"
-                                type="series"
-                                hint="簇内串联抬高电压"
-                              />
+                              <ConnectionLegend label="包 · 串联" type="series" hint="簇内部串联提升电压" />
                               <div className="bms-pack-row">
                                 {cluster.packs.map((pack) => {
                                   const packExpanded = expanded.has(pack.id);
@@ -644,40 +661,33 @@ export const BmsThreeLevelTopology = ({
                                       valueFormatter={valueFormatter}
                                       hvBox={pack.hvBox}
                                       topology={pack.topology}
-                                      metaLines={
-                                        pack.topology?.hint
-                                          ? [pack.topology.hint]
-                                          : undefined
-                                      }
+                                      metaLines={pack.topology?.hint ? [pack.topology.hint] : undefined}
                                       isExpandable={(pack.cells?.length ?? 0) > 0}
                                       isExpanded={packExpanded}
                                       onToggle={() => toggleNode(pack.id)}
                                     >
-                                      {pack.temperatureSensors &&
-                                        pack.temperatureSensors.length > 0 && (
-                                          <TemperatureList
-                                            sensors={pack.temperatureSensors}
+                                      {pack.temperatureSensors && pack.temperatureSensors.length > 0 && (
+                                        <TemperatureList
+                                          sensors={pack.temperatureSensors}
+                                          tokens={tokens}
+                                          valueFormatter={valueFormatter}
+                                        />
+                                      )}
+                                      {packExpanded && pack.cells && pack.cells.length > 0 && (
+                                        <>
+                                          <ConnectionLegend
+                                            label="单体 · 串并"
+                                            type="hybrid"
+                                            hint={pack.topology?.text ?? '如 2S × 15P 等组合'}
+                                          />
+                                          <CellGrid
+                                            cells={pack.cells}
                                             tokens={tokens}
+                                            statusPalette={statusPalette}
                                             valueFormatter={valueFormatter}
                                           />
-                                        )}
-                                      {packExpanded &&
-                                        pack.cells &&
-                                        pack.cells.length > 0 && (
-                                          <>
-                                            <ConnectionLegend
-                                              label="单体 · 串并组合"
-                                              type="hybrid"
-                                              hint={pack.topology?.text ?? '示意 2S × 15P 等组合'}
-                                            />
-                                            <CellGrid
-                                              cells={pack.cells}
-                                              tokens={tokens}
-                                              statusPalette={statusPalette}
-                                              valueFormatter={valueFormatter}
-                                            />
-                                          </>
-                                        )}
+                                        </>
+                                      )}
                                     </NodeCard>
                                   );
                                 })}
@@ -698,13 +708,16 @@ export const BmsThreeLevelTopology = ({
   );
 };
 
+/**
+ * 二级架构：簇 -> 包 -> 单体。
+ */
 export interface BmsTwoLevelTopologyProps extends TopologyBaseProps {
   title?: string;
   clusters: BatteryClusterNode[];
 }
 
 export const BmsTwoLevelTopology = ({
-  title = '二级 BMS 架构拓扑',
+  title = '二级 BMS 拓扑',
   clusters,
   className,
   style,
@@ -715,9 +728,7 @@ export const BmsTwoLevelTopology = ({
   onNodeToggle,
 }: BmsTwoLevelTopologyProps) => {
   const tokens = variantTokens[variant];
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () => new Set(defaultExpandedIds ?? []),
-  );
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(defaultExpandedIds ?? []));
 
   const toggleNode = (id: string) => {
     setExpanded((prev) => {
@@ -738,23 +749,18 @@ export const BmsTwoLevelTopology = ({
     '--bms-connector-color': tokens.connectorColor,
     '--bms-series-color': tokens.seriesColor,
     '--bms-parallel-color': tokens.parallelColor,
-  } as CSSProperties;
+    ...style,
+  };
 
   return (
     <section
-      className={cx(
-        'bms-topology flex flex-col gap-6 rounded-3xl border bg-transparent p-6',
-        tokens.container,
-        className,
-      )}
-      style={{ ...cssVars, ...style }}
+      className={cx('bms-topology flex flex-col gap-6 rounded-3xl border bg-transparent p-6', tokens.container, className)}
+      style={cssVars}
     >
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-lg font-semibold">{title}</p>
-          <p className={cx('text-sm', tokens.muted)}>
-            二级架构直接对外呈现电池簇，簇下串联包、包下单体
-          </p>
+          <p className={cx('text-sm', tokens.muted)}>簇直接对外，包串联，包内再展示单体与温度点</p>
         </div>
         <div className="flex flex-wrap gap-3 text-sm">
           <StatBadge label="簇" value={totals.clusters} />
@@ -770,26 +776,20 @@ export const BmsTwoLevelTopology = ({
             <NodeCard
               key={cluster.id}
               node={cluster}
-              levelLabel="Cluster HV Box"
+              levelLabel='Cluster HV Box'
               tokens={tokens}
               statusPalette={statusPalette}
               valueFormatter={valueFormatter}
               hvBox={cluster.hvBox}
               topology={cluster.topology}
-              metaLines={
-                cluster.topology?.hint ? [cluster.topology.hint] : undefined
-              }
+              metaLines={cluster.topology?.hint ? [cluster.topology.hint] : undefined}
               isExpandable={(cluster.packs?.length ?? 0) > 0}
               isExpanded={clusterExpanded}
               onToggle={() => toggleNode(cluster.id)}
             >
               {clusterExpanded && cluster.packs && cluster.packs.length > 0 && (
                 <>
-                  <ConnectionLegend
-                    label="包 · 串联"
-                    type="series"
-                    hint="簇内部包串联提升电压"
-                  />
+                  <ConnectionLegend label="包 · 串联" type="series" hint="所有包串联抬高电压" />
                   <div className="bms-pack-row">
                     {cluster.packs.map((pack) => {
                       const packExpanded = expanded.has(pack.id);
@@ -803,27 +803,24 @@ export const BmsTwoLevelTopology = ({
                           valueFormatter={valueFormatter}
                           hvBox={pack.hvBox}
                           topology={pack.topology}
-                          metaLines={
-                            pack.topology?.hint ? [pack.topology.hint] : undefined
-                          }
+                          metaLines={pack.topology?.hint ? [pack.topology.hint] : undefined}
                           isExpandable={(pack.cells?.length ?? 0) > 0}
                           isExpanded={packExpanded}
                           onToggle={() => toggleNode(pack.id)}
                         >
-                          {pack.temperatureSensors &&
-                            pack.temperatureSensors.length > 0 && (
-                              <TemperatureList
-                                sensors={pack.temperatureSensors}
-                                tokens={tokens}
-                                valueFormatter={valueFormatter}
-                              />
-                            )}
+                          {pack.temperatureSensors && pack.temperatureSensors.length > 0 && (
+                            <TemperatureList
+                              sensors={pack.temperatureSensors}
+                              tokens={tokens}
+                              valueFormatter={valueFormatter}
+                            />
+                          )}
                           {packExpanded && pack.cells && pack.cells.length > 0 && (
                             <>
                               <ConnectionLegend
-                                label="单体 · 串并组合"
+                                label="单体 · 串并"
                                 type="hybrid"
-                                hint={pack.topology?.text ?? '单体串并示意'}
+                                hint={pack.topology?.text ?? '串并组合示意'}
                               />
                               <CellGrid
                                 cells={pack.cells}
