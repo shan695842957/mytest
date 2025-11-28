@@ -44,7 +44,7 @@ import {
   TemperaturePoint,
   BatteryPackData,
   BatteryClusterData,
-} from '@/types/bms';
+} from '../types/bms';
 
 /**
  * 创建三级架构BMS初始数据

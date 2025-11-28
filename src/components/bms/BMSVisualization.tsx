@@ -50,9 +50,9 @@
  */
 
 import React from 'react';
-import { BatteryStackData, BatteryClusterDataLevel2, BreakerStatus, DataField } from '@/types/bms';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { BatteryStackData, BatteryClusterDataLevel2, BreakerStatus, DataField } from '../../types/bms';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Badge } from '../ui/badge';
 import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 
 // ========== 共享组件 ==========

@@ -59,7 +59,7 @@ import {
   BatteryStackData,
   BatteryClusterDataLevel2,
   DataField,
-} from '@/types/bms';
+} from '../types/bms';
 
 /**
  * 三级架构BMS Hook
