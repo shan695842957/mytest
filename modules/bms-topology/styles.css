@@ -77,6 +77,37 @@
   backdrop-filter: blur(10px);
 }
 
+.bms-cell-bar[data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+
+.bms-cell-bar[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 0.35rem);
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.5rem;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  font-size: 0.65rem;
+  line-height: 1.1;
+  white-space: pre-line;
+  opacity: 0;
+  transform: translateY(0.2rem);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+}
+
+.bms-cell-bar[data-tooltip]:hover::after,
+.bms-cell-bar[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .bms-cell-bar__track {
   position: relative;
   height: 0.4rem;

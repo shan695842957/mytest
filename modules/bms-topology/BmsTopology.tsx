@@ -460,8 +460,32 @@ const CellVoltageBar = ({
     typeof voltage === 'number' &&
     ((min !== undefined && voltage < min) || (max !== undefined && voltage > max));
 
+  const hoverMetrics = cell.metrics?.filter((metric) => {
+    const label = metric.label?.toLowerCase() ?? '';
+    return !label.includes('电压') && !label.includes('voltage') && !label.includes('v');
+  });
+
   return (
-    <div className={cx('bms-cell-bar rounded-lg border px-2.5 py-2 text-[11px]', tokens.subtleCard, tokens.border)}>
+    <div
+      className={cx(
+        'bms-cell-bar rounded-lg border px-2.5 py-2 text-[11px]',
+        tokens.subtleCard,
+        tokens.border,
+      )}
+      {...(hoverMetrics && hoverMetrics.length > 0
+        ? {
+            'aria-haspopup': 'true',
+            'data-tooltip': hoverMetrics
+              .map((metric) => {
+                const label = metric.label ?? '';
+                const val = valueFormatter(metric.value);
+                const unit = metric.unit ? `${metric.unit}` : '';
+                return `${label ? `${label}: ` : ''}${val}${unit}`;
+              })
+              .join('\n'),
+          }
+        : {})}
+    >
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold">{cell.name}</span>
         <div className="flex items-center gap-1">
