@@ -42,8 +42,8 @@
   "test_light_panel": "Light Panel Test",
   "test_history": "History Data Test",
   "test_pcs_monitor": "PCS Monitor",
-  "test_bms_level3_monitor": "BMS Level 3 Monitor",
-  "test_bms_level2_monitor": "BMS Level 2 Monitor",
+  "test_bms_level3_insight": "BMS Level 3 Insight",
+  "test_bms_level2_insight": "BMS Level 2 Insight",
   "my_info": "My Information",
   "change_password": "Change Password",
   "asset_mappings": "Asset Mappings"

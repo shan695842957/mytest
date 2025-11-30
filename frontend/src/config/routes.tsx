@@ -66,8 +66,8 @@ const PCSTestPage2 = lazy(() => import('@/pages/test/PCSTestPage2'))
 const PCSEnergyMonitorPage = lazy(() => import('@/pages/test/PCSEnergyMonitorPage'))
 const BMSLevel2TopologyPage = lazy(() => import('@/pages/test/BMSLevel2TopologyPage'))
 const BMSLevel3TopologyPage = lazy(() => import('@/pages/test/BMSLevel3TopologyPage'))
-const BMSLevel3MonitorPage = lazy(() => import('@/pages/test/BMSLevel3MonitorPage'))
-const BMSLevel2MonitorPage = lazy(() => import('@/pages/test/BMSLevel2MonitorPage'))
+const BMSLevel3InsightPage = lazy(() => import('@/pages/test/BMSLevel3InsightPage'))
+const BMSLevel2InsightPage = lazy(() => import('@/pages/test/BMSLevel2InsightPage'))
 const BMSPage3TestPage = lazy(() => import('@/pages/test/BMSPage3TestPage'))
 
 
@@ -396,12 +396,12 @@ export const routes: RouteObject[] = [
                 element: <PCSEnergyMonitorPage />,
               },
               {
-                path: 'bms-level3-monitor',
-                element: <BMSLevel3MonitorPage />,
+                path: 'bms-level3-insight',
+                element: <BMSLevel3InsightPage />,
               },
               {
-                path: 'bms-level2-monitor',
-                element: <BMSLevel2MonitorPage />,
+                path: 'bms-level2-insight',
+                element: <BMSLevel2InsightPage />,
               },
               {
                 path: 'bms-level2-topology',

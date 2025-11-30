@@ -42,8 +42,8 @@
   "test_light_panel": "光字牌测试",
   "test_history": "历史数据测试",
   "test_pcs_monitor": "PCS展示",
-  "test_bms_level3_monitor": "BMS三级展示",
-  "test_bms_level2_monitor": "BMS二级展示",
+  "test_bms_level3_insight": "BMS三级展示",
+  "test_bms_level2_insight": "BMS二级展示",
   "my_info": "我的信息",
   "change_password": "修改密码",
   "asset_mappings": "映射管理"
