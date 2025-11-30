@@ -62,14 +62,8 @@ const LightPanelPage = lazy(() => import('@/pages/lightPanel/LightPanelPage'))
 // 测试页面
 const LightPanelTestPage = lazy(() => import('@/pages/test/LightPanelTestPage'))
 const HistoryTestPage = lazy(() => import('@/pages/test/HistoryTestPage'))
-const PCSTestPage = lazy(() => import('@/pages/test/PCSTestPage'))
-const PCSTestPage2 = lazy(() => import('@/pages/test/PCSTestPage2'))
-const BMSLevel2TestPage = lazy(() => import('@/pages/test/BMSLevel2TestPage'))
-const BMSLevel3TestPage = lazy(() => import('@/pages/test/BMSLevel3TestPage'))
 const BMSLevel2TopologyPage = lazy(() => import('@/pages/test/BMSLevel2TopologyPage'))
 const BMSLevel3TopologyPage = lazy(() => import('@/pages/test/BMSLevel3TopologyPage'))
-const BMSPage3TestPage = lazy(() => import('@/pages/test/BMSPage3TestPage'))
-const BMSNewTestPage = lazy(() => import('@/pages/test/BMSNewTestPage'))
 
 
 // 路由守卫
@@ -389,36 +383,12 @@ export const routes: RouteObject[] = [
                 element: <HistoryTestPage />,
               },
               {
-                path: 'pcs',
-                element: <PCSTestPage />,
-              },
-              {
-                path: 'pcs2',
-                element: <PCSTestPage2 />,
-              },
-              {
-                path: 'bms-level2',
-                element: <BMSLevel2TestPage />,
-              },
-              {
-                path: 'bms-level3',
-                element: <BMSLevel3TestPage />,
-              },
-              {
                 path: 'bms-level2-topology',
                 element: <BMSLevel2TopologyPage />,
               },
               {
                 path: 'bms-level3-topology',
                 element: <BMSLevel3TopologyPage />,
-              },
-              {
-                path: 'bms-page3',
-                element: <BMSPage3TestPage />,
-              },
-              {
-                path: 'bms-new',
-                element: <BMSNewTestPage />,
               },
             ],
           },
