@@ -331,6 +331,20 @@ export const MENU_CONFIG: MenuItem[] = [
         path: '/test/pcs',
         roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
       },
+      {
+        key: 'test-bms-level3',
+        label: 'test_bms_level3',
+        icon: <Battery className="size-4" />,
+        path: '/test/bms-level3',
+        roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
+      },
+      {
+        key: 'test-bms-level2',
+        label: 'test_bms_level2',
+        icon: <Battery className="size-4" />,
+        path: '/test/bms-level2',
+        roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
+      },
     ],
   },
   {
