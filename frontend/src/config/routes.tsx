@@ -63,6 +63,7 @@ const LightPanelPage = lazy(() => import('@/pages/lightPanel/LightPanelPage'))
 const LightPanelTestPage = lazy(() => import('@/pages/test/LightPanelTestPage'))
 const HistoryTestPage = lazy(() => import('@/pages/test/HistoryTestPage'))
 const PCSTestPage2 = lazy(() => import('@/pages/test/PCSTestPage2'))
+const PCSEnergyMonitorPage = lazy(() => import('@/pages/test/PCSEnergyMonitorPage'))
 const BMSLevel2TopologyPage = lazy(() => import('@/pages/test/BMSLevel2TopologyPage'))
 const BMSLevel3TopologyPage = lazy(() => import('@/pages/test/BMSLevel3TopologyPage'))
 const BMSPage3TestPage = lazy(() => import('@/pages/test/BMSPage3TestPage'))
@@ -387,6 +388,10 @@ export const routes: RouteObject[] = [
               {
                 path: 'pcs2',
                 element: <PCSTestPage2 />,
+              },
+              {
+                path: 'pcs-monitor',
+                element: <PCSEnergyMonitorPage />,
               },
               {
                 path: 'bms-level2-topology',

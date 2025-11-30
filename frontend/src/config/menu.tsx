@@ -324,6 +324,13 @@ export const MENU_CONFIG: MenuItem[] = [
         path: '/test/history',
         roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
       },
+      {
+        key: 'test-pcs-monitor',
+        label: 'test_pcs_monitor',
+        icon: <Zap className="size-4" />,
+        path: '/test/pcs-monitor',
+        roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
+      },
     ],
   },
   {
