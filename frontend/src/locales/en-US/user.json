@@ -1,0 +1,50 @@
+{
+  "list": {
+    "title": "User List",
+    "filter": {
+      "title": "Filter Conditions",
+      "description": "Filter users by role, status and keyword",
+      "searchPlaceholder": "Search username...",
+      "role": "Role",
+      "allRoles": "All Roles",
+      "status": "Status",
+      "allStatus": "All Status"
+    },
+    "table": {
+      "id": "ID",
+      "username": "Username",
+      "role": "Role",
+      "status": "Status",
+      "builtin": "Type",
+      "createdBy": "Creator",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    },
+    "empty": "No user data",
+    "total": "Total: {{count}}"
+  },
+  "profile": {
+    "title": "Profile",
+    "basic": {
+      "title": "Basic Information",
+      "description": "Your account basic information",
+      "username": "Username",
+      "role": "Role",
+      "status": "Status",
+      "accountType": "Account Type",
+      "normalAccount": "Normal Account",
+      "createdAt": "Created At"
+    },
+    "permission": {
+      "title": "Role Permissions",
+      "description": "Permission description for your current role"
+    },
+    "security": {
+      "title": "Security Settings",
+      "description": "Manage your account security",
+      "changePassword": "Change Password",
+      "changePasswordHint": "Change password regularly to protect account security"
+    }
+  }
+}
+

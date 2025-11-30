@@ -1,0 +1,227 @@
+.energy-flow-panel {
+  --panel-bg: rgba(8, 15, 40, 0.65);
+  --panel-border: rgba(79, 109, 155, 0.35);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent: #12f3c9;
+  --connector-track: rgba(148, 163, 184, 0.25);
+  --node-bg: rgba(15, 23, 42, 0.65);
+  --node-border: rgba(148, 163, 184, 0.3);
+  --badge-bg: rgba(18, 243, 201, 0.12);
+  --flow-speed: 3200ms;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  padding: 24px;
+  color: var(--text-primary);
+  backdrop-filter: blur(16px);
+}
+
+.energy-flow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.energy-flow-header h3 {
+  font-size: 1.25rem;
+  margin: 2px 0 0;
+}
+
+.energy-flow-eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.energy-flow-pill {
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: var(--badge-bg);
+  border: 1px solid rgba(18, 243, 201, 0.4);
+  border-radius: 999px;
+  padding: 6px 14px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.energy-flow-pill[data-direction='discharge'] {
+  color: #facc15;
+  border-color: rgba(250, 204, 21, 0.35);
+  background: rgba(250, 204, 21, 0.12);
+}
+
+.energy-flow-diagram {
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+}
+
+.energy-flow-node {
+  min-width: 180px;
+  width: 220px;
+  background: var(--node-bg);
+  border: 1px solid var(--node-border);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+
+.energy-flow-node--start,
+.energy-flow-node--end {
+  flex: 0 0 auto;
+}
+
+.energy-flow-node--pcs {
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 25px rgba(18, 243, 201, 0.3);
+}
+
+.energy-flow-node-icon {
+  color: var(--accent);
+  display: flex;
+  justify-content: center;
+}
+
+.energy-flow-node--pcs .energy-flow-node-icon {
+  color: #3b82f6;
+}
+
+.energy-flow-node-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.node-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.node-subtitle,
+.node-eff {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.node-eff span {
+  color: var(--accent);
+}
+
+.energy-flow-metric-list {
+  display: grid;
+  gap: 10px;
+}
+
+.energy-flow-metric {
+  display: grid;
+  gap: 2px;
+}
+
+.energy-flow-metric dt {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.energy-flow-metric dd {
+  margin: 0;
+  font-size: 1.05rem;
+  display: inline-flex;
+  gap: 4px;
+  align-items: baseline;
+}
+
+.metric-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.metric-unit {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.metric-hint {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.energy-flow-connector {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  align-self: center;
+  border-radius: 999px;
+  background: var(--connector-track);
+  overflow: hidden;
+}
+
+.energy-flow-connector::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent) 40%,
+    transparent 80%
+  );
+  animation: energy-flow-right var(--flow-speed) linear infinite;
+}
+
+.energy-flow-connector[data-direction='discharge']::after {
+  animation-name: energy-flow-left;
+}
+
+@keyframes energy-flow-right {
+  from {
+    transform: translateX(-60%);
+  }
+  to {
+    transform: translateX(60%);
+  }
+}
+
+@keyframes energy-flow-left {
+  from {
+    transform: translateX(60%);
+  }
+  to {
+    transform: translateX(-60%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .energy-flow-connector::after {
+    animation: none;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .energy-flow-diagram {
+    flex-direction: column;
+  }
+
+  .energy-flow-node {
+    width: 100%;
+  }
+
+  .energy-flow-connector {
+    width: 100%;
+    min-height: 4px;
+  }
+}
+

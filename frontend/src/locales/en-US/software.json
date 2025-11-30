@@ -1,0 +1,204 @@
+{
+  "config": {
+    "title": "Software Configuration",
+    "description": "Centralized management of all backend service parameters",
+    "search": "Search configuration items...",
+    "readOnlyHint": "Read-only mode, developer role required to modify configuration",
+    "changedCount": "changes pending",
+    "noResults": "No matching configuration items found",
+    "updateSuccess": "Configuration updated successfully",
+    "resetSuccess": "All changes have been reset",
+    "paramCount": "{{count}} parameters"
+  },
+  "actions": {
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "reset": "Reset",
+    "undo": "Undo",
+    "import": "Import Config",
+    "export": "Export Config"
+  },
+  "systemPage": {
+    "title": "System Data Directory",
+    "description": "Configure the root directory used to store backups, logs, and other runtime data.",
+    "readOnlyHint": "Read-only mode. Switch to a developer account to modify the directory.",
+    "dataDirectory": {
+      "label": "Data Root Directory",
+      "description": "The application will create rathole, logs, temp and other folders under this path.",
+      "placeholder": "/var/lib/lccu-v"
+    },
+    "updateSuccess": "System data directory updated successfully",
+    "resetSuccess": "Reverted to the currently active directory"
+  },
+  "badges": {
+    "modified": "Modified",
+    "required": "Required",
+    "readonly": "Readonly"
+  },
+  "categories": {
+    "monitor": {
+      "label": "Monitor Collection",
+      "description": "System monitoring data collection and storage configuration",
+      "params": "parameters"
+    },
+    "rathole": {
+      "label": "Rathole Tunneling",
+      "description": "Rathole client directories and backup strategy"
+    },
+    "database": {
+      "label": "Database",
+      "description": "Database connection and performance configuration"
+    },
+    "logging": {
+      "label": "Logging",
+      "description": "Log level and output configuration"
+    },
+    "jwt": {
+      "label": "JWT Authentication",
+      "description": "JWT Token security configuration"
+    },
+    "api": {
+      "label": "API Security",
+      "description": "API rate limiting and security policies"
+    },
+    "cors": {
+      "label": "CORS",
+      "description": "Cross-Origin Resource Sharing configuration"
+    },
+    "system": {
+      "label": "System Configuration",
+      "description": "System data directory and basic settings"
+    }
+  },
+  "sections": {
+    "monitor": {
+      "basic": "Basic Settings",
+      "advanced": "Advanced Settings"
+    },
+    "rathole": {
+      "paths": "Path Settings",
+      "backup": "Backup Policy"
+    },
+    "database": {
+      "connection": "Connection Settings"
+    },
+    "logging": {
+      "basic": "Basic Settings"
+    },
+    "jwt": {
+      "security": "Security Settings"
+    },
+    "api": {
+      "rateLimit": "Rate Limiting"
+    },
+    "cors": {
+      "origins": "Allowed Origins"
+    },
+    "system": {
+      "info": "Basic Information",
+      "paths": "Path Settings"
+    }
+  },
+  "params": {
+    "collection_enabled": {
+      "label": "Enable Data Collection",
+      "description": "Enable system monitoring data collection"
+    },
+    "collection_interval": {
+      "label": "Collection Interval",
+      "description": "System monitoring data collection frequency",
+      "unit": "seconds"
+    },
+    "retention_days": {
+      "label": "Data Retention Days",
+      "description": "Historical monitoring data retention period",
+      "unit": "days"
+    },
+    "collect_network": {
+      "label": "Collect Network Traffic",
+      "description": "Collect detailed traffic data for each network interface"
+    },
+    "collect_process": {
+      "label": "Collect Process Info",
+      "description": "Collect process-level resource usage"
+    },
+    "auto_cleanup": {
+      "label": "Auto Cleanup",
+      "description": "Automatically delete historical data exceeding retention days"
+    },
+    "config_path": {
+      "label": "Config File Path",
+      "description": "Location of the Rathole client configuration file"
+    },
+    "data_directory": {
+      "label": "Data Directory",
+      "description": "Directory storing Rathole related data"
+    },
+    "backup_keep_count": {
+      "label": "Backup Retention Count",
+      "description": "Maximum number of backup files to retain",
+      "unit": "files"
+    },
+    "database_url": {
+      "label": "Database URL",
+      "description": "Database connection string"
+    },
+    "db_pool_size": {
+      "label": "Connection Pool Size",
+      "description": "Maximum database connection pool size"
+    },
+    "log_level": {
+      "label": "Log Level",
+      "description": "Set log output detail level"
+    },
+    "log_to_file": {
+      "label": "Log to File",
+      "description": "Write logs to file"
+    },
+    "access_token_expire_minutes": {
+      "label": "Token Expiration",
+      "description": "JWT access token validity period",
+      "unit": "minutes"
+    },
+    "algorithm": {
+      "label": "Encryption Algorithm",
+      "description": "JWT Token signing algorithm"
+    },
+    "rate_limit_per_minute": {
+      "label": "Requests Per Minute",
+      "description": "Maximum API requests per minute per IP",
+      "unit": "req/min"
+    },
+    "cors_origins": {
+      "label": "Frontend Address List",
+      "description": "Allowed frontend addresses to access API (one per line)"
+    },
+    "app_name": {
+      "label": "Application Name",
+      "description": "Backend application identifier"
+    },
+    "app_version": {
+      "label": "Application Version",
+      "description": "Current backend version number"
+    },
+    "api_prefix": {
+      "label": "API Prefix",
+      "description": "API routing prefix"
+    },
+    "system_data_directory": {
+      "label": "System Data Directory",
+      "description": "Root directory for backups, logs and other runtime data"
+    }
+  },
+  "logLevels": {
+    "debug": "DEBUG - Debug information",
+    "info": "INFO - General information",
+    "warning": "WARNING - Warning information",
+    "error": "ERROR - Error information"
+  },
+  "algorithms": {
+    "HS256": "HS256 (Recommended)",
+    "HS384": "HS384",
+    "HS512": "HS512"
+  }
+}

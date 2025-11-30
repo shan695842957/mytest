@@ -1,0 +1,37 @@
+# FastAPI 核心
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# 异步 SQLite
+aiosqlite==0.19.0
+sqlalchemy[asyncio]==2.0.25
+
+# 国际化
+babel==2.14.0
+
+# 密码哈希（修复版本兼容性）
+bcrypt==4.0.1
+passlib[bcrypt]==1.7.4
+
+# JWT
+python-jose[cryptography]==3.3.0
+
+# 工具库
+python-multipart==0.0.6
+python-dotenv==1.0.0
+
+# 系统信息
+psutil==5.9.8
+
+# 开发工具
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0
+
+# 串口通信
+pyserial>=3.5
+
+# TOML 配置文件
+toml==0.10.2

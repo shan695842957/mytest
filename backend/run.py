@@ -1,0 +1,15 @@
+"""
+开发服务器启动脚本
+"""
+
+import uvicorn
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=18000,
+        reload=True,  # 开发模式自动重载
+        log_level="info"
+    )
+

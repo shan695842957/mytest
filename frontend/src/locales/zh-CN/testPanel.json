@@ -1,0 +1,87 @@
+{
+  "title": "光字牌测试",
+  "bitfield": {
+    "title": "位域数据展示",
+    "description": "16位整数，bit0~bit15分别表示16个遥信",
+    "rawValue": "原始值",
+    "bitLabel": "Bit {bit}",
+    "status": {
+      "on": "开",
+      "off": "关"
+    }
+  },
+  "enum": {
+    "title": "枚举量展示",
+    "description": "int16类型，0=待机、1=故障、2=开机",
+    "rawValue": "原始值",
+    "value": "当前值",
+    "states": {
+      "0": "待机",
+      "1": "故障",
+      "2": "开机"
+    }
+  },
+  "complexBitfield": {
+    "title": "复杂位域解析",
+    "description": "int16类型，bit0~bit7是8个布尔，bit8~bit11是预留（不显示），bit12~bit15是一个枚举数据",
+    "rawValue": "原始值",
+    "booleanBits": "布尔位（Bit 0-7）",
+    "reservedBits": "预留位（Bit 8-11）",
+    "enumBits": "枚举位（Bit 12-15）",
+    "enumValue": "枚举值",
+    "enumStates": {
+      "0": "模式0",
+      "1": "模式1",
+      "2": "模式2",
+      "3": "模式3",
+      "4": "模式4",
+      "5": "模式5",
+      "6": "模式6",
+      "7": "模式7",
+      "8": "模式8",
+      "9": "模式9",
+      "10": "模式10",
+      "11": "模式11",
+      "12": "模式12",
+      "13": "模式13",
+      "14": "模式14",
+      "15": "模式15"
+    }
+  },
+  "measurements": {
+    "title": "遥测量展示",
+    "description": "三相电压、三相电流、有功功率、无功功率、视在功率等数据",
+    "voltage": "电压",
+    "current": "电流",
+    "power": "功率",
+    "phaseA": "A相",
+    "phaseB": "B相",
+    "phaseC": "C相",
+    "activePower": "有功功率",
+    "reactivePower": "无功功率",
+    "apparentPower": "视在功率",
+    "unit": {
+      "v": "V",
+      "a": "A",
+      "w": "W",
+      "var": "Var",
+      "va": "VA"
+    }
+  },
+  "history": {
+    "title": "历史数据展示",
+    "description": "历史遥测遥信数据，包含位域、枚举等",
+    "timeRange": "时间范围",
+    "dataType": "数据类型",
+    "all": "全部",
+    "measurement": "遥测",
+    "status": "遥信",
+    "bitfield": "位域",
+    "enum": "枚举",
+    "noData": "暂无数据",
+    "time": "时间",
+    "value": "值",
+    "rawValue": "原始值"
+  }
+}
+

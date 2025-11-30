@@ -1,0 +1,21 @@
+{
+  "deviceTree": "Device Tree",
+  "selectAsset": "Please select a device from the left",
+  "noAssets": "No assets",
+  "disabled": "Disabled",
+  "ungrouped": "Ungrouped",
+  "noTags": "This device has no tags",
+  "loadFailed": "Failed to load",
+  "semantic": {
+    "STATUS": "Status",
+    "MEASURE": "Measurements",
+    "SETPOINT": "Setpoints",
+    "COMMAND": "Commands",
+    "ACCUM": "Accumulated",
+    "PARAM": "Parameters",
+    "PARAM_SET": "Parameter Set",
+    "UNKNOWN": "Others",
+    "noData": "No data for this semantic type"
+  }
+}
+

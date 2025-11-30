@@ -1,0 +1,476 @@
+{
+  "deviceType": {
+    "title": "Device Templates",
+    "list": {
+      "title": "Device Template List",
+      "description": "Manage device type templates",
+      "empty": "No device templates",
+      "searchPlaceholder": "Search device template name or display name",
+      "columns": {
+        "displayName": "Display Name",
+        "name": "Internal Name",
+        "description": "Description",
+        "tagsCount": "Tags Count",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      }
+    },
+    "detail": {
+      "title": "Device Template Detail",
+      "basicInfo": "Basic Information",
+      "tags": "Business Fields",
+      "addTag": "Add Business Field",
+      "editTag": "Edit Business Field",
+      "deleteTag": "Delete Business Field"
+    },
+    "form": {
+      "create": "Create Device Template",
+      "update": "Update Device Template",
+      "name": "Internal Name",
+      "namePlaceholder": "e.g., B_COMPRESSOR",
+      "displayName": "Display Name",
+      "displayNamePlaceholder": "e.g., B-Type Compressor",
+      "model": "Model",
+      "manufacturer": "Manufacturer",
+      "description": "Description"
+    },
+    "tagForm": {
+      "tagName": "Tag Name",
+      "displayName": "Display Name",
+      "dataType": "Data Type",
+      "semanticType": "Semantic Type",
+      "engineeringUnit": "Engineering Unit",
+      "groupName": "Group",
+      "severity": "Severity",
+      "description": "Description",
+      "enumJson": "Enum Value Mapping",
+      "enumHint": "Only ENUM data types require code-label pairs",
+      "enumAdd": "Add Enum",
+      "enumCode": "Code",
+      "enumLabel": "Label",
+      "enumEmpty": "No enum values yet, click Add to create one"
+    },
+    "success": {
+      "created": "Device template created successfully",
+      "updated": "Device template updated successfully",
+      "deleted": "Device template deleted successfully",
+      "cloned": "Device template duplicated successfully"
+    },
+    "tagSuccess": {
+      "created": "Business field created successfully",
+      "updated": "Business field updated successfully",
+      "deleted": "Business field deleted successfully"
+    },
+    "error": {
+      "notFound": "Device template not found",
+      "nameExists": "Device template name already exists"
+    },
+    "clone": {
+      "title": "Clone Device Template",
+      "description": "Provide a unique internal name and display name for the new template",
+      "action": "Clone Template",
+      "submit": "Create Copy",
+      "copySuffix": "Copy",
+      "noSource": "Please select a device template to clone"
+    },
+    "tagClone": {
+      "title": "Clone Business Field",
+      "description": "Set a unique tag name and adjust other properties for the new field",
+      "action": "Clone Field",
+      "submit": "Create Field Copy",
+      "copySuffix": "Copy",
+      "noSource": "Please select a business field to clone",
+      "success": "Business field duplicated successfully"
+    }
+  },
+  "pointTable": {
+    "title": "Comm Templates",
+    "list": {
+      "title": "Comm Template List",
+      "description": "Manage point table templates",
+      "empty": "No comm templates",
+      "searchPlaceholder": "Search template name or display name",
+      "columns": {
+        "displayName": "Display Name",
+        "name": "Internal Name",
+        "protocolType": "Protocol Type",
+        "pointsCount": "Points Count",
+        "description": "Description",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      }
+    },
+    "detail": {
+      "title": "Comm Template Detail",
+      "basicInfo": "Basic Information",
+      "points": "Points",
+      "addPoint": "Add Point",
+      "editPoint": "Edit Point",
+      "deletePoint": "Delete Point"
+    },
+    "form": {
+      "create": "Create Comm Template",
+      "update": "Update Comm Template",
+      "name": "Internal Name",
+      "displayName": "Display Name",
+      "protocolType": "Protocol Type",
+      "description": "Description"
+    },
+    "pointForm": {
+      "pointName": "Point Name",
+      "displayName": "Display Name",
+      "address": "Address",
+      "ioType": "IO Type",
+      "rawType": "Raw Type",
+      "byteOrder": "Byte Order",
+      "scaleK": "Scale K",
+      "scaleB": "Scale B",
+      "parseRulesJson": "Parse Rules",
+      "description": "Description",
+      "isActive": "Is Active",
+      "subPoints": "Sub Points",
+      "subPointName": "Sub Point Name",
+      "subPointNamePlaceholder": "e.g. mode_code",
+      "subPointType": "Type",
+      "subPointTypePlaceholder": "BOOL / UINT",
+      "subPointKind": "Parse Kind",
+      "subPointKindPlaceholder": "Select parse kind",
+      "kindBit": "Single bit",
+      "kindBitsRange": "Bit range",
+      "bitIndex": "Bit index",
+      "bitFrom": "Bit from",
+      "bitTo": "Bit to",
+      "addSubPoint": "Add sub point"
+    },
+    "success": {
+      "created": "Comm template created successfully",
+      "updated": "Comm template updated successfully",
+      "deleted": "Comm template deleted successfully",
+      "cloned": "Comm template duplicated successfully"
+    },
+    "clone": {
+      "title": "Clone Comm Template",
+      "description": "Duplicate the template along with all point definitions",
+      "action": "Clone Template",
+      "submit": "Create Copy",
+      "copySuffix": "Copy",
+      "noSource": "Please select a comm template to clone"
+    },
+    "pointClone": {
+      "title": "Clone Point",
+      "description": "Duplicate the point definition and adjust its properties before saving",
+      "action": "Clone Point",
+      "submit": "Create Point Copy",
+      "copySuffix": "Copy",
+      "noSource": "Please select a point to clone",
+      "success": "Point duplicated successfully",
+      "activeHint": "Keep the new point enabled"
+    }
+  },
+  "commInstance": {
+    "title": "Comm Instances",
+    "list": {
+      "title": "Comm Instance List",
+      "description": "Manage communication instances",
+      "empty": "No comm instances",
+      "searchPlaceholder": "Search instance name",
+      "columns": {
+        "name": "Name",
+        "displayName": "Display Name",
+        "protocolType": "Protocol Type",
+        "pointTable": "Point Table",
+        "enabled": "Enabled",
+        "pollingInterval": "Polling Interval",
+        "actions": "Actions"
+      }
+    },
+    "form": {
+      "create": "Create Comm Instance",
+      "update": "Update Comm Instance",
+      "name": "Name",
+      "displayName": "Display Name",
+      "enabled": "Enabled",
+      "pointTableId": "Point Table",
+      "protocolType": "Protocol Type",
+      "protocolConfig": "Protocol Config",
+      "pollingIntervalMs": "Polling Interval (ms)",
+      "timeoutMs": "Timeout (ms)",
+      "retries": "Retries",
+      "selectProtocolType": "Please select a protocol type first",
+      "noParams": "This protocol type has no parameter definitions",
+      "paramRequired": "Parameter {name} is required",
+      "paramInvalidType": "Parameter {name} must be of type {type}",
+      "paramMinError": "Parameter {name} cannot be less than {min}",
+      "paramMaxError": "Parameter {name} cannot be greater than {max}",
+      "paramEnumError": "Parameter {name} must be one of: {values}",
+      "paramPatternError": "Parameter {name} format is incorrect",
+      "selectValue": "Please select a value",
+      "defaultValue": "Default value",
+      "selectPeripheral": "Please select a peripheral",
+      "noPeripheralsAvailable": "No peripherals of this type available"
+    },
+    "success": {
+      "created": "Comm instance created successfully",
+      "updated": "Comm instance updated successfully",
+      "deleted": "Comm instance deleted successfully"
+    }
+  },
+  "protocolType": {
+    "title": "Protocol Types",
+    "list": {
+      "title": "Protocol Type List",
+      "description": "Manage communication protocol types and their parameter definitions",
+      "empty": "No protocol types",
+      "searchPlaceholder": "Search protocol type name",
+      "manageParams": "Manage Parameters",
+      "edit": "Edit",
+      "delete": "Delete",
+      "columns": {
+        "name": "Internal Name",
+        "displayName": "Display Name",
+        "enabled": "Enabled",
+        "paramsCount": "Parameters",
+        "description": "Description",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      }
+    },
+    "form": {
+      "create": "Create Protocol Type",
+      "update": "Update Protocol Type",
+      "name": "Internal Name",
+      "displayName": "Display Name",
+      "enabled": "Enabled",
+      "enabledDescription": "Disabled protocol types cannot be selected when creating comm instances",
+      "description": "Description",
+      "descriptionPlaceholder": "Protocol type description"
+    },
+    "params": {
+      "title": "Protocol Parameters - {name}",
+      "description": "Manage configuration parameters required for this protocol type",
+      "empty": "No parameters defined",
+      "addParam": "Add Parameter",
+      "required": "Required",
+      "defaultValue": "Default Value"
+    },
+    "param": {
+      "form": {
+        "create": "Create Protocol Parameter",
+        "update": "Update Protocol Parameter",
+        "createDescription": "Add a new parameter definition for protocol type {name}",
+        "updateDescription": "Update protocol parameter definition",
+        "paramName": "Parameter Name",
+        "paramNameDescription": "Internal parameter name used when creating comm instances",
+        "displayName": "Display Name",
+        "dataType": "Data Type",
+        "required": "Required",
+        "defaultValue": "Default Value",
+        "defaultValuePlaceholder": "Optional, default value for the parameter",
+        "defaultValueDescription": "Default value when creating comm instances",
+        "placeholder": "Placeholder",
+        "placeholderDescription": "Hint text for frontend input fields",
+        "orderIndex": "Order Index",
+        "orderIndexDescription": "Display order in the form, smaller numbers appear first",
+        "inputType": "Input Type",
+        "inputTypeDescription": "How the parameter is input in the frontend form",
+        "inputTypeText": "Text Input",
+        "inputTypeNumber": "Number Input",
+        "inputTypeSelect": "Select (Enum)",
+        "inputTypePeripheral": "Peripheral Select",
+        "peripheralType": "Peripheral Type",
+        "peripheralTypeDescription": "When input type is peripheral select, specify the peripheral type",
+        "peripheralTypePlaceholder": "Please select peripheral type",
+        "peripheralTypeSerial": "Serial",
+        "peripheralTypeCan": "CAN Bus",
+        "peripheralTypeSpi": "SPI",
+        "peripheralTypeI2c": "I2C",
+        "peripheralTypeGpio": "GPIO",
+        "peripheralTypePwm": "PWM",
+        "peripheralTypeAdc": "ADC",
+        "peripheralTypeDac": "DAC",
+        "peripheralTypeOther": "Other",
+        "description": "Description",
+        "descriptionPlaceholder": "Parameter description"
+      },
+      "delete": {
+        "title": "Delete Protocol Parameter",
+        "description": "Are you sure you want to delete parameter \"{paramName}\"? This will affect all comm instances using protocol type \"{protocolName}\"."
+      }
+    },
+    "delete": {
+      "title": "Delete Protocol Type",
+      "description": "Are you sure you want to delete protocol type \"{name}\"? This action cannot be undone. If there are comm instances using this protocol type, it cannot be deleted."
+    },
+    "success": {
+      "created": "Protocol type created successfully",
+      "updated": "Protocol type updated successfully",
+      "deleted": "Protocol type deleted successfully",
+      "paramCreated": "Protocol parameter created successfully",
+      "paramUpdated": "Protocol parameter updated successfully",
+      "paramDeleted": "Protocol parameter deleted successfully"
+    },
+    "error": {
+      "created": "Failed to create protocol type",
+      "updated": "Failed to update protocol type",
+      "deleted": "Failed to delete protocol type",
+      "paramCreated": "Failed to create protocol parameter",
+      "paramUpdated": "Failed to update protocol parameter",
+      "paramDeleted": "Failed to delete protocol parameter"
+    }
+  },
+  "peripheral": {
+    "title": "Peripherals",
+    "list": {
+      "title": "Peripheral List",
+      "description": "Manage available peripheral devices (serial, CAN, etc.)",
+      "empty": "No peripherals",
+      "searchPlaceholder": "Search peripheral name",
+      "filterAll": "All Types",
+      "filterSerial": "Serial",
+      "filterCan": "CAN Bus",
+      "filterSpi": "SPI",
+      "filterI2c": "I2C",
+      "filterGpio": "GPIO",
+      "filterPwm": "PWM",
+      "filterAdc": "ADC",
+      "filterDac": "DAC",
+      "filterOther": "Other",
+      "edit": "Edit",
+      "delete": "Delete",
+      "columns": {
+        "name": "Name",
+        "displayName": "Display Name",
+        "type": "Type",
+        "devicePath": "Device Path",
+        "enabled": "Enabled",
+        "description": "Description",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      }
+    },
+    "form": {
+      "create": "Create Peripheral",
+      "update": "Update Peripheral",
+      "name": "Peripheral Name",
+      "nameDescription": "Internal name, unique identifier",
+      "displayName": "Display Name",
+      "type": "Peripheral Type",
+      "typeSerial": "Serial",
+      "typeCan": "CAN Bus",
+      "typeSpi": "SPI",
+      "typeI2c": "I2C",
+      "typeGpio": "GPIO",
+      "typePwm": "PWM",
+      "typeAdc": "ADC",
+      "typeDac": "DAC",
+      "typeOther": "Other",
+      "devicePath": "Device Path",
+      "devicePathDescription": "System path of the device, e.g., /dev/ttyS0, can0",
+      "enabled": "Enabled",
+      "description": "Description",
+      "descriptionPlaceholder": "Peripheral device description"
+    },
+    "delete": {
+      "title": "Delete Peripheral",
+      "description": "Are you sure you want to delete peripheral \"{name}\"? This action cannot be undone. If there are comm instances using this peripheral, it cannot be deleted."
+    },
+    "success": {
+      "created": "Peripheral created successfully",
+      "updated": "Peripheral updated successfully",
+      "deleted": "Peripheral deleted successfully"
+    },
+    "error": {
+      "createFailed": "Failed to create peripheral",
+      "updateFailed": "Failed to update peripheral",
+      "deleteFailed": "Failed to delete peripheral"
+    }
+  },
+  "asset": {
+    "title": "Assets",
+    "list": {
+      "title": "Asset List",
+      "description": "Manage physical assets",
+      "empty": "No assets",
+      "searchPlaceholder": "Search asset name or type",
+      "columns": {
+        "name": "Name",
+        "displayName": "Display Name",
+        "deviceType": "Device Type",
+        "location": "Location",
+        "enabled": "Enabled",
+        "mappingCompletion": "Mapping Completion",
+        "actions": "Actions"
+      }
+    },
+    "form": {
+      "create": "Create Asset",
+      "update": "Update Asset",
+      "name": "Name",
+      "displayName": "Display Name",
+      "deviceTypeId": "Device Type",
+      "location": "Location",
+      "enabled": "Enabled"
+    },
+    "wizard": {
+      "step1": "Basic Information",
+      "step2": "Bind Comm Instances",
+      "step3": "Generate Mappings",
+      "bindCommInstances": "Select Comm Instances",
+      "autoGenerate": "Auto Generate Mappings",
+      "preview": "Preview Mappings"
+    },
+    "success": {
+      "created": "Asset created successfully",
+      "updated": "Asset updated successfully",
+      "deleted": "Asset deleted successfully"
+    }
+  },
+  "mapping": {
+    "title": "Asset Mappings",
+    "boundInstances": "Bound Comm Instances",
+    "syncButton": "Sync Comm Instances",
+    "noInstances": "Bind at least one comm instance before configuring mappings",
+    "assetSwitcher": {
+      "label": "Switch Asset",
+      "search": "Search asset name or internal id",
+      "empty": "No other assets available"
+    },
+    "left": {
+      "title": "Business Fields",
+      "groupedBy": "Grouped By",
+      "mapped": "Mapped",
+      "unmapped": "Unmapped",
+      "ungrouped": "Ungrouped"
+    },
+    "right": {
+      "title": "Signal Points",
+      "search": "Search sub-point name or address",
+      "emptyNoInstance": "Select or bind a comm instance first",
+      "emptyNoPoint": "No sub-points found"
+    },
+    "center": {
+      "title": "Mapping Editor",
+      "fieldName": "Business Field",
+      "semanticType": "Semantic Type",
+      "boundInstance": "Bound Comm Instance",
+      "boundPoint": "Bound Sub-point",
+      "currentMapping": "Current Mapping",
+      "pointDetails": "Point Address",
+      "save": "Save Mapping",
+      "clear": "Clear Mapping",
+      "emptyField": "Select a business field from the left",
+      "noInstance": "This asset has no bound comm instance yet"
+    },
+    "bindingDialog": {
+      "title": "Sync Comm Instances",
+      "description": "Choose which communication instances belong to this asset",
+      "empty": "No comm instances available. Please create one first."
+    },
+    "success": {
+      "created": "Mapping created successfully",
+      "updated": "Mapping updated successfully",
+      "deleted": "Mapping deleted successfully",
+      "autoGenerated": "Comm instances synced successfully"
+    }
+  }
+}

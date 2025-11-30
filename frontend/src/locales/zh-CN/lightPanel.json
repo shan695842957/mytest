@@ -1,0 +1,21 @@
+{
+  "deviceTree": "设备树",
+  "selectAsset": "请从左侧选择一个设备",
+  "noAssets": "暂无资产",
+  "disabled": "已禁用",
+  "ungrouped": "未分组",
+  "noTags": "该设备暂无业务字段",
+  "loadFailed": "加载失败",
+  "semantic": {
+    "STATUS": "状态",
+    "MEASURE": "测量值",
+    "SETPOINT": "设定值",
+    "COMMAND": "命令",
+    "ACCUM": "累积量",
+    "PARAM": "参数",
+    "PARAM_SET": "参数集",
+    "UNKNOWN": "其他",
+    "noData": "暂无该语义的数据"
+  }
+}
+

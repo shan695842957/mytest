@@ -1,0 +1,204 @@
+{
+  "config": {
+    "title": "软件参数配置",
+    "description": "集中管理所有后端服务参数配置",
+    "search": "搜索配置项...",
+    "readOnlyHint": "当前为只读模式，需要开发者角色才能修改配置",
+    "changedCount": "项待保存",
+    "noResults": "未找到匹配的配置项",
+    "updateSuccess": "配置更新成功",
+    "resetSuccess": "已重置所有修改",
+    "paramCount": "共 {{count}} 个参数"
+  },
+  "actions": {
+    "save": "保存更改",
+    "saving": "保存中...",
+    "reset": "重置",
+    "undo": "撤销",
+    "import": "导入配置",
+    "export": "导出配置"
+  },
+  "systemPage": {
+    "title": "系统数据目录",
+    "description": "设置软件运行时生成的备份、日志等文件的根目录。",
+    "readOnlyHint": "当前为只读模式，需要开发者角色才能修改数据目录。",
+    "dataDirectory": {
+      "label": "数据存储根目录",
+      "description": "系统会在该目录下创建 rathole、logs、temp 等子目录。",
+      "placeholder": "/var/lib/lccu-v"
+    },
+    "updateSuccess": "系统数据目录更新成功",
+    "resetSuccess": "已恢复为当前生效的目录"
+  },
+  "badges": {
+    "modified": "已修改",
+    "required": "必填",
+    "readonly": "只读"
+  },
+  "categories": {
+    "monitor": {
+      "label": "监控采集",
+      "description": "系统监控数据采集和存储配置",
+      "params": "个参数"
+    },
+    "rathole": {
+      "label": "Rathole 内网穿透",
+      "description": "Rathole 客户端目录与备份策略"
+    },
+    "database": {
+      "label": "数据库",
+      "description": "数据库连接和性能配置"
+    },
+    "logging": {
+      "label": "日志系统",
+      "description": "日志级别和输出配置"
+    },
+    "jwt": {
+      "label": "JWT认证",
+      "description": "JWT Token 安全配置"
+    },
+    "api": {
+      "label": "API安全",
+      "description": "API访问限流和安全策略"
+    },
+    "cors": {
+      "label": "CORS跨域",
+      "description": "跨域资源共享配置"
+    },
+    "system": {
+      "label": "系统配置",
+      "description": "系统数据目录等基础配置"
+    }
+  },
+  "sections": {
+    "monitor": {
+      "basic": "基础设置",
+      "advanced": "高级设置"
+    },
+    "rathole": {
+      "paths": "路径配置",
+      "backup": "备份策略"
+    },
+    "database": {
+      "connection": "连接配置"
+    },
+    "logging": {
+      "basic": "基础配置"
+    },
+    "jwt": {
+      "security": "安全配置"
+    },
+    "api": {
+      "rateLimit": "限流配置"
+    },
+    "cors": {
+      "origins": "允许的来源"
+    },
+    "system": {
+      "info": "基本信息",
+      "paths": "路径配置"
+    }
+  },
+  "params": {
+    "collection_enabled": {
+      "label": "启用数据采集",
+      "description": "是否启用系统监控数据采集"
+    },
+    "collection_interval": {
+      "label": "采集间隔",
+      "description": "系统监控数据采集频率",
+      "unit": "秒"
+    },
+    "retention_days": {
+      "label": "数据保留天数",
+      "description": "历史监控数据保留时长",
+      "unit": "天"
+    },
+    "collect_network": {
+      "label": "采集网络流量",
+      "description": "是否采集每个网卡的详细流量数据"
+    },
+    "collect_process": {
+      "label": "采集进程信息",
+      "description": "是否采集进程级别的资源使用"
+    },
+    "auto_cleanup": {
+      "label": "自动清理",
+      "description": "自动删除超过保留天数的历史数据"
+    },
+    "config_path": {
+      "label": "配置文件路径",
+      "description": "Rathole 客户端配置文件所在位置"
+    },
+    "data_directory": {
+      "label": "数据目录",
+      "description": "Rathole 运行相关数据的存储目录"
+    },
+    "backup_keep_count": {
+      "label": "备份保留数量",
+      "description": "最多保留的备份文件数量",
+      "unit": "份"
+    },
+    "database_url": {
+      "label": "数据库URL",
+      "description": "数据库连接字符串"
+    },
+    "db_pool_size": {
+      "label": "连接池大小",
+      "description": "数据库连接池最大连接数"
+    },
+    "log_level": {
+      "label": "日志级别",
+      "description": "设置日志输出的详细程度"
+    },
+    "log_to_file": {
+      "label": "输出到文件",
+      "description": "是否将日志写入文件"
+    },
+    "access_token_expire_minutes": {
+      "label": "Token过期时间",
+      "description": "JWT访问令牌的有效期",
+      "unit": "分钟"
+    },
+    "algorithm": {
+      "label": "加密算法",
+      "description": "JWT Token 签名算法"
+    },
+    "rate_limit_per_minute": {
+      "label": "每分钟请求限制",
+      "description": "单个IP每分钟最大API请求数",
+      "unit": "次/分钟"
+    },
+    "cors_origins": {
+      "label": "前端地址列表",
+      "description": "允许访问API的前端地址（每行一个）"
+    },
+    "app_name": {
+      "label": "应用名称",
+      "description": "后端应用标识名称"
+    },
+    "app_version": {
+      "label": "应用版本",
+      "description": "当前后端版本号"
+    },
+    "api_prefix": {
+      "label": "API前缀",
+      "description": "API路由前缀"
+    },
+    "system_data_directory": {
+      "label": "系统数据目录",
+      "description": "软件运行时生成的备份、日志等文件的根目录"
+    }
+  },
+  "logLevels": {
+    "debug": "DEBUG - 调试信息",
+    "info": "INFO - 常规信息",
+    "warning": "WARNING - 警告信息",
+    "error": "ERROR - 错误信息"
+  },
+  "algorithms": {
+    "HS256": "HS256 (推荐)",
+    "HS384": "HS384",
+    "HS512": "HS512"
+  }
+}

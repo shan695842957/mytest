@@ -1,0 +1,163 @@
+"""
+资产相关的 Pydantic Schemas - 按照 device.md 设计
+"""
+
+from typing import Optional, Dict, Any
+from datetime import datetime
+from pydantic import BaseModel, Field, ConfigDict, model_validator
+
+
+class AssetBase(BaseModel):
+    """资产基础模型"""
+    name: str = Field(..., min_length=1, max_length=100, description="资产名，如 'North_Compressor_01'")
+    display_name: str = Field(..., min_length=1, max_length=200, description="UI 名称，如 '北区1号压缩机'")
+    device_type_id: int = Field(..., description="设备类型ID")
+    location: str = Field(default='', max_length=200, description="位置")
+    enabled: bool = Field(default=True, description="是否启用")
+    metadata_json: Dict[str, Any] = Field(default_factory=dict, description="元数据 JSON")
+
+
+class AssetCreate(AssetBase):
+    """创建资产请求模型"""
+    pass
+
+
+class AssetUpdate(BaseModel):
+    """更新资产请求模型"""
+    display_name: Optional[str] = Field(None, min_length=1, max_length=200)
+    location: Optional[str] = Field(None, max_length=200)
+    enabled: Optional[bool] = None
+    metadata_json: Optional[Dict[str, Any]] = None
+
+
+class AssetResponse(AssetBase):
+    """资产响应模型"""
+    id: int
+    created_at: datetime = Field(..., description="创建时间")
+    updated_at: datetime = Field(..., description="更新时间")
+    model_config = ConfigDict(from_attributes=True)
+    
+    @model_validator(mode='before')
+    @classmethod
+    def parse_metadata_json(cls, data: Any) -> Any:
+        """解析 metadata_json 字符串为字典"""
+        import json
+        
+        if hasattr(data, 'metadata_json') and not isinstance(data, dict):
+            if isinstance(data.metadata_json, str):
+                try:
+                    payload = data.__dict__.copy()
+                    payload['metadata_json'] = json.loads(data.metadata_json)
+                    return payload
+                except Exception:
+                    payload = data.__dict__.copy()
+                    payload['metadata_json'] = {}
+                    return payload
+        elif isinstance(data, dict) and 'metadata_json' in data:
+            if isinstance(data['metadata_json'], str):
+                try:
+                    data['metadata_json'] = json.loads(data['metadata_json'])
+                except Exception:
+                    data['metadata_json'] = {}
+        
+        return data
+
+
+# ============================================================================
+# 资产映射 (AssetMapping)
+# ============================================================================
+
+class AssetMappingBase(BaseModel):
+    """资产映射基础模型"""
+    asset_tag_name: str = Field(..., min_length=1, max_length=100, description="业务字段名")
+    instance_id: int = Field(..., description="通信实例ID")
+    point_name: str = Field(..., min_length=1, max_length=100, description="点表点名")
+    binding_kind: str = Field(..., description="绑定类型：'DIRECT'|'BIT'|'BITMASK_ENUM'")
+    bit_index: Optional[int] = Field(None, ge=0, le=15, description="位索引（仅 BIT）")
+    bit_mask: Optional[int] = Field(None, ge=0, description="位掩码（仅 BITMASK_ENUM）")
+    bit_shift: Optional[int] = Field(None, ge=0, description="位移（仅 BITMASK_ENUM）")
+    enum_json: Dict[str, str] = Field(default_factory=dict, description="枚举映射 JSON")
+
+
+class AssetMappingCreate(AssetMappingBase):
+    """创建资产映射请求模型（asset_id 从路径参数获取，不需要在请求体中）"""
+    is_overridden: bool = Field(default=False, description="是否覆盖模板")
+
+
+class AssetMappingUpdate(BaseModel):
+    """更新资产映射请求模型"""
+    instance_id: Optional[int] = None
+    point_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    binding_kind: Optional[str] = None
+    bit_index: Optional[int] = Field(None, ge=0, le=15)
+    bit_mask: Optional[int] = Field(None, ge=0)
+    bit_shift: Optional[int] = Field(None, ge=0)
+    enum_json: Optional[Dict[str, str]] = None
+    is_overridden: Optional[bool] = None
+
+
+class AssetMappingResponse(AssetMappingBase):
+    """资产映射响应模型"""
+    id: int
+    asset_id: int
+    is_overridden: bool
+    created_at: datetime = Field(..., description="创建时间")
+    updated_at: datetime = Field(..., description="更新时间")
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    @model_validator(mode='before')
+    @classmethod
+    def parse_enum_json(cls, data: Any) -> Any:
+        """解析 enum_json 字符串为字典"""
+        import json
+        
+        # 处理 SQLAlchemy 对象（从数据库查询）
+        if hasattr(data, 'enum_json') and not isinstance(data, dict):
+            if isinstance(data.enum_json, str):
+                try:
+                    # 创建字典副本，避免修改原始 SQLAlchemy 对象
+                    data_dict = {
+                        'id': data.id,
+                        'asset_id': data.asset_id,
+                        'asset_tag_name': data.asset_tag_name,
+                        'instance_id': data.instance_id,
+                        'point_name': data.point_name,
+                        'binding_kind': data.binding_kind,
+                        'bit_index': data.bit_index,
+                        'bit_mask': data.bit_mask,
+                        'bit_shift': data.bit_shift,
+                        'enum_json': json.loads(data.enum_json),
+                        'is_overridden': bool(data.is_overridden),
+                        'created_at': data.created_at,
+                        'updated_at': data.updated_at,
+                    }
+                    return data_dict
+                except:
+                    # JSON 解析失败，使用空字典
+                    data_dict = {
+                        'id': data.id,
+                        'asset_id': data.asset_id,
+                        'asset_tag_name': data.asset_tag_name,
+                        'instance_id': data.instance_id,
+                        'point_name': data.point_name,
+                        'binding_kind': data.binding_kind,
+                        'bit_index': data.bit_index,
+                        'bit_mask': data.bit_mask,
+                        'bit_shift': data.bit_shift,
+                        'enum_json': {},
+                        'is_overridden': bool(data.is_overridden),
+                        'created_at': data.created_at,
+                        'updated_at': data.updated_at,
+                    }
+                    return data_dict
+        # 处理字典格式（从 API 请求）
+        elif isinstance(data, dict) and 'enum_json' in data:
+            if isinstance(data['enum_json'], str):
+                try:
+                    data['enum_json'] = json.loads(data['enum_json'])
+                except:
+                    data['enum_json'] = {}
+        
+        return data
+

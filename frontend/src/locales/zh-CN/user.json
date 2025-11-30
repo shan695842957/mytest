@@ -1,0 +1,50 @@
+{
+  "list": {
+    "title": "用户列表",
+    "filter": {
+      "title": "筛选条件",
+      "description": "根据角色、状态和关键词筛选用户",
+      "searchPlaceholder": "搜索用户名...",
+      "role": "角色",
+      "allRoles": "全部角色",
+      "status": "状态",
+      "allStatus": "全部状态"
+    },
+    "table": {
+      "id": "ID",
+      "username": "用户名",
+      "role": "角色",
+      "status": "状态",
+      "builtin": "类型",
+      "createdBy": "创建者",
+      "createdAt": "创建时间",
+      "actions": "操作"
+    },
+    "empty": "暂无用户数据",
+    "total": "共 {{count}} 条"
+  },
+  "profile": {
+    "title": "个人中心",
+    "basic": {
+      "title": "基本信息",
+      "description": "您的账号基本信息",
+      "username": "用户名",
+      "role": "角色",
+      "status": "状态",
+      "accountType": "账号类型",
+      "normalAccount": "普通账号",
+      "createdAt": "创建时间"
+    },
+    "permission": {
+      "title": "角色权限",
+      "description": "您当前角色的权限说明"
+    },
+    "security": {
+      "title": "安全设置",
+      "description": "管理您的账号安全",
+      "changePassword": "修改密码",
+      "changePasswordHint": "定期修改密码以保护账号安全"
+    }
+  }
+}
+

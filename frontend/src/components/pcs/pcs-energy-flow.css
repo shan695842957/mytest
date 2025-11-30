@@ -1,0 +1,114 @@
+.pcs-energy-flow {
+  --pcs-flow-color: #22d3ee;
+  --pcs-track-color: rgba(148, 163, 184, 0.3);
+}
+
+.pcs-flow-connector {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--pcs-track-color);
+}
+
+.pcs-flow-connector--horizontal {
+  width: 100%;
+  height: 0.4rem;
+  min-width: 4rem;
+}
+
+.pcs-flow-connector--vertical {
+  width: 0.4rem;
+  height: 4.5rem;
+  min-height: 3.5rem;
+}
+
+.pcs-flow-line {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    90deg,
+    transparent 5%,
+    var(--pcs-flow-color) 35%,
+    transparent 65%
+  );
+  background-size: 200% 100%;
+  animation: pcs-flow-horizontal 2.2s linear infinite;
+  opacity: 0.85;
+}
+
+.pcs-flow-line--vertical {
+  background-image: linear-gradient(
+    0deg,
+    transparent 5%,
+    var(--pcs-flow-color) 35%,
+    transparent 65%
+  );
+  background-size: 100% 200%;
+  animation-name: pcs-flow-vertical;
+}
+
+.pcs-flow-line--forward {
+  animation-direction: normal;
+}
+
+.pcs-flow-line--reverse {
+  animation-direction: reverse;
+}
+
+.pcs-flow-line--paused {
+  opacity: 0.25;
+  animation-play-state: paused;
+  background: var(--pcs-track-color);
+}
+
+@keyframes pcs-flow-horizontal {
+  from {
+    background-position: -100% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+
+@keyframes pcs-flow-vertical {
+  from {
+    background-position: 0 -100%;
+  }
+  to {
+    background-position: 0 100%;
+  }
+}
+
+.pcs-core::before,
+.pcs-core::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1.5rem;
+  pointer-events: none;
+}
+
+.pcs-core::before {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--pcs-flow-color) 60%, transparent),
+    transparent 65%
+  );
+  filter: blur(12px);
+  opacity: 0.45;
+}
+
+.pcs-core::after {
+  inset: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--pcs-flow-color) 50%, transparent);
+  border-radius: 1.25rem;
+  opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pcs-flow-line {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+}
+

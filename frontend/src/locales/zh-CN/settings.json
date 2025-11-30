@@ -1,0 +1,72 @@
+{
+  "frontend": {
+    "title": "前端设置",
+    "description": "自定义界面主题、语言和外观偏好",
+    "theme": {
+      "title": "主题配色",
+      "description": "选择配色方案，每个主题均经过精心设计",
+      "neutral": {
+        "name": "中性经典",
+        "desc": "经典中性配色"
+      },
+      "blue": {
+        "name": "蓝色专业",
+        "desc": "专业商务风格"
+      },
+      "green": {
+        "name": "绿色自然",
+        "desc": "自然风格配色"
+      },
+      "purple": {
+        "name": "紫色优雅",
+        "desc": "优雅配色方案"
+      },
+      "yellow": {
+        "name": "黄色温暖",
+        "desc": "温暖配色方案"
+      }
+    },
+    "appearance": {
+      "title": "外观模式",
+      "description": "在浅色和深色模式之间切换",
+      "light": {
+        "title": "浅色模式",
+        "desc": "明亮配色，适用于日间使用"
+      },
+      "dark": {
+        "title": "深色模式",
+        "desc": "护眼配色，适用于夜间使用"
+      }
+    },
+    "language": {
+      "title": "语言",
+      "description": "选择界面显示语言",
+      "zh-CN": {
+        "name": "简体中文",
+        "desc": "中文简体"
+      },
+      "en-US": {
+        "name": "English",
+        "desc": "English"
+      }
+    },
+    "preview": {
+      "title": "当前设置",
+      "description": "您当前的前端配置",
+      "themeColor": "主题配色",
+      "appearanceMode": "外观模式",
+      "interfaceLanguage": "界面语言"
+    }
+  },
+  "gateway": {
+    "title": "网关设置",
+    "description": "配置 API 网关参数和路由规则",
+    "developmentNotice": "网关设置功能开发中，敬请期待...",
+    "apiConfig": {
+      "title": "API 网关配置",
+      "description": "配置 API 网关的基本参数和路由规则",
+      "comingSoon": "此功能将在后续版本中提供。"
+    }
+  }
+}
+

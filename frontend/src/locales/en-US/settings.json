@@ -1,0 +1,72 @@
+{
+  "frontend": {
+    "title": "Frontend Settings",
+    "description": "Customize interface theme, language and appearance preferences",
+    "theme": {
+      "title": "Theme Color",
+      "description": "Select a color scheme, each theme is carefully designed",
+      "neutral": {
+        "name": "Neutral Classic",
+        "desc": "Classic neutral color scheme"
+      },
+      "blue": {
+        "name": "Blue Professional",
+        "desc": "Professional business style"
+      },
+      "green": {
+        "name": "Green Natural",
+        "desc": "Natural color scheme"
+      },
+      "purple": {
+        "name": "Purple Elegant",
+        "desc": "Elegant color scheme"
+      },
+      "yellow": {
+        "name": "Yellow Warm",
+        "desc": "Warm color scheme"
+      }
+    },
+    "appearance": {
+      "title": "Appearance Mode",
+      "description": "Switch between light and dark mode",
+      "light": {
+        "title": "Light Mode",
+        "desc": "Bright color scheme, suitable for daytime use"
+      },
+      "dark": {
+        "title": "Dark Mode",
+        "desc": "Eye-friendly color scheme, suitable for nighttime use"
+      }
+    },
+    "language": {
+      "title": "Language",
+      "description": "Select interface display language",
+      "zh-CN": {
+        "name": "简体中文",
+        "desc": "Simplified Chinese"
+      },
+      "en-US": {
+        "name": "English",
+        "desc": "English"
+      }
+    },
+    "preview": {
+      "title": "Current Settings",
+      "description": "Your current frontend configuration",
+      "themeColor": "Theme Color",
+      "appearanceMode": "Appearance Mode",
+      "interfaceLanguage": "Interface Language"
+    }
+  },
+  "gateway": {
+    "title": "Gateway Settings",
+    "description": "Configure API gateway parameters and routing rules",
+    "developmentNotice": "Gateway settings feature is under development, stay tuned...",
+    "apiConfig": {
+      "title": "API Gateway Configuration",
+      "description": "Configure basic parameters and routing rules for API gateway",
+      "comingSoon": "This feature will be available in a future release."
+    }
+  }
+}
+

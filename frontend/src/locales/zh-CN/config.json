@@ -1,0 +1,479 @@
+{
+  "deviceType": {
+    "title": "设备模板",
+    "list": {
+      "title": "设备模板列表",
+      "description": "管理设备类型模板",
+      "empty": "暂无设备模板",
+      "searchPlaceholder": "搜索设备模板名称或显示名",
+      "columns": {
+        "displayName": "显示名称",
+        "name": "内部名称",
+        "description": "描述",
+        "tagsCount": "业务字段数",
+        "createdAt": "创建时间",
+        "actions": "操作"
+      }
+    },
+    "detail": {
+      "title": "设备模板详情",
+      "basicInfo": "基本信息",
+      "tags": "业务字段",
+      "addTag": "添加业务字段",
+      "editTag": "编辑业务字段",
+      "deleteTag": "删除业务字段"
+    },
+    "form": {
+      "create": "创建设备模板",
+      "update": "更新设备模板",
+      "name": "内部名称",
+      "namePlaceholder": "例如：B_COMPRESSOR",
+      "displayName": "显示名称",
+      "displayNamePlaceholder": "例如：B型压缩机",
+      "model": "型号",
+      "manufacturer": "厂家",
+      "description": "描述"
+    },
+    "tagForm": {
+      "tagName": "字段名",
+      "displayName": "显示名",
+      "dataType": "数据类型",
+      "semanticType": "语义类型",
+      "engineeringUnit": "工程单位",
+      "groupName": "分组",
+      "severity": "严重性",
+      "description": "描述",
+      "enumJson": "枚举值映射",
+      "enumHint": "仅 ENUM 数据类型需要配置编码与显示文本",
+      "enumAdd": "新增枚举值",
+      "enumCode": "编码",
+      "enumLabel": "显示文本",
+      "enumEmpty": "暂无枚举值，请点击右上角新增"
+    },
+    "success": {
+      "created": "设备模板创建成功",
+      "updated": "设备模板更新成功",
+      "deleted": "设备模板删除成功",
+      "cloned": "设备模板复制成功"
+    },
+    "tagSuccess": {
+      "created": "业务字段创建成功",
+      "updated": "业务字段更新成功",
+      "deleted": "业务字段删除成功"
+    },
+    "error": {
+      "notFound": "设备模板不存在",
+      "nameExists": "设备模板名称已存在"
+    },
+    "clone": {
+      "title": "复制设备模板",
+      "description": "为新模板设置唯一的内部名称和显示名称",
+      "action": "复制模板",
+      "submit": "创建副本",
+      "copySuffix": "副本",
+      "noSource": "请选择要复制的设备模板"
+    },
+    "tagClone": {
+      "title": "复制业务字段",
+      "description": "为新业务字段设置唯一的字段名，可调整其他属性",
+      "action": "复制字段",
+      "submit": "创建字段副本",
+      "copySuffix": "副本",
+      "noSource": "请选择要复制的业务字段",
+      "success": "业务字段复制成功"
+    }
+  },
+  "pointTable": {
+    "title": "通信模板",
+    "list": {
+      "title": "通信模板列表",
+      "description": "管理点表模板",
+      "empty": "暂无通信模板",
+      "searchPlaceholder": "搜索模板名称或显示名",
+      "columns": {
+        "displayName": "显示名称",
+        "name": "内部名称",
+        "protocolType": "协议类型",
+        "pointsCount": "点数",
+        "description": "描述",
+        "createdAt": "创建时间",
+        "actions": "操作"
+      }
+    },
+    "detail": {
+      "title": "通信模板详情",
+      "basicInfo": "基本信息",
+      "points": "点表点",
+      "addPoint": "添加点",
+      "editPoint": "编辑点",
+      "deletePoint": "删除点"
+    },
+    "form": {
+      "create": "创建通信模板",
+      "update": "更新通信模板",
+      "name": "内部名称",
+      "displayName": "显示名称",
+      "protocolType": "协议类型",
+      "description": "描述"
+    },
+    "pointForm": {
+      "pointName": "点名",
+      "displayName": "显示名",
+      "address": "地址",
+      "ioType": "IO类型",
+      "rawType": "原始类型",
+      "byteOrder": "字节序",
+      "scaleK": "缩放系数K",
+      "scaleB": "缩放系数B",
+      "parseRulesJson": "解析规则",
+      "description": "描述",
+      "isActive": "是否启用",
+      "subPoints": "子点解析",
+      "subPointName": "子点名称",
+      "subPointNamePlaceholder": "例如 mode_code",
+      "subPointType": "类型",
+      "subPointTypePlaceholder": "BOOL / UINT",
+      "subPointKind": "解析方式",
+      "subPointKindPlaceholder": "选择解析方式",
+      "kindBit": "单 bit",
+      "kindBitsRange": "位段",
+      "bitIndex": "bit 位序号",
+      "bitFrom": "起始位 (bit_from)",
+      "bitTo": "结束位 (bit_to)",
+      "addSubPoint": "添加子点"
+    },
+    "success": {
+      "created": "通信模板创建成功",
+      "updated": "通信模板更新成功",
+      "deleted": "通信模板删除成功",
+      "cloned": "通信模板复制成功"
+    },
+    "clone": {
+      "title": "复制通信模板",
+      "description": "复制点表模板及其所有点定义",
+      "action": "复制模板",
+      "submit": "创建副本",
+      "copySuffix": "副本",
+      "noSource": "请选择要复制的通信模板"
+    },
+    "pointClone": {
+      "title": "复制点表点",
+      "description": "复制点的所有属性，可在创建前进行调整",
+      "action": "复制点",
+      "submit": "创建点副本",
+      "copySuffix": "副本",
+      "noSource": "请选择要复制的点",
+      "success": "点表点复制成功",
+      "activeHint": "复制后是否保持启用"
+    }
+  },
+  "commInstance": {
+    "title": "通信实例",
+    "list": {
+      "title": "通信实例列表",
+      "description": "管理通信实例",
+      "empty": "暂无通信实例",
+      "searchPlaceholder": "搜索实例名称",
+      "columns": {
+        "name": "名称",
+        "displayName": "显示名称",
+        "protocolType": "协议类型",
+        "pointTable": "点表模板",
+        "enabled": "启用状态",
+        "pollingInterval": "轮询周期",
+        "actions": "操作"
+      }
+    },
+    "form": {
+      "create": "创建通信实例",
+      "update": "更新通信实例",
+      "name": "名称",
+      "displayName": "显示名称",
+      "enabled": "启用",
+      "pointTableId": "点表模板",
+      "protocolType": "协议类型",
+      "protocolConfig": "协议配置",
+      "pollingIntervalMs": "轮询周期(ms)",
+      "timeoutMs": "超时(ms)",
+      "retries": "重试次数",
+      "selectProtocolType": "请先选择协议类型",
+      "noParams": "该协议类型暂无参数定义",
+      "paramRequired": "参数 {name} 为必填项",
+      "paramInvalidType": "参数 {name} 必须是 {type} 类型",
+      "paramMinError": "参数 {name} 不能小于 {min}",
+      "paramMaxError": "参数 {name} 不能大于 {max}",
+      "paramEnumError": "参数 {name} 必须是以下值之一: {values}",
+      "paramPatternError": "参数 {name} 格式不正确",
+      "selectValue": "请选择值",
+      "defaultValue": "默认值",
+      "selectPeripheral": "请选择外设",
+      "noPeripheralsAvailable": "该类型外设暂无可选项"
+    },
+    "success": {
+      "created": "通信实例创建成功",
+      "updated": "通信实例更新成功",
+      "deleted": "通信实例删除成功"
+    },
+    "error": {
+      "invalidProtocolConfig": "协议配置参数验证失败"
+    }
+  },
+  "protocolType": {
+    "title": "协议类型",
+    "list": {
+      "title": "协议类型列表",
+      "description": "管理通信协议类型及其参数定义",
+      "empty": "暂无协议类型",
+      "searchPlaceholder": "搜索协议类型名称",
+      "manageParams": "管理参数",
+      "edit": "编辑",
+      "delete": "删除",
+      "columns": {
+        "name": "内部名称",
+        "displayName": "显示名称",
+        "enabled": "启用状态",
+        "paramsCount": "参数数量",
+        "description": "描述",
+        "createdAt": "创建时间",
+        "actions": "操作"
+      }
+    },
+    "form": {
+      "create": "创建协议类型",
+      "update": "更新协议类型",
+      "name": "内部名称",
+      "displayName": "显示名称",
+      "enabled": "是否启用",
+      "enabledDescription": "禁用后，创建通信实例时将不可选择此协议类型",
+      "description": "描述",
+      "descriptionPlaceholder": "协议类型的说明信息"
+    },
+    "params": {
+      "title": "协议参数管理 - {name}",
+      "description": "管理该协议类型需要的配置参数",
+      "empty": "暂无参数定义",
+      "addParam": "添加参数",
+      "required": "必填",
+      "defaultValue": "默认值"
+    },
+    "param": {
+      "form": {
+        "create": "创建协议参数",
+        "update": "更新协议参数",
+        "createDescription": "为协议类型 {name} 添加新的参数定义",
+        "updateDescription": "更新协议参数定义",
+        "paramName": "参数名称",
+        "paramNameDescription": "内部使用的参数名，创建通信实例时使用",
+        "displayName": "显示名称",
+        "dataType": "数据类型",
+        "required": "是否必填",
+        "defaultValue": "默认值",
+        "defaultValuePlaceholder": "可选，参数的默认值",
+        "defaultValueDescription": "创建通信实例时的默认值",
+        "placeholder": "占位符",
+        "placeholderDescription": "前端输入框的提示文本",
+        "orderIndex": "排序索引",
+        "orderIndexDescription": "参数在表单中的显示顺序，数字越小越靠前",
+        "inputType": "输入类型",
+        "inputTypeDescription": "参数在前端表单中的输入方式",
+        "inputTypeText": "文本输入",
+        "inputTypeNumber": "数字输入",
+        "inputTypeSelect": "下拉选择（枚举）",
+        "inputTypePeripheral": "外设选择",
+        "peripheralType": "外设类型",
+        "peripheralTypeDescription": "当输入类型为外设选择时，指定外设类型",
+        "peripheralTypePlaceholder": "请选择外设类型",
+        "peripheralTypeSerial": "串口",
+        "peripheralTypeCan": "CAN总线",
+        "peripheralTypeSpi": "SPI",
+        "peripheralTypeI2c": "I2C",
+        "peripheralTypeGpio": "GPIO",
+        "peripheralTypePwm": "PWM",
+        "peripheralTypeAdc": "ADC",
+        "peripheralTypeDac": "DAC",
+        "peripheralTypeOther": "其他",
+        "description": "描述",
+        "descriptionPlaceholder": "参数的说明信息"
+      },
+      "delete": {
+        "title": "删除协议参数",
+        "description": "确定要删除参数 \"{paramName}\" 吗？此操作将影响协议类型 \"{protocolName}\" 的所有通信实例。"
+      }
+    },
+    "delete": {
+      "title": "删除协议类型",
+      "description": "确定要删除协议类型 \"{name}\" 吗？此操作不可撤销。如果有通信实例使用此协议类型，将无法删除。"
+    },
+    "success": {
+      "created": "协议类型创建成功",
+      "updated": "协议类型更新成功",
+      "deleted": "协议类型删除成功",
+      "paramCreated": "协议参数创建成功",
+      "paramUpdated": "协议参数更新成功",
+      "paramDeleted": "协议参数删除成功"
+    },
+    "error": {
+      "created": "协议类型创建失败",
+      "updated": "协议类型更新失败",
+      "deleted": "协议类型删除失败",
+      "paramCreated": "协议参数创建失败",
+      "paramUpdated": "协议参数更新失败",
+      "paramDeleted": "协议参数删除失败"
+    }
+  },
+  "peripheral": {
+    "title": "外设设备",
+    "list": {
+      "title": "外设设备列表",
+      "description": "管理系统可用的外设设备（串口、CAN等）",
+      "empty": "暂无外设设备",
+      "searchPlaceholder": "搜索外设名称",
+      "filterAll": "全部类型",
+      "filterSerial": "串口",
+      "filterCan": "CAN总线",
+      "filterSpi": "SPI",
+      "filterI2c": "I2C",
+      "filterGpio": "GPIO",
+      "filterPwm": "PWM",
+      "filterAdc": "ADC",
+      "filterDac": "DAC",
+      "filterOther": "其他",
+      "edit": "编辑",
+      "delete": "删除",
+      "columns": {
+        "name": "名称",
+        "displayName": "显示名称",
+        "type": "类型",
+        "devicePath": "设备路径",
+        "enabled": "启用状态",
+        "description": "描述",
+        "createdAt": "创建时间",
+        "actions": "操作"
+      }
+    },
+    "form": {
+      "create": "创建外设设备",
+      "update": "更新外设设备",
+      "name": "外设名称",
+      "nameDescription": "内部使用的名称，唯一标识",
+      "displayName": "显示名称",
+      "type": "外设类型",
+      "typeSerial": "串口",
+      "typeCan": "CAN总线",
+      "typeSpi": "SPI",
+      "typeI2c": "I2C",
+      "typeGpio": "GPIO",
+      "typePwm": "PWM",
+      "typeAdc": "ADC",
+      "typeDac": "DAC",
+      "typeOther": "其他",
+      "devicePath": "设备路径",
+      "devicePathDescription": "设备的系统路径，如 /dev/ttyS0, can0",
+      "enabled": "启用",
+      "description": "描述",
+      "descriptionPlaceholder": "外设设备的说明信息"
+    },
+    "delete": {
+      "title": "删除外设设备",
+      "description": "确定要删除外设设备 \"{name}\" 吗？此操作不可撤销。如果有通信实例使用此外设，将无法删除。"
+    },
+    "success": {
+      "created": "外设设备创建成功",
+      "updated": "外设设备更新成功",
+      "deleted": "外设设备删除成功"
+    },
+    "error": {
+      "createFailed": "外设设备创建失败",
+      "updateFailed": "外设设备更新失败",
+      "deleteFailed": "外设设备删除失败"
+    }
+  },
+  "asset": {
+    "title": "资产",
+    "list": {
+      "title": "资产列表",
+      "description": "管理物理资产",
+      "empty": "暂无资产",
+      "searchPlaceholder": "搜索资产名称或类型",
+      "columns": {
+        "name": "名称",
+        "displayName": "显示名称",
+        "deviceType": "设备类型",
+        "location": "位置",
+        "enabled": "启用状态",
+        "mappingCompletion": "映射完成度",
+        "actions": "操作"
+      }
+    },
+    "form": {
+      "create": "创建资产",
+      "update": "更新资产",
+      "name": "名称",
+      "displayName": "显示名称",
+      "deviceTypeId": "设备类型",
+      "location": "位置",
+      "enabled": "启用"
+    },
+    "wizard": {
+      "step1": "基本信息",
+      "step2": "绑定通信实例",
+      "step3": "生成映射",
+      "bindCommInstances": "选择通信实例",
+      "autoGenerate": "自动生成映射",
+      "preview": "预览映射"
+    },
+    "success": {
+      "created": "资产创建成功",
+      "updated": "资产更新成功",
+      "deleted": "资产删除成功"
+    }
+  },
+  "mapping": {
+    "title": "资产映射",
+    "boundInstances": "已绑定的通信实例",
+    "syncButton": "同步通信实例",
+    "noInstances": "请先绑定通信实例后再配置映射",
+    "assetSwitcher": {
+      "label": "切换资产",
+      "search": "搜索资产名称或内部名",
+      "empty": "没有可切换的资产"
+    },
+    "left": {
+      "title": "业务字段",
+      "groupedBy": "按分组",
+      "mapped": "已映射",
+      "unmapped": "未映射",
+      "ungrouped": "未分组"
+    },
+    "right": {
+      "title": "信号点",
+      "search": "搜索子点名称或地址",
+      "emptyNoInstance": "请先选择或绑定通信实例",
+      "emptyNoPoint": "未找到符合条件的子点"
+    },
+    "center": {
+      "title": "映射编辑",
+      "fieldName": "业务字段",
+      "semanticType": "语义类型",
+      "boundInstance": "绑定通信实例",
+      "boundPoint": "绑定子点",
+      "currentMapping": "当前映射",
+      "pointDetails": "点表地址",
+      "save": "保存映射",
+      "clear": "清除映射",
+      "emptyField": "请从左侧选择一个业务字段",
+      "noInstance": "该资产尚未绑定通信实例"
+    },
+    "bindingDialog": {
+      "title": "同步通信实例",
+      "description": "选择需要绑定到该资产的通信实例，可多选",
+      "empty": "暂无通信实例，请先创建"
+    },
+    "success": {
+      "created": "映射创建成功",
+      "updated": "映射更新成功",
+      "deleted": "映射删除成功",
+      "autoGenerated": "通信实例同步成功"
+    }
+  }
+}

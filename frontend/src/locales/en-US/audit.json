@@ -1,0 +1,99 @@
+{
+  "audit": {
+    "title": "Audit Logs",
+    "list": "Operation Logs",
+    "detailTitle": "Log Detail",
+    "viewDetail": "View Detail",
+    "id": "Log ID",
+    "request_id": "Request ID",
+    "method": "Method",
+    "path": "Path",
+    "module": "Module",
+    "action": "Action",
+    "user": "User",
+    "target": "Target",
+    "status": "Status",
+    "duration": "Duration",
+    "created_at": "Created At",
+    "ip_address": "IP Address",
+    "user_agent": "User Agent",
+    "request_body": "Request Body",
+    "changes": "Changes",
+    "error_message": "Error Message",
+    "success": "Success",
+    "failed": "Failed",
+    "filter": {
+      "title": "Filter Conditions",
+      "description": "Click Query button after setting filter conditions",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "all": "All",
+      "module": "Module",
+      "action": "Action Type",
+      "status": "Status",
+      "dateRange": "Date Time Range",
+      "dateRangePlaceholder": "Select start and end time...",
+      "selectPlaceholder": "Select an option",
+      "quickRange": "Quick time range",
+      "quickRangeHint": "Pick a preset range to focus on critical events.",
+      "customRange": "Custom",
+      "summary": "{{count}} filters applied",
+      "summaryEmpty": "No additional filters",
+      "statusHint": "Highlight successful or failed actions to triage issues faster.",
+      "presets": {
+        "last6h": "Last 6 hours",
+        "last24h": "Last 24 hours",
+        "last7d": "Last 7 days",
+        "last30d": "Last 30 days",
+        "thisMonth": "Month to date"
+      },
+      "query": "Query",
+      "reset": "Reset",
+      "refresh": "Refresh"
+    },
+    "module_type": {
+      "auth": "Authentication",
+      "user": "User Management",
+      "system": "System Settings"
+    },
+    "action_type": {
+      "create": "Create",
+      "update": "Update",
+      "delete": "Delete",
+      "login": "Login",
+      "logout": "Logout",
+      "change_password": "Change Password"
+    },
+    "table": {
+      "id": "ID",
+      "time": "Time",
+      "user": "User",
+      "module": "Module",
+      "action": "Action",
+      "target": "Target",
+      "method": "Method",
+      "status": "Status",
+      "duration": "Duration",
+      "actions": "Actions"
+    },
+    "empty": "No audit logs",
+    "pagination": {
+      "total": "Total: {{total}} records",
+      "page": "Page {{current}}/{{total}}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "detail": {
+      "basicInfo": "Basic Information",
+      "userInfo": "User Information",
+      "operationInfo": "Operation Information",
+      "targetInfo": "Target Information",
+      "role": "Role",
+      "targetType": "Target Type",
+      "targetId": "Target ID",
+      "targetName": "Target Name",
+      "before": "Before",
+      "after": "After"
+    }
+  }
+}

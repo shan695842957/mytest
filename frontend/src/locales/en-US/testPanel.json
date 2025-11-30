@@ -1,0 +1,87 @@
+{
+  "title": "Light Panel Test",
+  "bitfield": {
+    "title": "Bitfield Data Display",
+    "description": "16-bit integer, bit0~bit15 represent 16 status signals",
+    "rawValue": "Raw Value",
+    "bitLabel": "Bit {bit}",
+    "status": {
+      "on": "ON",
+      "off": "OFF"
+    }
+  },
+  "enum": {
+    "title": "Enumeration Display",
+    "description": "int16 type, 0=Standby, 1=Fault, 2=Running",
+    "rawValue": "Raw Value",
+    "value": "Current Value",
+    "states": {
+      "0": "Standby",
+      "1": "Fault",
+      "2": "Running"
+    }
+  },
+  "complexBitfield": {
+    "title": "Complex Bitfield Parsing",
+    "description": "int16 type, bit0~bit7 are 8 booleans, bit8~bit11 are reserved (not displayed), bit12~bit15 are enumeration data",
+    "rawValue": "Raw Value",
+    "booleanBits": "Boolean Bits (Bit 0-7)",
+    "reservedBits": "Reserved Bits (Bit 8-11)",
+    "enumBits": "Enumeration Bits (Bit 12-15)",
+    "enumValue": "Enumeration Value",
+    "enumStates": {
+      "0": "Mode 0",
+      "1": "Mode 1",
+      "2": "Mode 2",
+      "3": "Mode 3",
+      "4": "Mode 4",
+      "5": "Mode 5",
+      "6": "Mode 6",
+      "7": "Mode 7",
+      "8": "Mode 8",
+      "9": "Mode 9",
+      "10": "Mode 10",
+      "11": "Mode 11",
+      "12": "Mode 12",
+      "13": "Mode 13",
+      "14": "Mode 14",
+      "15": "Mode 15"
+    }
+  },
+  "measurements": {
+    "title": "Measurement Display",
+    "description": "Three-phase voltage, three-phase current, active power, reactive power, apparent power, etc.",
+    "voltage": "Voltage",
+    "current": "Current",
+    "power": "Power",
+    "phaseA": "Phase A",
+    "phaseB": "Phase B",
+    "phaseC": "Phase C",
+    "activePower": "Active Power",
+    "reactivePower": "Reactive Power",
+    "apparentPower": "Apparent Power",
+    "unit": {
+      "v": "V",
+      "a": "A",
+      "w": "W",
+      "var": "Var",
+      "va": "VA"
+    }
+  },
+  "history": {
+    "title": "History Data Display",
+    "description": "Historical measurement and status data, including bitfield, enumeration, etc.",
+    "timeRange": "Time Range",
+    "dataType": "Data Type",
+    "all": "All",
+    "measurement": "Measurement",
+    "status": "Status",
+    "bitfield": "Bitfield",
+    "enum": "Enumeration",
+    "noData": "No Data",
+    "time": "Time",
+    "value": "Value",
+    "rawValue": "Raw Value"
+  }
+}
+

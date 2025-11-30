@@ -1,0 +1,48 @@
+{
+  "title": "SOE Event Query",
+  "filter": {
+    "title": "Filter Conditions",
+    "dateRange": "Date Range",
+    "quickOptions": {
+      "last1h": "Last 1 Hour",
+      "last24h": "Last 24 Hours",
+      "last7d": "Last 7 Days"
+    },
+    "device": "Device Selection",
+    "severity": "Severity",
+    "eventType": "Event Type",
+    "keyword": "Keyword Search",
+    "apply": "Apply Filter",
+    "reset": "Reset"
+  },
+  "table": {
+    "columns": {
+      "createdAt": "Time",
+      "assetName": "Asset Name",
+      "tagDisplayName": "Business Field",
+      "eventType": "Event Type",
+      "severity": "Severity",
+      "value": "Value"
+    },
+    "eventTypes": {
+      "ALARM_ON": "Alarm On",
+      "ALARM_OFF": "Alarm Off",
+      "STATE_CHANGE": "State Change",
+      "CMD_SENT": "Command Sent",
+      "CMD_FAIL": "Command Failed",
+      "PARAM_CHANGE": "Parameter Change",
+      "SETPOINT_CHANGE": "Setpoint Change"
+    },
+    "severity": {
+      "0": "Info",
+      "1": "Low",
+      "2": "Medium",
+      "3": "High",
+      "4": "Critical",
+      "5": "Fatal"
+    },
+    "empty": "No SOE events",
+    "expandDetails": "Expand Details"
+  }
+}
+
