@@ -291,10 +291,117 @@ def tier2_pack_detail():
     img.save(OUTPUT_DIR / "bms_tier2_pack.png")
 
 
+def tier3_sys():
+    img, draw = canvas()
+    draw_tabs(draw, active="SYS")
+    title(draw, "System Overview", "Tier-3 / Stack + Cluster + Strings")
+    metrics = [
+        ("System Status", "系统状态", "RUNNING"),
+        ("Operation Mode", "运行模式", "Auto Dispatch"),
+        ("Stack Voltage", "总电压", "1250.5 V"),
+        ("Stack Current", "总电流", "1320 A"),
+        ("Power", "功率", "1650 kW"),
+        ("SOC", "SOC", "93 %"),
+        ("SOH", "SOH", "91 %"),
+        ("Insulation", "绝缘", "980 kΩ"),
+    ]
+    x, y = 80, 260
+    for idx, data in enumerate(metrics):
+        metric_pair(draw, (x, y), data[0], data[1], data[2])
+        x += 360
+        if (idx + 1) % 4 == 0:
+            x = 80
+            y += 90
+    divider(draw, 420)
+    # breaker info
+    draw.text((80, 460), "Breaker Control / 正负极断路器", font=font_28, fill=COLORS["text"])
+    chip(draw, (80, 500), "+ Pole Closed", COLORS["chip_ok"])
+    chip(draw, (300, 500), "- Pole Closed", COLORS["chip_ok"])
+    chip(draw, (520, 500), "Ground Relay Ready", COLORS["chip_ok"])
+    chip(draw, (780, 500), "Trip Command", COLORS["chip_warn"])
+    divider(draw, 560)
+    draw.text((80, 600), "Stack Topology", font=font_28, fill=COLORS["text"])
+    draw.line((120, 640, WIDTH - 120, 640), fill="#FF5B5B", width=6)
+    # junctions for clusters
+    cluster_x = [360, 960, 1560]
+    for cx in cluster_x:
+        draw.line((cx, 640, cx, 700), fill="#FF5B5B", width=6)
+        draw.text((cx - 60, 710), f"Cluster {cluster_x.index(cx)+1}", font=font_24, fill=COLORS["text"])
+    # strings
+    base_y = 860
+    start_x = 200
+    spacing = 140
+    for idx in range(12):
+        x = start_x + idx * spacing
+        draw.line((x, 700, x, 730), fill="#FF5B5B", width=4)
+        # cell body
+        draw.rounded_rectangle((x - 26, 730, x + 26, base_y - 20), radius=24, fill="#CFEED0")
+        soc = 12.5 + (idx % 4) * 0.4
+        bar_top = 760
+        bar_bottom = base_y - 40
+        bar_height = bar_bottom - bar_top
+        filled = bar_height * (soc / 15)
+        fill_top = bar_bottom - filled
+        draw.rectangle((x - 18, fill_top, x + 18, bar_bottom), fill="#6AD675")
+        draw.text((x - 35, bar_bottom + 10), f"{soc:.1f}%", font=font_18, fill=COLORS["text"])
+        draw.text((x - 50, base_y - 40), f"String S{idx+1}", font=font_20, fill=COLORS["text"])
+        draw.text((x - 50, base_y - 10), "1250.5V | 110A", font=font_18, fill=COLORS["muted"])
+    divider(draw, 900)
+    draw.text((80, 940), "Commands: Close All / Open All / Sync PCS", font=font_24, fill=COLORS["muted"])
+    draw.text((80, 980), "Timestamp 2025-12-01 09:55 | Mode NORMAL", font=font_20, fill=COLORS["muted"])
+    img.save(OUTPUT_DIR / "bms_tier3_sys.png")
+
+
+def tier2_sys():
+    img, draw = canvas()
+    draw_tabs(draw, active="SYS")
+    title(draw, "System Overview", "Tier-2 / Cluster + Pack")
+    metrics = [
+        ("Cluster Status", "簇状态", "READY"),
+        ("Operation Mode", "运行模式", "Auto"),
+        ("Cluster Voltage", "簇电压", "1250 V"),
+        ("Cluster Current", "簇电流", "820 A"),
+        ("SOC", "SOC", "92 %"),
+        ("SOH", "SOH", "90 %"),
+        ("Cooling", "冷却", "Liquid 63%"),
+        ("Insulation", "绝缘", "910 kΩ"),
+    ]
+    x, y = 80, 260
+    for idx, data in enumerate(metrics):
+        metric_pair(draw, (x, y), data[0], data[1], data[2])
+        x += 360
+        if (idx + 1) % 4 == 0:
+            x = 80
+            y += 90
+    divider(draw, 420)
+    draw.text((80, 460), "Cluster CLU-01 Bus", font=font_28, fill=COLORS["text"])
+    draw.line((120, 520, WIDTH - 120, 520), fill="#FF5B5B", width=5)
+    draw.text((140, 540), "Breaker: Closed", font=font_24, fill=COLORS["muted"])
+    # pack branches
+    base_y = 900
+    start_x = 160
+    spacing = 180
+    for idx in range(10):
+        x = start_x + idx * spacing
+        draw.line((x, 520, x, 560), fill="#FF5B5B", width=4)
+        draw.ellipse((x - 14, 560, x + 14, 588), fill="#FF5B5B")
+        draw.rounded_rectangle((x - 35, 600, x + 35, 840), radius=30, fill="#D6E8FF")
+        soc = 90 - idx * 0.8
+        height = 180
+        fill_height = height * (soc / 100)
+        draw.rectangle((x - 20, 800 - fill_height, x + 20, 800), fill="#2F80FF")
+        draw.text((x - 50, 620), f"Pack {idx+1:02d}", font=font_20, fill=COLORS["text"])
+        draw.text((x - 60, 850), f"{soc:.1f}% | 52.{idx%5}V", font=font_18, fill=COLORS["muted"])
+    draw.text((80, 940), "Note: Packs do not own HV breakers; commands issued at cluster level", font=font_20, fill=COLORS["muted"])
+    img.save(OUTPUT_DIR / "bms_tier2_sys.png")
+
+
 def main():
+    tier3_sys()
     tier3_monitor()
     tier3_balance()
     tier3_events()
+    tier2_sys()
     tier2_cluster()
     tier2_pack_detail()
 
