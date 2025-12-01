@@ -144,7 +144,7 @@ def tier3_monitor():
     img, draw = canvas()
     
     tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
-    draw_tabs(draw, tabs, active_idx=2)  # BCU active
+    draw_tabs(draw, tabs, active_idx=1)  # BAU active (Main Monitor)
     
     draw_title(draw, "Stack Monitor", "Level 3 Architecture: Stack → Cluster → Pack → Cell")
     
@@ -638,7 +638,7 @@ def tier2_key_info():
     img, draw = canvas()
     
     tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
-    draw_tabs(draw, tabs, active_idx=1)  # BAU active
+    draw_tabs(draw, tabs, active_idx=2)  # BCU active (Key Information)
     
     draw_title(draw, "Key Information", "Level 2: Cluster Key Parameters")
     
