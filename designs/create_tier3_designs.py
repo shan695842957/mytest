@@ -202,14 +202,23 @@ def tier3_sys():
     draw_divider(draw, y)
     y += 30
     
-    # Cluster status - Parallel connection (like bms1.jpg)
+    # Cluster status - Parallel connection with busbar (like bms1.jpg)
     draw.text((40, y), "Cluster Status (Parallel Connection)", font=fonts["heading"], fill=COLORS["text"])
     y += 50
+    
+    # Draw busbar (thick horizontal line at top)
+    busbar_y = y
+    busbar_start_x = 40
+    busbar_end_x = WIDTH - 40
+    draw.line((busbar_start_x, busbar_y, busbar_end_x, busbar_y), fill=COLORS["chip_error"], width=8)
+    draw.text((busbar_start_x + 20, busbar_y - 25), "Busbar (Parallel)", font=fonts["small"], fill=COLORS["muted"])
+    
+    y += 40  # Space below busbar
     
     # Display clusters in parallel (horizontal layout like bms1.jpg)
     cluster_count = 3
     cluster_width = 580
-    cluster_height = 220
+    cluster_height = 200
     start_x = 40
     cluster_y = y
     
@@ -218,11 +227,9 @@ def tier3_sys():
         if x + cluster_width > WIDTH - 40:
             break
         
-        # Parallel connection indicator (except first cluster)
-        if idx > 0:
-            # Draw parallel connection line
-            draw.line((x - 10, cluster_y + cluster_height // 2, x, cluster_y + cluster_height // 2), fill=COLORS["accent"], width=3)
-            draw.text((x - 5, cluster_y + cluster_height // 2 - 20), "Parallel", font=fonts["tiny"], fill=COLORS["accent"])
+        # Connection line from busbar to cluster
+        connection_x = x + cluster_width // 2
+        draw.line((connection_x, busbar_y, connection_x, cluster_y), fill=COLORS["accent"], width=4)
         
         # Cluster card
         draw.rounded_rectangle((x, cluster_y, x + cluster_width, cluster_y + cluster_height), radius=6, fill=COLORS["card_bg"])
@@ -351,28 +358,38 @@ def generate_svg_tier3_sys():
   <!-- Cluster Status (Parallel) -->
   <text x="40" y="680" fill="{COLORS['text']}" font-size="32" font-family="Arial" font-weight="bold">Cluster Status (Parallel Connection)</text>
   
+  <!-- Busbar -->
+  <line x1="40" y1="700" x2="1880" y2="700" stroke="{COLORS['chip_error']}" stroke-width="8"/>
+  <text x="60" y="695" fill="{COLORS['muted']}" font-size="18" font-family="Arial">Busbar (Parallel)</text>
+  
   <!-- Clusters (simplified) -->
   <g id="clusters">
-    <rect x="40" y="720" width="580" height="220" rx="6" fill="{COLORS['card_bg']}"/>
-    <text x="60" y="750" fill="{COLORS['text']}" font-size="32" font-family="Arial" font-weight="bold">Cluster C1</text>
-    <text x="60" y="790" fill="{COLORS['text']}" font-size="20" font-family="Arial">SOC: 12.8%</text>
-    <text x="60" y="820" fill="{COLORS['text']}" font-size="20" font-family="Arial">Voltage: 1250.5V</text>
-    <text x="60" y="850" fill="{COLORS['text']}" font-size="20" font-family="Arial">Current: 110.0A</text>
-    <rect x="60" y="880" width="500" height="20" rx="4" fill="{COLORS['line']}"/>
-    <rect x="60" y="880" width="64" height="20" rx="4" fill="{COLORS['chip_ok']}"/>
-    <text x="60" y="910" fill="{COLORS['muted']}" font-size="18" font-family="Arial">Breaker:</text>
-    <rect x="160" y="905" width="100" height="20" rx="4" fill="{COLORS['breaker_closed']}"/>
-    <text x="210" y="918" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Closed</text>
-    <rect x="290" y="905" width="70" height="20" rx="4" fill="{COLORS['breaker_closed']}"/>
-    <text x="325" y="918" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Close</text>
-    <rect x="380" y="905" width="70" height="20" rx="4" fill="{COLORS['breaker_open']}"/>
-    <text x="415" y="918" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Open</text>
+    <!-- Connection line from busbar to cluster -->
+    <line x1="330" y1="700" x2="330" y2="750" stroke="{COLORS['accent']}" stroke-width="4"/>
     
-    <line x1="630" y1="830" x2="640" y2="830" stroke="{COLORS['accent']}" stroke-width="3"/>
-    <text x="645" y="835" fill="{COLORS['accent']}" font-size="14" font-family="Arial">Parallel</text>
+    <rect x="40" y="750" width="580" height="200" rx="6" fill="{COLORS['card_bg']}"/>
+    <text x="60" y="780" fill="{COLORS['text']}" font-size="32" font-family="Arial" font-weight="bold">Cluster C1</text>
+    <text x="60" y="820" fill="{COLORS['text']}" font-size="20" font-family="Arial">SOC: 12.8%</text>
+    <text x="60" y="850" fill="{COLORS['text']}" font-size="20" font-family="Arial">Voltage: 1250.5V</text>
+    <text x="60" y="880" fill="{COLORS['text']}" font-size="20" font-family="Arial">Current: 110.0A</text>
+    <rect x="60" y="910" width="500" height="20" rx="4" fill="{COLORS['line']}"/>
+    <rect x="60" y="910" width="64" height="20" rx="4" fill="{COLORS['chip_ok']}"/>
+    <text x="60" y="940" fill="{COLORS['muted']}" font-size="18" font-family="Arial">Breaker:</text>
+    <rect x="160" y="935" width="100" height="20" rx="4" fill="{COLORS['breaker_closed']}"/>
+    <text x="210" y="948" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Closed</text>
+    <rect x="290" y="935" width="70" height="20" rx="4" fill="{COLORS['breaker_closed']}"/>
+    <text x="325" y="948" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Close</text>
+    <rect x="380" y="935" width="70" height="20" rx="4" fill="{COLORS['breaker_open']}"/>
+    <text x="415" y="948" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Open</text>
     
-    <rect x="640" y="720" width="580" height="220" rx="6" fill="{COLORS['card_bg']}"/>
-    <text x="660" y="750" fill="{COLORS['text']}" font-size="32" font-family="Arial" font-weight="bold">Cluster C2</text>
+    <!-- Connection line from busbar to cluster 2 -->
+    <line x1="930" y1="700" x2="930" y2="750" stroke="{COLORS['accent']}" stroke-width="4"/>
+    
+    <rect x="640" y="750" width="580" height="200" rx="6" fill="{COLORS['card_bg']}"/>
+    <text x="660" y="780" fill="{COLORS['text']}" font-size="32" font-family="Arial" font-weight="bold">Cluster C2</text>
+    <text x="660" y="820" fill="{COLORS['text']}" font-size="20" font-family="Arial">SOC: 12.9%</text>
+    <text x="660" y="850" fill="{COLORS['text']}" font-size="20" font-family="Arial">Voltage: 1250.4V</text>
+    <text x="660" y="880" fill="{COLORS['text']}" font-size="20" font-family="Arial">Current: 110.0A</text>
   </g>
 </svg>'''
     

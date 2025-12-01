@@ -78,27 +78,37 @@
   <!-- Cluster Status (Parallel) -->
   <text x="40" y="680" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Cluster Status (Parallel Connection)</text>
   
+  <!-- Busbar -->
+  <line x1="40" y1="700" x2="1880" y2="700" stroke="#F44336" stroke-width="8"/>
+  <text x="60" y="695" fill="#757575" font-size="18" font-family="Arial">Busbar (Parallel)</text>
+  
   <!-- Clusters (simplified) -->
   <g id="clusters">
-    <rect x="40" y="720" width="580" height="220" rx="6" fill="#FFFFFF"/>
-    <text x="60" y="750" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Cluster C1</text>
-    <text x="60" y="790" fill="#212121" font-size="20" font-family="Arial">SOC: 12.8%</text>
-    <text x="60" y="820" fill="#212121" font-size="20" font-family="Arial">Voltage: 1250.5V</text>
-    <text x="60" y="850" fill="#212121" font-size="20" font-family="Arial">Current: 110.0A</text>
-    <rect x="60" y="880" width="500" height="20" rx="4" fill="#BDBDBD"/>
-    <rect x="60" y="880" width="64" height="20" rx="4" fill="#4CAF50"/>
-    <text x="60" y="910" fill="#757575" font-size="18" font-family="Arial">Breaker:</text>
-    <rect x="160" y="905" width="100" height="20" rx="4" fill="#4CAF50"/>
-    <text x="210" y="918" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Closed</text>
-    <rect x="290" y="905" width="70" height="20" rx="4" fill="#4CAF50"/>
-    <text x="325" y="918" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Close</text>
-    <rect x="380" y="905" width="70" height="20" rx="4" fill="#F44336"/>
-    <text x="415" y="918" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Open</text>
+    <!-- Connection line from busbar to cluster -->
+    <line x1="330" y1="700" x2="330" y2="750" stroke="#1976D2" stroke-width="4"/>
     
-    <line x1="630" y1="830" x2="640" y2="830" stroke="#1976D2" stroke-width="3"/>
-    <text x="645" y="835" fill="#1976D2" font-size="14" font-family="Arial">Parallel</text>
+    <rect x="40" y="750" width="580" height="200" rx="6" fill="#FFFFFF"/>
+    <text x="60" y="780" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Cluster C1</text>
+    <text x="60" y="820" fill="#212121" font-size="20" font-family="Arial">SOC: 12.8%</text>
+    <text x="60" y="850" fill="#212121" font-size="20" font-family="Arial">Voltage: 1250.5V</text>
+    <text x="60" y="880" fill="#212121" font-size="20" font-family="Arial">Current: 110.0A</text>
+    <rect x="60" y="910" width="500" height="20" rx="4" fill="#BDBDBD"/>
+    <rect x="60" y="910" width="64" height="20" rx="4" fill="#4CAF50"/>
+    <text x="60" y="940" fill="#757575" font-size="18" font-family="Arial">Breaker:</text>
+    <rect x="160" y="935" width="100" height="20" rx="4" fill="#4CAF50"/>
+    <text x="210" y="948" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Closed</text>
+    <rect x="290" y="935" width="70" height="20" rx="4" fill="#4CAF50"/>
+    <text x="325" y="948" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Close</text>
+    <rect x="380" y="935" width="70" height="20" rx="4" fill="#F44336"/>
+    <text x="415" y="948" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Open</text>
     
-    <rect x="640" y="720" width="580" height="220" rx="6" fill="#FFFFFF"/>
-    <text x="660" y="750" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Cluster C2</text>
+    <!-- Connection line from busbar to cluster 2 -->
+    <line x1="930" y1="700" x2="930" y2="750" stroke="#1976D2" stroke-width="4"/>
+    
+    <rect x="640" y="750" width="580" height="200" rx="6" fill="#FFFFFF"/>
+    <text x="660" y="780" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Cluster C2</text>
+    <text x="660" y="820" fill="#212121" font-size="20" font-family="Arial">SOC: 12.9%</text>
+    <text x="660" y="850" fill="#212121" font-size="20" font-family="Arial">Voltage: 1250.4V</text>
+    <text x="660" y="880" fill="#212121" font-size="20" font-family="Arial">Current: 110.0A</text>
   </g>
 </svg>
