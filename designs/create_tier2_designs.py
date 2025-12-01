@@ -152,10 +152,6 @@ def tier2_sys():
     draw.rounded_rectangle((40, y + 25, 200, y + 65), radius=4, fill=COLORS["chip_error"])
     draw.text((120, y + 40), "Fault", font=fonts["body"], fill="#FFFFFF")
     
-    draw.text((40, y + 80), "Operation Status", font=fonts["small"], fill=COLORS["muted"])
-    draw.rounded_rectangle((40, y + 105, 200, y + 145), radius=4, fill=COLORS["chip_warn"])
-    draw.text((120, y + 120), "Local", font=fonts["body"], fill="#FFFFFF")
-    
     # Middle: Main electrical parameters
     draw_metric_card(draw, 240, y, "Cluster Voltage", "1250.5", "V", width=200, height=100)
     draw_metric_card(draw, 460, y, "Cluster Current", "1320.0", "A", width=200, height=100)
@@ -785,6 +781,115 @@ def generate_svg_tier2_bmu_temperature():
     print(f"Generated: {OUTPUT_DIR / 'tier2_bmu_temperature.svg'}")
 
 
+def tier2_evt():
+    """Tier 2: EVT Page - Event Log (Telecontrol Information)"""
+    img, draw = canvas()
+    
+    tabs = ["SYS", "BCU", "BMU", "EVT"]
+    draw_tabs(draw, tabs, active_idx=3)
+    
+    draw_title(draw, "Event Log", "Tier 2: System Telecontrol Information")
+    
+    y = 200
+    
+    # Event list table
+    events = [
+        ("2025/11/22 08:13:29", "System Fault", "BEMU Communication Timeout"),
+        ("2025/11/22 08:09:29", "System Alarm", "BEMU Communication Timeout"),
+        ("2025/11/22 08:08:34", "System Status", "System Alarm - Open All Contactors"),
+        ("2025/11/22 08:08:31", "BCMU7 Fault", "Insulation Failure, 0kohm"),
+        ("2025/11/22 08:08:31", "BCMU7 Status", "Insulation Detection Enabled"),
+        ("2025/11/22 08:08:31", "BCMU7 Status", "Fault Occurred 400"),
+        ("2025/11/22 08:08:31", "BCMU6 Fault", "Insulation Failure, 0kohm"),
+        ("2025/11/22 08:08:31", "BCMU6 Status", "Insulation Detection Enabled"),
+        ("2025/11/22 08:08:31", "BCMU6 Status", "Fault Occurred 400"),
+        ("2025/11/22 08:08:30", "BCMU5 Fault", "Insulation Failure, 0kohm"),
+        ("2025/11/22 08:08:30", "BCMU5 Status", "Insulation Detection Enabled"),
+        ("2025/11/22 08:08:30", "BCMU5 Status", "Fault Occurred 400"),
+    ]
+    
+    # Table header
+    draw.text((40, y), "Time", font=fonts["body"], fill=COLORS["muted"])
+    draw.text((300, y), "Category", font=fonts["body"], fill=COLORS["muted"])
+    draw.text((600, y), "Details", font=fonts["body"], fill=COLORS["muted"])
+    y += 30
+    draw_divider(draw, y)
+    y += 20
+    
+    # Event rows
+    for time_str, category, details in events[:12]:  # Show first 12
+        # Time
+        draw.text((40, y), time_str, font=fonts["small"], fill=COLORS["text"])
+        
+        # Category with color coding
+        if "Fault" in category:
+            status = "error"
+        elif "Alarm" in category:
+            status = "warn"
+        else:
+            status = "info"
+        
+        draw_status_chip(draw, 300, y - 5, category, status)
+        
+        # Details
+        draw.text((600, y), details, font=fonts["small"], fill=COLORS["text"])
+        
+        y += 50
+        if y > HEIGHT - 100:
+            break
+    
+    img.save(OUTPUT_DIR / "tier2_evt.png")
+    print(f"Generated: {OUTPUT_DIR / 'tier2_evt.png'}")
+    
+    # Generate SVG
+    generate_svg_tier2_evt()
+
+
+def generate_svg_tier2_evt():
+    """Generate SVG version of tier2_evt"""
+    svg_content = f'''<svg width="{WIDTH}" height="{HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="{WIDTH}" height="{HEIGHT}" fill="{COLORS['bg']}"/>
+  
+  <!-- Tabs -->
+  <g id="tabs">
+    <rect x="40" y="20" width="100" height="50" rx="8" fill="{COLORS['tab']}"/>
+    <text x="90" y="50" text-anchor="middle" fill="{COLORS['text']}" font-size="20" font-family="Arial">SYS</text>
+    <rect x="150" y="20" width="100" height="50" rx="8" fill="{COLORS['tab']}"/>
+    <text x="200" y="50" text-anchor="middle" fill="{COLORS['text']}" font-size="20" font-family="Arial">BCU</text>
+    <rect x="260" y="20" width="100" height="50" rx="8" fill="{COLORS['tab']}"/>
+    <text x="310" y="50" text-anchor="middle" fill="{COLORS['text']}" font-size="20" font-family="Arial">BMU</text>
+    <rect x="370" y="20" width="100" height="50" rx="8" fill="{COLORS['tab_active']}"/>
+    <text x="420" y="50" text-anchor="middle" fill="#FFFFFF" font-size="20" font-family="Arial">EVT</text>
+  </g>
+  
+  <!-- Title -->
+  <text x="40" y="140" fill="{COLORS['text']}" font-size="48" font-family="Arial" font-weight="bold">Event Log</text>
+  <text x="40" y="180" fill="{COLORS['muted']}" font-size="24" font-family="Arial">Tier 2: System Telecontrol Information</text>
+  <line x1="40" y1="200" x2="1880" y2="200" stroke="{COLORS['line']}" stroke-width="2"/>
+  
+  <!-- Table header -->
+  <text x="40" y="250" fill="{COLORS['muted']}" font-size="20" font-family="Arial">Time</text>
+  <text x="300" y="250" fill="{COLORS['muted']}" font-size="20" font-family="Arial">Category</text>
+  <text x="600" y="250" fill="{COLORS['muted']}" font-size="20" font-family="Arial">Details</text>
+  <line x1="40" y1="260" x2="1880" y2="260" stroke="{COLORS['line']}" stroke-width="2"/>
+  
+  <!-- Event rows (simplified) -->
+  <text x="40" y="290" fill="{COLORS['text']}" font-size="18" font-family="Arial">2025/11/22 08:13:29</text>
+  <rect x="300" y="275" width="150" height="32" rx="16" fill="{COLORS['chip_error']}"/>
+  <text x="375" y="295" text-anchor="middle" fill="#FFFFFF" font-size="18" font-family="Arial">System Fault</text>
+  <text x="600" y="290" fill="{COLORS['text']}" font-size="18" font-family="Arial">BEMU Communication Timeout</text>
+  
+  <text x="40" y="340" fill="{COLORS['text']}" font-size="18" font-family="Arial">2025/11/22 08:09:29</text>
+  <rect x="300" y="325" width="150" height="32" rx="16" fill="{COLORS['chip_warn']}"/>
+  <text x="375" y="345" text-anchor="middle" fill="#FFFFFF" font-size="18" font-family="Arial">System Alarm</text>
+  <text x="600" y="340" fill="{COLORS['text']}" font-size="18" font-family="Arial">BEMU Communication Timeout</text>
+</svg>'''
+    
+    with open(OUTPUT_DIR / "tier2_evt.svg", "w") as f:
+        f.write(svg_content)
+    print(f"Generated: {OUTPUT_DIR / 'tier2_evt.svg'}")
+
+
 def main():
     """Generate all Tier 2 design images"""
     print("Generating Tier 2 BMS design images...")
@@ -794,10 +899,11 @@ def main():
     tier2_bcu()
     tier2_bmu_cell_info()
     tier2_bmu_temperature()
+    tier2_evt()
     
     print("\n" + "=" * 50)
     print(f"All designs generated in: {OUTPUT_DIR}")
-    print("Total: 8 files (4 PNG + 4 SVG)")
+    print("Total: 10 files (5 PNG + 5 SVG)")
 
 
 if __name__ == "__main__":
