@@ -1,0 +1,92 @@
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ão -->
+  <rect width="1200" height="800" fill="#f5f5f5"/>
+  
+  <!-- ò -->
+  <text x="600" y="40" text-anchor="middle" font-size="24" font-weight="bold" fill="#333">PCS U:ub - æ°πH2”Q˛ + ûˆpn</text>
+  
+  <!-- Êß”Q˛ -->
+  <rect x="50" y="70" width="600" height="680" rx="6" fill="#fff" stroke="#ddd" stroke-width="2"/>
+  <text x="350" y="100" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">PCS ”Q”Ñ</text>
+  
+  <!-- 5Q -->
+  <rect x="200" y="150" width="300" height="80" rx="6" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
+  <text x="350" y="180" text-anchor="middle" font-size="16" font-weight="bold" fill="#1976d2">5Q (Grid)</text>
+  <text x="350" y="205" text-anchor="middle" font-size="14" fill="#666">380V / 50Hz</text>
+  <text x="350" y="225" text-anchor="middle" font-size="12" fill="#666">650.5kW</text>
+  
+  <!-- ﬁ•ø5Q í ÿãh -->
+  <line x1="350" y1="230" x2="350" y2="280" stroke="#666" stroke-width="2"/>
+  
+  <!-- ÿãh -->
+  <rect x="300" y="280" width="100" height="60" rx="4" fill="#fff3e0" stroke="#ff9800" stroke-width="2"/>
+  <text x="350" y="305" text-anchor="middle" font-size="14" font-weight="bold" fill="#e65100">ÿãh</text>
+  <text x="350" y="325" text-anchor="middle" font-size="12" fill="#666">AC/DC</text>
+  
+  <!-- ﬁ•øÿãh í PCS -->
+  <line x1="350" y1="340" x2="350" y2="380" stroke="#666" stroke-width="2"/>
+  
+  <!-- PCS8√ -->
+  <rect x="250" y="380" width="200" height="120" rx="6" fill="#fff" stroke="#4caf50" stroke-width="3"/>
+  <text x="350" y="410" text-anchor="middle" font-size="18" font-weight="bold" fill="#2e7d32">PCS</text>
+  <text x="350" y="435" text-anchor="middle" font-size="12" fill="#666">®˝ÿAh</text>
+  <text x="350" y="455" text-anchor="middle" font-size="14" fill="#333">Há: 95.2%</text>
+  <text x="350" y="475" text-anchor="middle" font-size="16" font-weight="bold" fill="#4caf50">E5!</text>
+  <text x="350" y="495" text-anchor="middle" font-size="12" fill="#666">)¶: 42∞C</text>
+  
+  <!-- ﬁ•øPCS í ÙAÕø -->
+  <line x1="350" y1="500" x2="350" y2="540" stroke="#666" stroke-width="2"/>
+  
+  <!-- ÙAÕø -->
+  <rect x="200" y="540" width="300" height="60" rx="4" fill="#e8f5e9" stroke="#4caf50" stroke-width="2"/>
+  <text x="350" y="565" text-anchor="middle" font-size="16" font-weight="bold" fill="#2e7d32">ÙAÕø</text>
+  <text x="350" y="585" text-anchor="middle" font-size="14" fill="#666">600V / 619.3kW</text>
+  
+  <!-- ﬁ•øÙAÕø í 5`ƒ -->
+  <line x1="350" y1="600" x2="350" y2="640" stroke="#666" stroke-width="2"/>
+  
+  <!-- 5`ƒ -->
+  <rect x="200" y="640" width="300" height="80" rx="6" fill="#e8f5e9" stroke="#4caf50" stroke-width="2"/>
+  <text x="350" y="670" text-anchor="middle" font-size="16" font-weight="bold" fill="#2e7d32">5`ƒ (Battery)</text>
+  <text x="350" y="695" text-anchor="middle" font-size="14" fill="#666">600V / SOC: 85%</text>
+  <text x="350" y="715" text-anchor="middle" font-size="12" fill="#666">619.3kW</text>
+  
+  <!-- Ûßûˆpnb -->
+  <rect x="680" y="70" width="470" height="680" rx="6" fill="#fff" stroke="#ddd" stroke-width="2"/>
+  <text x="915" y="100" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">ûˆpn</text>
+  
+  <!-- pnaG1§Aß -->
+  <rect x="700" y="130" width="430" height="140" rx="4" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
+  <text x="720" y="155" font-size="16" font-weight="bold" fill="#333">§Aß (AC)</text>
+  <text x="720" y="180" font-size="12" fill="#666">ø5ã: AB=380V | BC=382V | CA=381V</text>
+  <text x="720" y="200" font-size="12" fill="#666">¯5ã: A=220V | B=221V | C=220V</text>
+  <text x="720" y="220" font-size="12" fill="#666">¯5A: A=50A | B=52A | C=51A</text>
+  <text x="720" y="240" font-size="12" fill="#666">ëá: 50.02Hz | üá‡p: 0.98</text>
+  <text x="720" y="260" font-size="14" font-weight="bold" fill="#1976d2">üá: -650.5kW (E5)</text>
+  
+  <!-- pnaG2PCS∂ -->
+  <rect x="700" y="290" width="430" height="120" rx="4" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
+  <text x="720" y="315" font-size="16" font-weight="bold" fill="#333">PCS ∂</text>
+  <text x="720" y="340" font-size="12" fill="#666">–L!: E5 | vQ∂: vQ</text>
+  <text x="720" y="360" font-size="12" fill="#666">˚ﬂ∂: c8 | Há: 95.2%</text>
+  <text x="720" y="380" font-size="12" fill="#666">!W)¶: 42∞C | ØÉ)¶: 28∞C</text>
+  <text x="720" y="400" font-size="12" fill="#666">lb_: 31.2kW</text>
+  
+  <!-- pnaG3ÙAß -->
+  <rect x="700" y="430" width="430" height="140" rx="4" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
+  <text x="720" y="455" font-size="16" font-weight="bold" fill="#333">ÙAß (DC)</text>
+  <text x="720" y="480" font-size="12" fill="#666">5`5ã: 600V | Õø5ã: 605V</text>
+  <text x="720" y="500" font-size="12" fill="#666">ÙA5A: -1032A (E5π)</text>
+  <text x="720" y="520" font-size="12" fill="#666">ÙAüá: -619.3kW</text>
+  <text x="720" y="540" font-size="12" fill="#666">SOC: 85% | SOH: 92%</text>
+  <text x="720" y="560" font-size="14" font-weight="bold" fill="#2e7d32">üá: 619.3kW</text>
+  
+  <!-- pnaG4›§∂ -->
+  <rect x="700" y="590" width="430" height="140" rx="4" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
+  <text x="720" y="615" font-size="16" font-weight="bold" fill="#333">›§∂</text>
+  <text x="720" y="640" font-size="12" fill="#666">˚ﬂEú: & | ˚ﬂJf: &</text>
+  <text x="720" y="660" font-size="12" fill="#666">˚ﬂMù: & | ˚ﬂ1H: &</text>
+  <text x="720" y="680" font-size="12" fill="#666">«ã›§: c8 | «A›§: c8</text>
+  <text x="720" y="700" font-size="12" fill="#666">«)›§: c8 | ÌÔ›§: c8</text>
+  <text x="720" y="720" font-size="12" fill="#4caf50"> @	›§c8</text>
+</svg>
