@@ -5,7 +5,8 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Level2BMSVisualization } from '@/components/bms'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Level2BMSVisualization, Level2Topology } from '@/components/bms'
 import { useLevel2BMS } from '@/hooks/useBMS'
 import { createLevel2BMSData } from '@/utils/bmsDataFactory'
 import type { Level2BMSConfig, DataField } from '@/types/bms'
@@ -122,7 +123,28 @@ export default function BMSLevel2Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Level2BMSVisualization data={level2BMS.data} config={config} />
+          <Tabs defaultValue="topology" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="topology">拓扑图</TabsTrigger>
+              <TabsTrigger value="details">详细数据</TabsTrigger>
+            </TabsList>
+            <TabsContent value="topology" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">二级架构拓扑图</CardTitle>
+                  <CardDescription>
+                    展示电池簇 → 电池包（串联）→ 单体（串并联）的层级关系
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Level2Topology data={level2BMS.data} config={config} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="details" className="mt-4">
+              <Level2BMSVisualization data={level2BMS.data} config={config} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

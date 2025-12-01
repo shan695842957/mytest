@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Level3BMSVisualization } from '@/components/bms'
+import { Level3BMSVisualization, Level3Topology } from '@/components/bms'
 import { useLevel3BMS } from '@/hooks/useBMS'
 import { createLevel3BMSData } from '@/utils/bmsDataFactory'
 import type { Level3BMSConfig, DataField } from '@/types/bms'
@@ -139,7 +139,28 @@ export default function BMSLevel3Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Level3BMSVisualization data={level3BMS.data} config={config} />
+          <Tabs defaultValue="topology" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="topology">拓扑图</TabsTrigger>
+              <TabsTrigger value="details">详细数据</TabsTrigger>
+            </TabsList>
+            <TabsContent value="topology" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">三级架构拓扑图</CardTitle>
+                  <CardDescription>
+                    展示电池堆 → 电池簇（并联）→ 电池包（串联）→ 单体（串并联）的层级关系
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Level3Topology data={level3BMS.data} config={config} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="details" className="mt-4">
+              <Level3BMSVisualization data={level3BMS.data} config={config} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
