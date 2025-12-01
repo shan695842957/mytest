@@ -497,7 +497,7 @@ def tier3_sys():
     for idx, (label, state, status) in enumerate(sys_status):
         if idx > 0 and idx % 3 == 0:
             x = 40
-            row_y += 60
+            row_y += 100
         draw_metric_card(draw, x, row_y, label, state, "", width=280, height=80)
         draw_status_chip(draw, x + 200, row_y + 50, state, status)
         x += 600
@@ -637,8 +637,8 @@ def tier2_monitor():
     """Level 2: Cluster Monitor Page"""
     img, draw = canvas()
     
-    tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
-    draw_tabs(draw, tabs, active_idx=1)  # BAU active
+    tabs = ["SYS", "BCU", "BMU", "EVT"]
+    draw_tabs(draw, tabs, active_idx=1)  # BCU active (Cluster Monitor)
     
     draw_title(draw, "Cluster Monitor", "Level 2 Architecture: Cluster → Pack → Cell")
     
@@ -668,9 +668,9 @@ def tier2_monitor():
     draw.text((40, y), "Pack Status (Series Connection)", font=fonts["heading"], fill=COLORS["text"])
     y += 50
     
-    pack_count = 10
+    pack_count = 8  # Reduced from 10 to prevent overflow
     pack_y = y
-    pack_height = 60
+    pack_height = 55
     for idx in range(pack_count):
         x = 40
         
@@ -690,9 +690,9 @@ def tier2_monitor():
         
         # SOC progress bar
         bar_x = x + 550
-        bar_y = pack_y + 20
+        bar_y = pack_y + 18
         bar_width = 400
-        bar_height = 20
+        bar_height = 18
         draw.rounded_rectangle((bar_x, bar_y, bar_x + bar_width, bar_y + bar_height), radius=4, fill=COLORS["line"])
         fill_width = bar_width * (soc / 100)
         draw.rounded_rectangle((bar_x, bar_y, bar_x + fill_width, bar_y + bar_height), radius=4, fill=COLORS["chip_ok"])
@@ -705,8 +705,8 @@ def tier2_monitor():
         balance_status = "ok" if idx % 4 != 0 else "warn"
         draw_status_chip(draw, x + 1200, pack_y + 10, "Balance", balance_status)
         
-        pack_y += pack_height + 10
-        if pack_y + pack_height > HEIGHT - 100:
+        pack_y += pack_height + 8
+        if pack_y + pack_height > HEIGHT - 150:
             break
     
     y = pack_y + 20
@@ -739,8 +739,8 @@ def tier2_key_info():
     """Level 2: Key Information Page"""
     img, draw = canvas()
     
-    tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
-    draw_tabs(draw, tabs, active_idx=2)  # BCU active (Key Information)
+    tabs = ["SYS", "BCU", "BMU", "EVT"]
+    draw_tabs(draw, tabs, active_idx=1)  # BCU active (Key Information)
     
     draw_title(draw, "Key Information", "Level 2: Cluster Key Parameters")
     
@@ -845,8 +845,8 @@ def tier2_cell_voltage():
     """Level 2: Cell Voltage Page"""
     img, draw = canvas()
     
-    tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
-    draw_tabs(draw, tabs, active_idx=3)  # BMU active
+    tabs = ["SYS", "BCU", "BMU", "EVT"]
+    draw_tabs(draw, tabs, active_idx=2)  # BMU active
     
     draw_title(draw, "Cell Voltage", "Level 2: Individual Cell Voltage Monitoring")
     
@@ -906,8 +906,8 @@ def tier2_cell_temperature():
     """Level 2: Cell Temperature Page"""
     img, draw = canvas()
     
-    tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
-    draw_tabs(draw, tabs, active_idx=3)  # BMU active
+    tabs = ["SYS", "BCU", "BMU", "EVT"]
+    draw_tabs(draw, tabs, active_idx=2)  # BMU active
     
     draw_title(draw, "Cell Temperature", "Level 2: Temperature Points Monitoring")
     
@@ -950,7 +950,7 @@ def tier2_sys():
     """Level 2: System Information Page"""
     img, draw = canvas()
     
-    tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
+    tabs = ["SYS", "BCU", "BMU", "EVT"]
     draw_tabs(draw, tabs, active_idx=0)  # SYS active
     
     draw_title(draw, "System Information", "Level 2: System Status and Configuration")
@@ -975,7 +975,7 @@ def tier2_sys():
     for idx, (label, state, status) in enumerate(sys_status):
         if idx > 0 and idx % 3 == 0:
             x = 40
-            row_y += 60
+            row_y += 100
         draw_metric_card(draw, x, row_y, label, state, "", width=280, height=80)
         draw_status_chip(draw, x + 200, row_y + 50, state, status)
         x += 600
@@ -1051,8 +1051,8 @@ def tier2_events():
     """Level 2: Event Log Page"""
     img, draw = canvas()
     
-    tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
-    draw_tabs(draw, tabs, active_idx=4)  # EVT active
+    tabs = ["SYS", "BCU", "BMU", "EVT"]
+    draw_tabs(draw, tabs, active_idx=3)  # EVT active
     
     draw_title(draw, "Event Log", "Level 2: System Events and Alarms")
     
