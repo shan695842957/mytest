@@ -1,0 +1,104 @@
+<svg width="1920" height="1080" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="1080" fill="#F5F5F5"/>
+  
+  <!-- Tabs -->
+  <g id="tabs">
+    <rect x="40" y="20" width="100" height="50" rx="8" fill="#2E7D32"/>
+    <text x="90" y="50" text-anchor="middle" fill="#FFFFFF" font-size="20" font-family="Arial">SYS</text>
+    <rect x="150" y="20" width="100" height="50" rx="8" fill="#E0E0E0"/>
+    <text x="200" y="50" text-anchor="middle" fill="#212121" font-size="20" font-family="Arial">BAU</text>
+    <rect x="260" y="20" width="100" height="50" rx="8" fill="#E0E0E0"/>
+    <text x="310" y="50" text-anchor="middle" fill="#212121" font-size="20" font-family="Arial">BCU</text>
+    <rect x="370" y="20" width="100" height="50" rx="8" fill="#E0E0E0"/>
+    <text x="420" y="50" text-anchor="middle" fill="#212121" font-size="20" font-family="Arial">BMU</text>
+    <rect x="470" y="20" width="100" height="50" rx="8" fill="#E0E0E0"/>
+    <text x="520" y="50" text-anchor="middle" fill="#212121" font-size="20" font-family="Arial">EVT</text>
+  </g>
+  
+  <!-- Title -->
+  <text x="40" y="140" fill="#212121" font-size="48" font-family="Arial" font-weight="bold">Stack Overview</text>
+  <text x="40" y="180" fill="#757575" font-size="24" font-family="Arial">Tier 3: Stack Basic Information and Cluster Status</text>
+  <line x1="40" y1="200" x2="1880" y2="200" stroke="#BDBDBD" stroke-width="2"/>
+  
+  <!-- Stack Basic Information -->
+  <text x="40" y="250" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Stack Basic Information</text>
+  
+  <!-- Status indicators -->
+  <text x="40" y="300" fill="#757575" font-size="18" font-family="Arial">Alarm Status</text>
+  <rect x="40" y="325" width="160" height="40" rx="4" fill="#F44336"/>
+  <text x="120" y="350" text-anchor="middle" fill="#FFFFFF" font-size="20" font-family="Arial">Fault</text>
+  
+  <!-- Metrics -->
+  <rect x="240" y="300" width="200" height="100" rx="8" fill="#FFFFFF"/>
+  <text x="250" y="320" fill="#757575" font-size="18" font-family="Arial">Stack Voltage</text>
+  <text x="340" y="360" text-anchor="middle" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">1250.5 V</text>
+  
+  <rect x="460" y="300" width="200" height="100" rx="8" fill="#FFFFFF"/>
+  <text x="470" y="320" fill="#757575" font-size="18" font-family="Arial">Stack Current</text>
+  <text x="560" y="360" text-anchor="middle" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">1320.0 A</text>
+  
+  <rect x="680" y="300" width="200" height="100" rx="8" fill="#FFFFFF"/>
+  <text x="690" y="320" fill="#757575" font-size="18" font-family="Arial">Power</text>
+  <text x="780" y="360" text-anchor="middle" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">1650.6 kW</text>
+  
+  <text x="900" y="300" fill="#757575" font-size="18" font-family="Arial">Breaker Status</text>
+  <rect x="900" y="325" width="200" height="40" rx="4" fill="#F44336"/>
+  <text x="1000" y="350" text-anchor="middle" fill="#FFFFFF" font-size="20" font-family="Arial">Open</text>
+  
+  <!-- Additional indicators -->
+  <text x="40" y="420" fill="#757575" font-size="18" font-family="Arial">SOC</text>
+  <text x="40" y="450" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">12.7%</text>
+  
+  <text x="200" y="420" fill="#757575" font-size="18" font-family="Arial">SOE</text>
+  <text x="200" y="450" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">0.0%</text>
+  
+  <text x="360" y="420" fill="#757575" font-size="18" font-family="Arial">SOH</text>
+  <text x="360" y="450" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">93%</text>
+  
+  <text x="520" y="420" fill="#757575" font-size="18" font-family="Arial">SOS</text>
+  <text x="520" y="450" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">50.0%</text>
+  
+  <text x="680" y="420" fill="#757575" font-size="18" font-family="Arial">Consistency</text>
+  <text x="680" y="450" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">91%</text>
+  
+  <text x="900" y="420" fill="#757575" font-size="18" font-family="Arial">Insulation</text>
+  <text x="900" y="450" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">0kΩ</text>
+  
+  <line x1="40" y1="500" x2="1880" y2="500" stroke="#BDBDBD" stroke-width="2"/>
+  
+  <!-- Breaker Control -->
+  <text x="40" y="530" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Breaker Control</text>
+  <rect x="40" y="560" width="260" height="60" rx="8" fill="#4CAF50"/>
+  <text x="170" y="595" text-anchor="middle" fill="#FFFFFF" font-size="20" font-family="Arial">Close Breaker</text>
+  <rect x="340" y="560" width="260" height="60" rx="8" fill="#F44336"/>
+  <text x="470" y="595" text-anchor="middle" fill="#FFFFFF" font-size="20" font-family="Arial">Open Breaker</text>
+  
+  <line x1="40" y1="650" x2="1880" y2="650" stroke="#BDBDBD" stroke-width="2"/>
+  
+  <!-- Cluster Status (Parallel) -->
+  <text x="40" y="680" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Cluster Status (Parallel Connection)</text>
+  
+  <!-- Clusters (simplified) -->
+  <g id="clusters">
+    <rect x="40" y="720" width="580" height="220" rx="6" fill="#FFFFFF"/>
+    <text x="60" y="750" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Cluster C1</text>
+    <text x="60" y="790" fill="#212121" font-size="20" font-family="Arial">SOC: 12.8%</text>
+    <text x="60" y="820" fill="#212121" font-size="20" font-family="Arial">Voltage: 1250.5V</text>
+    <text x="60" y="850" fill="#212121" font-size="20" font-family="Arial">Current: 110.0A</text>
+    <rect x="60" y="880" width="500" height="20" rx="4" fill="#BDBDBD"/>
+    <rect x="60" y="880" width="64" height="20" rx="4" fill="#4CAF50"/>
+    <text x="60" y="910" fill="#757575" font-size="18" font-family="Arial">Breaker:</text>
+    <rect x="160" y="905" width="100" height="20" rx="4" fill="#4CAF50"/>
+    <text x="210" y="918" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Closed</text>
+    <rect x="290" y="905" width="70" height="20" rx="4" fill="#4CAF50"/>
+    <text x="325" y="918" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Close</text>
+    <rect x="380" y="905" width="70" height="20" rx="4" fill="#F44336"/>
+    <text x="415" y="918" text-anchor="middle" fill="#FFFFFF" font-size="14" font-family="Arial">Open</text>
+    
+    <line x1="630" y1="830" x2="640" y2="830" stroke="#1976D2" stroke-width="3"/>
+    <text x="645" y="835" fill="#1976D2" font-size="14" font-family="Arial">Parallel</text>
+    
+    <rect x="640" y="720" width="580" height="220" rx="6" fill="#FFFFFF"/>
+    <text x="660" y="750" fill="#212121" font-size="32" font-family="Arial" font-weight="bold">Cluster C2</text>
+  </g>
+</svg>
