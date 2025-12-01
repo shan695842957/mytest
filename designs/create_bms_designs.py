@@ -469,102 +469,122 @@ def tier3_cell_temperature():
 
 
 def tier3_sys():
-    """Level 3: System Information Page"""
+    """Level 3: System Overview Page (based on bms1.jpg)"""
     img, draw = canvas()
     
     tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
     draw_tabs(draw, tabs, active_idx=0)  # SYS active
     
-    draw_title(draw, "System Information", "Level 3: System Status and Configuration")
+    draw_title(draw, "Stack Overview", "Level 3: Battery Stack and Cluster Status")
     
     y = 200
     
-    # System status
-    draw.text((40, y), "System Status", font=fonts["heading"], fill=COLORS["text"])
-    y += 50
+    # Stack summary section
+    # Left: Status indicators
+    draw.text((40, y), "Alarm Status", font=fonts["small"], fill=COLORS["muted"])
+    draw.rounded_rectangle((40, y + 25, 200, y + 65), radius=4, fill=COLORS["chip_error"])
+    draw.text((120, y + 40), "Fault", font=fonts["body"], fill="#FFFFFF")
     
-    sys_status = [
-        ("System Mode", "Normal", "ok"),
-        ("Operation Status", "Local", "warn"),
-        ("Alarm Status", "Fault", "error"),
-        ("Communication", "Online", "ok"),
-        ("Network", "Connected", "ok"),
-        ("SD Card", "Normal", "ok"),
-    ]
+    draw.text((40, y + 80), "Operation Status", font=fonts["small"], fill=COLORS["muted"])
+    draw.rounded_rectangle((40, y + 105, 200, y + 145), radius=4, fill=COLORS["chip_warn"])
+    draw.text((120, y + 120), "Local", font=fonts["body"], fill="#FFFFFF")
     
-    x = 40
-    row_y = y
-    for idx, (label, state, status) in enumerate(sys_status):
-        if idx > 0 and idx % 3 == 0:
-            x = 40
-            row_y += 100
-        draw_metric_card(draw, x, row_y, label, state, "", width=280, height=80)
-        draw_status_chip(draw, x + 200, row_y + 50, state, status)
-        x += 600
+    # Middle: Main electrical parameters
+    draw_metric_card(draw, 240, y, "Stack Voltage", "1250.5", "V", width=200, height=100)
+    draw_metric_card(draw, 460, y, "Stack Current", "1320.0", "A", width=200, height=100)
     
-    y = row_y + 120
+    # Right: Power and contactor
+    draw_metric_card(draw, 680, y, "Power", "1650.6", "kW", width=200, height=100)
+    draw.text((900, y), "Contactor Status", font=fonts["small"], fill=COLORS["muted"])
+    draw.rounded_rectangle((900, y + 25, 1100, y + 65), radius=4, fill=COLORS["chip_ok"])
+    draw.text((1000, y + 40), "Open", font=fonts["body"], fill="#FFFFFF")
+    
+    # Additional performance indicators
+    y += 120
+    draw.text((40, y), "SOC", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((40, y + 30), "12.7%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((200, y), "SOE", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((200, y + 30), "0.0%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((360, y), "SOH", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((360, y + 30), "93%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((520, y), "Consistency", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((520, y + 30), "91%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((720, y), "SOS", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((720, y + 30), "50.0%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((900, y), "Insulation", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((900, y + 30), "0kΩ", font=fonts["heading"], fill=COLORS["text"])
+    
+    y += 80
     draw_divider(draw, y)
     y += 30
     
-    # System configuration
-    draw.text((40, y), "System Configuration", font=fonts["heading"], fill=COLORS["text"])
+    # Parallel control buttons
+    draw.text((40, y), "Parallel Control", font=fonts["heading"], fill=COLORS["text"])
     y += 50
     
-    config_items = [
-        ("Architecture", "Level 3 (Stack-Cluster-Pack-Cell)", 40),
-        ("Stack Count", "1", 400),
-        ("Cluster Count", "3", 760),
-        ("Pack Count per Cluster", "4", 1120),
-        ("Cell Count per Pack", "30", 1480),
-        ("Temperature Points per Pack", "28", 40),
-        ("Cell Configuration", "2S 15P", 400),
-        ("Software Version", "QRenBms100.3.1.13", 760),
-        ("Hardware Version", "BCMU-2 BEMU-V11", 1120),
-    ]
+    # One-key close button
+    draw.rounded_rectangle((40, y, 300, y + 60), radius=8, fill=COLORS["accent"])
+    draw.text((170, y + 20), "One-key Close", font=fonts["body"], fill="#FFFFFF")
     
-    row_y = y
-    for idx, (label, value, x) in enumerate(config_items):
-        if idx > 0 and idx % 3 == 0:
-            row_y += 60
-        draw.text((x, row_y), f"{label}:", font=fonts["body"], fill=COLORS["muted"])
-        draw.text((x, row_y + 30), value, font=fonts["body"], fill=COLORS["text"])
+    # One-key open button
+    draw.rounded_rectangle((340, y, 600, y + 60), radius=8, fill=COLORS["chip_warn"])
+    draw.text((470, y + 20), "One-key Open", font=fonts["body"], fill="#FFFFFF")
     
-    y = row_y + 100
+    y += 90
     draw_divider(draw, y)
     y += 30
     
-    # Communication status
-    draw.text((40, y), "Communication Status", font=fonts["heading"], fill=COLORS["text"])
+    # Cluster detailed view
+    draw.text((40, y), "Cluster Status", font=fonts["heading"], fill=COLORS["text"])
     y += 50
     
-    comm_status = [
-        ("CAN1", "Online", "ok"),
-        ("CAN2", "Online", "ok"),
-        ("RS485", "Online", "ok"),
-        ("SPI1", "Online", "ok"),
-        ("SPI2", "Online", "ok"),
-        ("LAN1", "Online", "ok"),
-        ("LAN2", "Online", "ok"),
-        ("LAN3", "Timeout", "error"),
-    ]
+    # Display clusters (C1, C2, C3)
+    cluster_count = 3
+    cluster_width = 580
+    cluster_height = 200
+    start_x = 40
     
-    x = 40
-    row_y = y
-    for idx, (label, state, status) in enumerate(comm_status):
-        if idx > 0 and idx % 4 == 0:
-            x = 40
-            row_y += 50
-        draw_status_chip(draw, x, row_y, f"{label}: {state}", status)
-        x += 460
-    
-    y = row_y + 80
-    draw_divider(draw, y)
-    y += 30
-    
-    # System time
-    draw.text((40, y), "System Time", font=fonts["heading"], fill=COLORS["text"])
-    y += 50
-    draw.text((40, y), "2025/12/1 09:55:52", font=fonts["heading"], fill=COLORS["text"])
+    for idx in range(cluster_count):
+        x = start_x + idx * (cluster_width + 20)
+        if x + cluster_width > WIDTH - 40:
+            break
+        
+        # Cluster card
+        draw.rounded_rectangle((x, y, x + cluster_width, y + cluster_height), radius=6, fill=COLORS["card_bg"])
+        
+        # Cluster ID
+        draw.text((x + 20, y + 20), f"Cluster C{idx+1}", font=fonts["heading"], fill=COLORS["text"])
+        
+        # Status indicators
+        draw.rounded_rectangle((x + 400, y + 20, x + 500, y + 50), radius=4, fill=COLORS["chip_ok"])
+        draw.text((x + 450, y + 35), "Enabled", font=fonts["small"], fill="#FFFFFF")
+        
+        # SOC percentage and bar
+        soc = 12.8 + idx * 0.1
+        draw.text((x + 20, y + 60), f"SOC: {soc:.1f}%", font=fonts["body"], fill=COLORS["text"])
+        bar_x = x + 20
+        bar_y = y + 90
+        bar_width = 500
+        bar_height = 20
+        draw.rounded_rectangle((bar_x, bar_y, bar_x + bar_width, bar_y + bar_height), radius=4, fill=COLORS["line"])
+        fill_width = bar_width * (soc / 100)
+        draw.rounded_rectangle((bar_x, bar_y, bar_x + fill_width, bar_y + bar_height), radius=4, fill=COLORS["chip_ok"])
+        
+        # Voltage and Current
+        draw.text((x + 20, y + 130), "Voltage: 1250.5V", font=fonts["body"], fill=COLORS["text"])
+        draw.text((x + 20, y + 160), "Current: 110.0A", font=fonts["body"], fill=COLORS["text"])
+        
+        # Control buttons
+        draw.rounded_rectangle((x + 400, y + 130, x + 480, y + 160), radius=4, fill=COLORS["chip_warn"])
+        draw.text((x + 440, y + 145), "Open", font=fonts["small"], fill="#FFFFFF")
+        
+        draw.rounded_rectangle((x + 490, y + 130, x + 570, y + 160), radius=4, fill=COLORS["chip_ok"])
+        draw.text((x + 530, y + 145), "Close", font=fonts["small"], fill="#FFFFFF")
     
     img.save(OUTPUT_DIR / "tier3_sys.png")
     print(f"Generated: {OUTPUT_DIR / 'tier3_sys.png'}")
@@ -947,101 +967,107 @@ def tier2_cell_temperature():
 
 
 def tier2_sys():
-    """Level 2: System Information Page"""
+    """Level 2: Cluster Overview Page (based on bms1.jpg)"""
     img, draw = canvas()
     
     tabs = ["SYS", "BCU", "BMU", "EVT"]
     draw_tabs(draw, tabs, active_idx=0)  # SYS active
     
-    draw_title(draw, "System Information", "Level 2: System Status and Configuration")
+    draw_title(draw, "Cluster Overview", "Level 2: Battery Cluster Status")
     
     y = 200
     
-    # System status
-    draw.text((40, y), "System Status", font=fonts["heading"], fill=COLORS["text"])
-    y += 50
+    # Cluster summary section
+    # Left: Status indicators
+    draw.text((40, y), "Alarm Status", font=fonts["small"], fill=COLORS["muted"])
+    draw.rounded_rectangle((40, y + 25, 200, y + 65), radius=4, fill=COLORS["chip_error"])
+    draw.text((120, y + 40), "Fault", font=fonts["body"], fill="#FFFFFF")
     
-    sys_status = [
-        ("System Mode", "Normal", "ok"),
-        ("Operation Status", "Local", "warn"),
-        ("Alarm Status", "Fault", "error"),
-        ("Communication", "Online", "ok"),
-        ("Network", "Connected", "ok"),
-        ("SD Card", "Normal", "ok"),
-    ]
+    draw.text((40, y + 80), "Operation Status", font=fonts["small"], fill=COLORS["muted"])
+    draw.rounded_rectangle((40, y + 105, 200, y + 145), radius=4, fill=COLORS["chip_warn"])
+    draw.text((120, y + 120), "Local", font=fonts["body"], fill="#FFFFFF")
     
-    x = 40
-    row_y = y
-    for idx, (label, state, status) in enumerate(sys_status):
-        if idx > 0 and idx % 3 == 0:
-            x = 40
-            row_y += 100
-        draw_metric_card(draw, x, row_y, label, state, "", width=280, height=80)
-        draw_status_chip(draw, x + 200, row_y + 50, state, status)
-        x += 600
+    # Middle: Main electrical parameters
+    draw_metric_card(draw, 240, y, "Cluster Voltage", "1250.5", "V", width=200, height=100)
+    draw_metric_card(draw, 460, y, "Cluster Current", "1320.0", "A", width=200, height=100)
     
-    y = row_y + 120
+    # Right: Power and contactor
+    draw_metric_card(draw, 680, y, "Power", "1650.6", "kW", width=200, height=100)
+    draw.text((900, y), "Contactor Status", font=fonts["small"], fill=COLORS["muted"])
+    draw.rounded_rectangle((900, y + 25, 1100, y + 65), radius=4, fill=COLORS["chip_ok"])
+    draw.text((1000, y + 40), "Closed", font=fonts["body"], fill="#FFFFFF")
+    
+    # Additional performance indicators
+    y += 120
+    draw.text((40, y), "SOC", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((40, y + 30), "12.7%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((200, y), "SOE", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((200, y + 30), "0.0%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((360, y), "SOH", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((360, y + 30), "93%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((520, y), "Consistency", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((520, y + 30), "91%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((720, y), "SOS", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((720, y + 30), "50.0%", font=fonts["heading"], fill=COLORS["text"])
+    
+    draw.text((900, y), "Insulation", font=fonts["small"], fill=COLORS["muted"])
+    draw.text((900, y + 30), "980kΩ", font=fonts["heading"], fill=COLORS["text"])
+    
+    y += 80
     draw_divider(draw, y)
     y += 30
     
-    # System configuration
-    draw.text((40, y), "System Configuration", font=fonts["heading"], fill=COLORS["text"])
+    # Pack status (series connection)
+    draw.text((40, y), "Pack Status (Series Connection)", font=fonts["heading"], fill=COLORS["text"])
     y += 50
     
-    config_items = [
-        ("Architecture", "Level 2 (Cluster-Pack-Cell)", 40),
-        ("Cluster Count", "1", 400),
-        ("Pack Count", "10", 760),
-        ("Cell Count per Pack", "30", 1120),
-        ("Temperature Points per Pack", "8", 1480),
-        ("Cell Configuration", "2S 15P", 400),
-        ("Software Version", "QRenBms100.3.1.13", 760),
-        ("Hardware Version", "BCMU-2 BEMU-V11", 1120),
-    ]
+    # Display packs in a horizontal scrollable view
+    pack_count = 8
+    pack_width = 220
+    pack_height = 180
+    start_x = 40
     
-    row_y = y
-    for idx, (label, value, x) in enumerate(config_items):
-        if idx > 0 and idx % 3 == 0:
-            row_y += 60
-        draw.text((x, row_y), f"{label}:", font=fonts["body"], fill=COLORS["muted"])
-        draw.text((x, row_y + 30), value, font=fonts["body"], fill=COLORS["text"])
-    
-    y = row_y + 100
-    draw_divider(draw, y)
-    y += 30
-    
-    # Communication status
-    draw.text((40, y), "Communication Status", font=fonts["heading"], fill=COLORS["text"])
-    y += 50
-    
-    comm_status = [
-        ("CAN1", "Online", "ok"),
-        ("CAN2", "Online", "ok"),
-        ("RS485", "Online", "ok"),
-        ("SPI1", "Online", "ok"),
-        ("SPI2", "Online", "ok"),
-        ("LAN1", "Online", "ok"),
-        ("LAN2", "Online", "ok"),
-        ("LAN3", "Timeout", "error"),
-    ]
-    
-    x = 40
-    row_y = y
-    for idx, (label, state, status) in enumerate(comm_status):
-        if idx > 0 and idx % 4 == 0:
-            x = 40
-            row_y += 50
-        draw_status_chip(draw, x, row_y, f"{label}: {state}", status)
-        x += 460
-    
-    y = row_y + 80
-    draw_divider(draw, y)
-    y += 30
-    
-    # System time
-    draw.text((40, y), "System Time", font=fonts["heading"], fill=COLORS["text"])
-    y += 50
-    draw.text((40, y), "2025/12/1 09:55:52", font=fonts["heading"], fill=COLORS["text"])
+    for idx in range(pack_count):
+        x = start_x + idx * (pack_width + 10)
+        if x + pack_width > WIDTH - 40:
+            break
+        
+        # Pack card
+        draw.rounded_rectangle((x, y, x + pack_width, y + pack_height), radius=6, fill=COLORS["card_bg"])
+        
+        # Pack ID
+        draw.text((x + 10, y + 10), f"Pack {idx+1:02d}", font=fonts["body"], fill=COLORS["text"])
+        
+        # Status indicator
+        draw.rounded_rectangle((x + 150, y + 10, x + 210, y + 40), radius=4, fill=COLORS["chip_ok"])
+        draw.text((x + 180, y + 25), "Enabled", font=fonts["tiny"], fill="#FFFFFF")
+        
+        # SOC percentage and bar
+        soc = 12.8 + idx * 0.1
+        draw.text((x + 10, y + 50), f"SOC: {soc:.1f}%", font=fonts["small"], fill=COLORS["text"])
+        bar_x = x + 10
+        bar_y = y + 75
+        bar_width = 200
+        bar_height = 15
+        draw.rounded_rectangle((bar_x, bar_y, bar_x + bar_width, bar_y + bar_height), radius=3, fill=COLORS["line"])
+        fill_width = bar_width * (soc / 100)
+        draw.rounded_rectangle((bar_x, bar_y, bar_x + fill_width, bar_y + bar_height), radius=3, fill=COLORS["chip_ok"])
+        
+        # Voltage and Current
+        voltage = 125.0 - idx * 0.1
+        draw.text((x + 10, y + 100), f"Voltage: {voltage:.1f}V", font=fonts["tiny"], fill=COLORS["text"])
+        draw.text((x + 10, y + 120), "Current: 110.0A", font=fonts["tiny"], fill=COLORS["text"])
+        
+        # Control buttons
+        draw.rounded_rectangle((x + 10, y + 145, x + 100, y + 170), radius=3, fill=COLORS["chip_warn"])
+        draw.text((x + 55, y + 157), "Open", font=fonts["tiny"], fill="#FFFFFF")
+        
+        draw.rounded_rectangle((x + 110, y + 145, x + 200, y + 170), radius=3, fill=COLORS["chip_ok"])
+        draw.text((x + 155, y + 157), "Close", font=fonts["tiny"], fill="#FFFFFF")
     
     img.save(OUTPUT_DIR / "tier2_sys.png")
     print(f"Generated: {OUTPUT_DIR / 'tier2_sys.png'}")
