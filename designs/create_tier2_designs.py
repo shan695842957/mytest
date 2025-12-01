@@ -225,7 +225,7 @@ def tier2_sys():
             draw.text((x + 110, pack_y - 25), "Series", font=fonts["tiny"], fill=COLORS["accent"])
         
         # Pack card
-        draw.rounded_rectangle((x, pack_y, x + 1800, pack_height), radius=6, fill=COLORS["card_bg"])
+        draw.rounded_rectangle((x, pack_y, x + 1800, pack_y + pack_height), radius=6, fill=COLORS["card_bg"])
         
         # Pack ID
         draw.text((x + 20, pack_y + 15), f"Pack {idx+1:02d}", font=fonts["body"], fill=COLORS["text"])
