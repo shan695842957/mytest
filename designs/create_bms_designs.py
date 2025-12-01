@@ -468,6 +468,108 @@ def tier3_cell_temperature():
     print(f"Generated: {OUTPUT_DIR / 'tier3_cell_temperature.png'}")
 
 
+def tier3_sys():
+    """Level 3: System Information Page"""
+    img, draw = canvas()
+    
+    tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
+    draw_tabs(draw, tabs, active_idx=0)  # SYS active
+    
+    draw_title(draw, "System Information", "Level 3: System Status and Configuration")
+    
+    y = 200
+    
+    # System status
+    draw.text((40, y), "System Status", font=fonts["heading"], fill=COLORS["text"])
+    y += 50
+    
+    sys_status = [
+        ("System Mode", "Normal", "ok"),
+        ("Operation Status", "Local", "warn"),
+        ("Alarm Status", "Fault", "error"),
+        ("Communication", "Online", "ok"),
+        ("Network", "Connected", "ok"),
+        ("SD Card", "Normal", "ok"),
+    ]
+    
+    x = 40
+    row_y = y
+    for idx, (label, state, status) in enumerate(sys_status):
+        if idx > 0 and idx % 3 == 0:
+            x = 40
+            row_y += 60
+        draw_metric_card(draw, x, row_y, label, state, "", width=280, height=80)
+        draw_status_chip(draw, x + 200, row_y + 50, state, status)
+        x += 600
+    
+    y = row_y + 120
+    draw_divider(draw, y)
+    y += 30
+    
+    # System configuration
+    draw.text((40, y), "System Configuration", font=fonts["heading"], fill=COLORS["text"])
+    y += 50
+    
+    config_items = [
+        ("Architecture", "Level 3 (Stack-Cluster-Pack-Cell)", 40),
+        ("Stack Count", "1", 400),
+        ("Cluster Count", "3", 760),
+        ("Pack Count per Cluster", "4", 1120),
+        ("Cell Count per Pack", "30", 1480),
+        ("Temperature Points per Pack", "28", 40),
+        ("Cell Configuration", "2S 15P", 400),
+        ("Software Version", "QRenBms100.3.1.13", 760),
+        ("Hardware Version", "BCMU-2 BEMU-V11", 1120),
+    ]
+    
+    row_y = y
+    for idx, (label, value, x) in enumerate(config_items):
+        if idx > 0 and idx % 3 == 0:
+            row_y += 60
+        draw.text((x, row_y), f"{label}:", font=fonts["body"], fill=COLORS["muted"])
+        draw.text((x, row_y + 30), value, font=fonts["body"], fill=COLORS["text"])
+    
+    y = row_y + 100
+    draw_divider(draw, y)
+    y += 30
+    
+    # Communication status
+    draw.text((40, y), "Communication Status", font=fonts["heading"], fill=COLORS["text"])
+    y += 50
+    
+    comm_status = [
+        ("CAN1", "Online", "ok"),
+        ("CAN2", "Online", "ok"),
+        ("RS485", "Online", "ok"),
+        ("SPI1", "Online", "ok"),
+        ("SPI2", "Online", "ok"),
+        ("LAN1", "Online", "ok"),
+        ("LAN2", "Online", "ok"),
+        ("LAN3", "Timeout", "error"),
+    ]
+    
+    x = 40
+    row_y = y
+    for idx, (label, state, status) in enumerate(comm_status):
+        if idx > 0 and idx % 4 == 0:
+            x = 40
+            row_y += 50
+        draw_status_chip(draw, x, row_y, f"{label}: {state}", status)
+        x += 460
+    
+    y = row_y + 80
+    draw_divider(draw, y)
+    y += 30
+    
+    # System time
+    draw.text((40, y), "System Time", font=fonts["heading"], fill=COLORS["text"])
+    y += 50
+    draw.text((40, y), "2025/12/1 09:55:52", font=fonts["heading"], fill=COLORS["text"])
+    
+    img.save(OUTPUT_DIR / "tier3_sys.png")
+    print(f"Generated: {OUTPUT_DIR / 'tier3_sys.png'}")
+
+
 def tier3_events():
     """Level 3: Event Log Page"""
     img, draw = canvas()
@@ -844,6 +946,107 @@ def tier2_cell_temperature():
     print(f"Generated: {OUTPUT_DIR / 'tier2_cell_temperature.png'}")
 
 
+def tier2_sys():
+    """Level 2: System Information Page"""
+    img, draw = canvas()
+    
+    tabs = ["SYS", "BAU", "BCU", "BMU", "EVT"]
+    draw_tabs(draw, tabs, active_idx=0)  # SYS active
+    
+    draw_title(draw, "System Information", "Level 2: System Status and Configuration")
+    
+    y = 200
+    
+    # System status
+    draw.text((40, y), "System Status", font=fonts["heading"], fill=COLORS["text"])
+    y += 50
+    
+    sys_status = [
+        ("System Mode", "Normal", "ok"),
+        ("Operation Status", "Local", "warn"),
+        ("Alarm Status", "Fault", "error"),
+        ("Communication", "Online", "ok"),
+        ("Network", "Connected", "ok"),
+        ("SD Card", "Normal", "ok"),
+    ]
+    
+    x = 40
+    row_y = y
+    for idx, (label, state, status) in enumerate(sys_status):
+        if idx > 0 and idx % 3 == 0:
+            x = 40
+            row_y += 60
+        draw_metric_card(draw, x, row_y, label, state, "", width=280, height=80)
+        draw_status_chip(draw, x + 200, row_y + 50, state, status)
+        x += 600
+    
+    y = row_y + 120
+    draw_divider(draw, y)
+    y += 30
+    
+    # System configuration
+    draw.text((40, y), "System Configuration", font=fonts["heading"], fill=COLORS["text"])
+    y += 50
+    
+    config_items = [
+        ("Architecture", "Level 2 (Cluster-Pack-Cell)", 40),
+        ("Cluster Count", "1", 400),
+        ("Pack Count", "10", 760),
+        ("Cell Count per Pack", "30", 1120),
+        ("Temperature Points per Pack", "8", 1480),
+        ("Cell Configuration", "2S 15P", 400),
+        ("Software Version", "QRenBms100.3.1.13", 760),
+        ("Hardware Version", "BCMU-2 BEMU-V11", 1120),
+    ]
+    
+    row_y = y
+    for idx, (label, value, x) in enumerate(config_items):
+        if idx > 0 and idx % 3 == 0:
+            row_y += 60
+        draw.text((x, row_y), f"{label}:", font=fonts["body"], fill=COLORS["muted"])
+        draw.text((x, row_y + 30), value, font=fonts["body"], fill=COLORS["text"])
+    
+    y = row_y + 100
+    draw_divider(draw, y)
+    y += 30
+    
+    # Communication status
+    draw.text((40, y), "Communication Status", font=fonts["heading"], fill=COLORS["text"])
+    y += 50
+    
+    comm_status = [
+        ("CAN1", "Online", "ok"),
+        ("CAN2", "Online", "ok"),
+        ("RS485", "Online", "ok"),
+        ("SPI1", "Online", "ok"),
+        ("SPI2", "Online", "ok"),
+        ("LAN1", "Online", "ok"),
+        ("LAN2", "Online", "ok"),
+        ("LAN3", "Timeout", "error"),
+    ]
+    
+    x = 40
+    row_y = y
+    for idx, (label, state, status) in enumerate(comm_status):
+        if idx > 0 and idx % 4 == 0:
+            x = 40
+            row_y += 50
+        draw_status_chip(draw, x, row_y, f"{label}: {state}", status)
+        x += 460
+    
+    y = row_y + 80
+    draw_divider(draw, y)
+    y += 30
+    
+    # System time
+    draw.text((40, y), "System Time", font=fonts["heading"], fill=COLORS["text"])
+    y += 50
+    draw.text((40, y), "2025/12/1 09:55:52", font=fonts["heading"], fill=COLORS["text"])
+    
+    img.save(OUTPUT_DIR / "tier2_sys.png")
+    print(f"Generated: {OUTPUT_DIR / 'tier2_sys.png'}")
+
+
 def tier2_events():
     """Level 2: Event Log Page"""
     img, draw = canvas()
@@ -902,6 +1105,7 @@ def main():
     print("=" * 50)
     
     print("\nLevel 3 (Stack-Cluster-Pack-Cell) Designs:")
+    tier3_sys()
     tier3_monitor()
     tier3_key_info()
     tier3_cell_voltage()
@@ -909,6 +1113,7 @@ def main():
     tier3_events()
     
     print("\nLevel 2 (Cluster-Pack-Cell) Designs:")
+    tier2_sys()
     tier2_monitor()
     tier2_key_info()
     tier2_cell_voltage()
@@ -917,7 +1122,7 @@ def main():
     
     print("\n" + "=" * 50)
     print(f"All designs generated in: {OUTPUT_DIR}")
-    print("Total: 10 design images")
+    print("Total: 12 design images")
 
 
 if __name__ == "__main__":
