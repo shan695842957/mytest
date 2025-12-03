@@ -332,13 +332,10 @@ export default function BMSLevel2Page() {
 
                               return (
                                 <div key={pack.id} className="relative">
-                                  {/* Series Connection Indicator - 固定显示 */}
+                                  {/* Series Connection Indicator - 固定显示（只显示连接线，不显示文字） */}
                                   {idx > 0 && (
                                     <div className="absolute left-[100px] -top-3 flex flex-col items-center">
                                       <div className="h-3 w-0.5 bg-blue-500" />
-                                      <span className="text-xs text-blue-500 mt-1">
-                                        {t('bms.series')}
-                                      </span>
                                     </div>
                                   )}
 

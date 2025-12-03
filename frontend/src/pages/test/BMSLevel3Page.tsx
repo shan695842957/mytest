@@ -10,7 +10,7 @@
  * - EVT: 事件记录（系统遥控信息）
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -122,6 +122,12 @@ export default function BMSLevel3Page() {
   // 簇列表
   const [clusterList, setClusterList] = useState<ClusterListResponse | null>(null)
   const [clusterBreakerStatuses, setClusterBreakerStatuses] = useState<Map<string, boolean>>(new Map())
+  
+  // 触摸滚动相关
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const isDraggingRef = useRef(false)
+  const startXRef = useRef(0)
+  const scrollLeftRef = useRef(0)
   
   // 加载数据
   useEffect(() => {
@@ -339,8 +345,51 @@ export default function BMSLevel3Page() {
                           </div>
                         </div>
 
-                        {/* Clusters in Parallel - 从后端获取 */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Clusters in Parallel - 横向排列，支持触摸滚动 */}
+                        <div 
+                          ref={scrollContainerRef}
+                          className="flex gap-3 overflow-x-auto pb-4 cursor-grab active:cursor-grabbing select-none"
+                          style={{
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: 'rgba(0,0,0,0.2) transparent',
+                          }}
+                          onMouseDown={(e) => {
+                            if (!scrollContainerRef.current) return
+                            isDraggingRef.current = true
+                            startXRef.current = e.pageX - scrollContainerRef.current.offsetLeft
+                            scrollLeftRef.current = scrollContainerRef.current.scrollLeft
+                            e.preventDefault()
+                          }}
+                          onMouseLeave={() => {
+                            isDraggingRef.current = false
+                          }}
+                          onMouseUp={() => {
+                            isDraggingRef.current = false
+                          }}
+                          onMouseMove={(e) => {
+                            if (!isDraggingRef.current || !scrollContainerRef.current) return
+                            e.preventDefault()
+                            const x = e.pageX - scrollContainerRef.current.offsetLeft
+                            const walk = (x - startXRef.current) * 2
+                            scrollContainerRef.current.scrollLeft = scrollLeftRef.current - walk
+                          }}
+                          onTouchStart={(e) => {
+                            if (!scrollContainerRef.current) return
+                            isDraggingRef.current = true
+                            startXRef.current = e.touches[0].pageX - scrollContainerRef.current.offsetLeft
+                            scrollLeftRef.current = scrollContainerRef.current.scrollLeft
+                          }}
+                          onTouchMove={(e) => {
+                            if (!isDraggingRef.current || !scrollContainerRef.current) return
+                            e.preventDefault()
+                            const x = e.touches[0].pageX - scrollContainerRef.current.offsetLeft
+                            const walk = (x - startXRef.current) * 2
+                            scrollContainerRef.current.scrollLeft = scrollLeftRef.current - walk
+                          }}
+                          onTouchEnd={() => {
+                            isDraggingRef.current = false
+                          }}
+                        >
                           {clusterList.clusters.map((cluster) => {
                             const isClosed =
                               clusterBreakerStatuses.get(cluster.id) ??
@@ -355,20 +404,20 @@ export default function BMSLevel3Page() {
                               : 0
 
                             return (
-                              <div key={cluster.id} className="relative">
+                              <div key={cluster.id} className="relative flex-shrink-0" style={{ minWidth: '280px' }}>
                                 {/* Connection Line from Busbar - 固定显示 */}
                                 <div className="absolute left-1/2 -top-6 w-0.5 h-6 bg-blue-500 transform -translate-x-1/2" />
 
-                                {/* Cluster Card */}
-                                <Card className="border-2">
-                                  <CardContent className="p-4 space-y-3">
-                                    <div className="text-lg font-semibold">
+                                {/* Cluster Card - 减小宽度以适应更多簇 */}
+                                <Card className="border-2 w-full">
+                                  <CardContent className="p-3 space-y-2">
+                                    <div className="text-base font-semibold">
                                       {t('bms.cluster')} C{cluster.number}
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-1.5">
                                       {/* 固定字段：电压、电流 */}
-                                      <div className="flex justify-between text-sm">
+                                      <div className="flex justify-between text-xs">
                                         <span className="text-muted-foreground">
                                           {t('bms.voltage')}:
                                         </span>
@@ -376,7 +425,7 @@ export default function BMSLevel3Page() {
                                           {cluster.fixedFields.voltage.toFixed(1)}V
                                         </span>
                                       </div>
-                                      <div className="flex justify-between text-sm">
+                                      <div className="flex justify-between text-xs">
                                         <span className="text-muted-foreground">
                                           {t('bms.current')}:
                                         </span>
@@ -387,7 +436,7 @@ export default function BMSLevel3Page() {
                                       
                                       {/* 动态字段 */}
                                       {cluster.dynamicFields.map((field) => (
-                                        <div key={field.nameEn} className="flex justify-between text-sm">
+                                        <div key={field.nameEn} className="flex justify-between text-xs">
                                           <span className="text-muted-foreground">
                                             {getDynamicFieldName(field)}:
                                           </span>
@@ -401,41 +450,47 @@ export default function BMSLevel3Page() {
                                     {/* SOC Progress Bar - 如果有SOC字段 */}
                                     {socField && (
                                       <div>
-                                        <Progress value={soc} className="h-2" />
+                                        <Progress value={soc} className="h-1.5" />
                                       </div>
                                     )}
 
                                     {/* Breaker Status and Control - 固定功能 */}
-                                    <div className="space-y-2 pt-2 border-t">
+                                    <div className="space-y-1.5 pt-1.5 border-t">
                                       <div className="flex items-center justify-between">
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-[10px] text-muted-foreground">
                                           {t('bms.breaker')}:
                                         </span>
                                         {isClosed ? (
-                                          <Badge variant="default" className="bg-green-500 text-xs">
+                                          <Badge variant="default" className="bg-green-500 text-[10px] px-1.5 py-0 h-5">
                                             {t('bms.closed')}
                                           </Badge>
                                         ) : (
-                                          <Badge variant="destructive" className="text-xs">
+                                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-5">
                                             {t('bms.open')}
                                           </Badge>
                                         )}
                                       </div>
 
-                                      <div className="flex gap-2">
+                                      <div className="flex gap-1.5">
                                         <Button
                                           size="sm"
-                                          onClick={() => handleClusterBreakerControl(cluster.id, 'close')}
-                                          className="bg-green-500 hover:bg-green-600 text-white text-xs h-6 px-2"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleClusterBreakerControl(cluster.id, 'close')
+                                          }}
+                                          className="bg-green-500 hover:bg-green-600 text-white text-[10px] h-5 px-2"
                                           disabled={isClosed}
                                         >
                                           {t('bms.close')}
                                         </Button>
                                         <Button
                                           size="sm"
-                                          onClick={() => handleClusterBreakerControl(cluster.id, 'open')}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleClusterBreakerControl(cluster.id, 'open')
+                                          }}
                                           variant="destructive"
-                                          className="text-xs h-6 px-2"
+                                          className="text-[10px] h-5 px-2"
                                           disabled={!isClosed}
                                         >
                                           {t('bms.open')}
