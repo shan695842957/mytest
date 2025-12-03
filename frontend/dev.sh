@@ -17,5 +17,5 @@ echo "Node.js 路径: $(which node)"
 echo ""
 
 # 启动开发服务器
-npm run dev
+sudo npm run dev
 
