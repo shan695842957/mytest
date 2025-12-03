@@ -37,6 +37,9 @@ import type {
   PackTemperatureResponse,
   CellInfo,
   TemperaturePoint,
+  EventLogResponse,
+  EventLog,
+  ActiveTelecontrol,
 } from '@/types/bms-api'
 
 // ========== API调用函数（临时数据，待后端接口整理好后实现） ==========
@@ -229,6 +232,47 @@ const resetFault = async (request: FaultResetRequest): Promise<void> => {
 }
 
 /**
+ * 获取事件记录（二级架构EVT）
+ * TODO: 实现实际的后端API调用
+ */
+const fetchEventLog = async (): Promise<EventLogResponse> => {
+  // TODO: 调用后端API获取事件记录
+  // const response = await fetch('/api/bms/level2/event-log')
+  // return response.json()
+  
+  // 临时数据
+  const events: EventLog[] = [
+    { id: '1', timestamp: '2025/11/22 08:13:29', category: 'Fault', details: 'BEMU Communication Timeout', device: 'BEMU' },
+    { id: '2', timestamp: '2025/11/22 08:09:29', category: 'Alarm', details: 'BEMU Communication Timeout', device: 'BEMU' },
+    { id: '3', timestamp: '2025/11/22 08:08:34', category: 'Status', details: 'System Alarm - Open All Contactors' },
+    { id: '4', timestamp: '2025/11/22 08:08:31', category: 'Fault', details: 'Insulation Failure, 0kohm', device: 'BCMU7' },
+    { id: '5', timestamp: '2025/11/22 08:08:31', category: 'Status', details: 'Insulation Detection Enabled', device: 'BCMU7' },
+    { id: '6', timestamp: '2025/11/22 08:08:31', category: 'Status', details: 'Fault Occurred 400', device: 'BCMU7' },
+    { id: '7', timestamp: '2025/11/22 08:08:31', category: 'Fault', details: 'Insulation Failure, 0kohm', device: 'BCMU6' },
+    { id: '8', timestamp: '2025/11/22 08:08:31', category: 'Status', details: 'Insulation Detection Enabled', device: 'BCMU6' },
+    { id: '9', timestamp: '2025/11/22 08:08:31', category: 'Status', details: 'Fault Occurred 400', device: 'BCMU6' },
+    { id: '10', timestamp: '2025/11/22 08:08:30', category: 'Fault', details: 'Insulation Failure, 0kohm', device: 'BCMU5' },
+    { id: '11', timestamp: '2025/11/22 08:08:30', category: 'Status', details: 'Insulation Detection Enabled', device: 'BCMU5' },
+    { id: '12', timestamp: '2025/11/22 08:08:30', category: 'Status', details: 'Fault Occurred 400', device: 'BCMU5' },
+  ]
+  
+  const activeTelecontrols: ActiveTelecontrol[] = [
+    { id: 'insulation_failure', nameZh: '绝缘故障', nameEn: 'Insulation Failure', active: true, faultLevel: 4 },
+    { id: 'soc_low', nameZh: 'SOC过低', nameEn: 'SOC Low', active: true, faultLevel: 3 },
+    { id: 'temp_sensor', nameZh: '温度传感器', nameEn: 'Temp Sensor', active: true, faultLevel: 4 },
+    { id: 'voltage_sensor', nameZh: '电压传感器', nameEn: 'Voltage Sensor', active: true, faultLevel: 4 },
+    { id: 'current_sensor', nameZh: '电流传感器', nameEn: 'Current Sensor', active: true, faultLevel: 4 },
+    { id: 'dc_contactor', nameZh: '直流接触器', nameEn: 'DC Contactor', active: true, faultLevel: 4 },
+    { id: 'fuse', nameZh: '熔断器', nameEn: 'Fuse', active: true, faultLevel: 4 },
+  ]
+  
+  return {
+    events,
+    activeTelecontrols,
+  }
+}
+
+/**
  * 获取包内单体信息（二级架构BMU）
  * TODO: 实现实际的后端API调用
  */
@@ -333,6 +377,9 @@ export default function BMSLevel2Page() {
   const [packTemperature, setPackTemperature] = useState<PackTemperatureResponse | null>(null)
   const [bmuActiveSubTab, setBmuActiveSubTab] = useState<'cell' | 'temperature'>('cell')
   
+  // EVT页面数据
+  const [eventLog, setEventLog] = useState<EventLogResponse | null>(null)
+  
   // 加载数据
   useEffect(() => {
     const loadData = async () => {
@@ -392,6 +439,21 @@ export default function BMSLevel2Page() {
       return () => clearInterval(interval)
     }
   }, [activeTab, selectedPackId, bmuActiveSubTab])
+  
+  // 加载EVT页面数据
+  useEffect(() => {
+    if (activeTab === 'evt') {
+      const loadEVTData = async () => {
+        const data = await fetchEventLog()
+        setEventLog(data)
+      }
+      loadEVTData()
+      
+      // 定时刷新
+      const interval = setInterval(loadEVTData, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [activeTab])
   
   // 控制簇断路器
   const handleBreakerControl = async (action: 'close' | 'open') => {
@@ -1094,17 +1156,120 @@ export default function BMSLevel2Page() {
             </TabsContent>
 
             <TabsContent value="evt" className="mt-4">
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t('bms.evt_title', '事件记录')}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      {t('bms.evt_placeholder', 'EVT 页面内容待实现...')}
-                    </p>
-                  </CardContent>
-                </Card>
+              <div className="space-y-6">
+                {eventLog ? (
+                  <>
+                    {/* 当前激活的遥信量 */}
+                    {eventLog.activeTelecontrols.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>{t('bms.active_telecontrols', '当前激活的遥信量')}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2">
+                            {eventLog.activeTelecontrols.map((telecontrol) => {
+                              const getFaultColor = (level: number) => {
+                                if (level === 4) return 'bg-red-600 hover:bg-red-700'
+                                if (level === 3) return 'bg-orange-600 hover:bg-orange-700'
+                                if (level === 2) return 'bg-yellow-600 hover:bg-yellow-700'
+                                return 'bg-gray-500 hover:bg-gray-600'
+                              }
+                              
+                              return (
+                                <Badge
+                                  key={telecontrol.id}
+                                  variant="destructive"
+                                  className={cn(
+                                    'text-xs px-3 py-1',
+                                    getFaultColor(telecontrol.faultLevel)
+                                  )}
+                                >
+                                  {i18n.language === 'zh-CN' ? telecontrol.nameZh : telecontrol.nameEn}
+                                </Badge>
+                              )
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* 事件记录表格 */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t('bms.event_log', '事件记录')}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">
+                                  {t('bms.time', '时间')}
+                                </th>
+                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">
+                                  {t('bms.category', '类别')}
+                                </th>
+                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">
+                                  {t('bms.details', '详情')}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {eventLog.events.map((event) => {
+                                const getCategoryLabel = () => {
+                                  const isZh = i18n.language === 'zh-CN'
+                                  if (event.device) {
+                                    if (event.category === 'Fault') {
+                                      return isZh ? `${event.device} 故障` : `${event.device} Fault`
+                                    }
+                                    if (event.category === 'Alarm') {
+                                      return isZh ? `${event.device} 告警` : `${event.device} Alarm`
+                                    }
+                                    return isZh ? `${event.device} 状态` : `${event.device} Status`
+                                  }
+                                  if (event.category === 'Fault') {
+                                    return t('bms.system_fault', '系统故障')
+                                  }
+                                  if (event.category === 'Alarm') {
+                                    return t('bms.system_alarm', '系统告警')
+                                  }
+                                  return t('bms.system_status', '系统状态')
+                                }
+                                
+                                const getCategoryColor = () => {
+                                  if (event.category === 'Fault') return 'bg-red-600 hover:bg-red-700'
+                                  if (event.category === 'Alarm') return 'bg-yellow-600 hover:bg-yellow-700'
+                                  return 'bg-blue-600 hover:bg-blue-700'
+                                }
+                                
+                                return (
+                                  <tr key={event.id} className="border-b hover:bg-muted/50">
+                                    <td className="p-3 text-sm">{event.timestamp}</td>
+                                    <td className="p-3">
+                                      <Badge
+                                        variant="default"
+                                        className={cn('text-xs', getCategoryColor())}
+                                      >
+                                        {getCategoryLabel()}
+                                      </Badge>
+                                    </td>
+                                    <td className="p-3 text-sm">{event.details}</td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : (
+                  <Card>
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      {t('bms.loading', '加载中...')}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </TabsContent>
           </Tabs>

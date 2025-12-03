@@ -141,7 +141,19 @@
     "cell_configuration": "Cell Configuration",
     "cell_data": "Cell Data",
     "temp_point": "Temperature Point",
-    "cell": "Cell"
+    "cell": "Cell",
+    "evt_title": "Event Log",
+    "event_log": "Event Log",
+    "time": "Time",
+    "category": "Category",
+    "details": "Details",
+    "active_telecontrols": "Active Teleindications",
+    "system_fault": "System Fault",
+    "system_alarm": "System Alarm",
+    "system_status": "System Status",
+    "fault": "Fault",
+    "alarm": "Alarm",
+    "status": "Status"
   }
 }
 

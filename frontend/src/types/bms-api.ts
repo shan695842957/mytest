@@ -396,3 +396,57 @@ export interface ClusterPackTemperatureResponse {
   /** 温度测点列表 */
   temperaturePoints: TemperaturePoint[];
 }
+
+// ========== EVT页面数据 ==========
+
+/**
+ * 事件记录
+ */
+export interface EventLog {
+  /** 事件ID */
+  id: string;
+  /** 时间戳 */
+  timestamp: string;
+  /** 类别：Fault/Alarm/Status */
+  category: 'Fault' | 'Alarm' | 'Status';
+  /** 详情描述 */
+  details: string;
+  /** 关联的设备/模块（如 BCMU7, BEMU等） */
+  device?: string;
+}
+
+/**
+ * 当前激活的遥信量
+ */
+export interface ActiveTelecontrol {
+  /** 遥信ID */
+  id: string;
+  /** 汉字名 */
+  nameZh: string;
+  /** 英文名 */
+  nameEn: string;
+  /** 是否激活 */
+  active: boolean;
+  /** 故障等级 */
+  faultLevel: number;
+}
+
+/**
+ * 事件记录响应（二级架构）
+ */
+export interface EventLogResponse {
+  /** 事件列表 */
+  events: EventLog[];
+  /** 当前激活的遥信量列表 */
+  activeTelecontrols: ActiveTelecontrol[];
+}
+
+/**
+ * 事件记录响应（三级架构）
+ */
+export interface EventLogResponseLevel3 {
+  /** 事件列表 */
+  events: EventLog[];
+  /** 当前激活的遥信量列表 */
+  activeTelecontrols: ActiveTelecontrol[];
+}
