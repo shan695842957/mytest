@@ -132,7 +132,16 @@
     "select_cluster": "选择簇",
     "cluster": "簇",
     "previous": "上一个",
-    "next": "下一个"
+    "next": "下一个",
+    "bmu_title": "包管理单元",
+    "cell_information": "单体信息",
+    "temperature_points": "温度测点",
+    "select_pack": "选择包",
+    "pack": "包",
+    "cell_configuration": "单体配置",
+    "cell_data": "单体数据",
+    "temp_point": "温度测点",
+    "cell": "单体"
   }
 }
 

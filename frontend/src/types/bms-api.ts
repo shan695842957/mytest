@@ -304,3 +304,95 @@ export interface FaultResetResponse {
   /** 消息 */
   message?: string;
 }
+
+// ========== BMU页面数据 ==========
+
+/**
+ * 单体信息
+ */
+export interface CellInfo {
+  /** 单体ID */
+  id: string;
+  /** 单体编号 */
+  number: number;
+  /** 动态字段列表（电压、SOC、SOH等） */
+  dynamicFields: DynamicField[];
+  /** 状态：normal/warning/alarm */
+  status?: 'normal' | 'warning' | 'alarm';
+}
+
+/**
+ * 温度测点信息
+ */
+export interface TemperaturePoint {
+  /** 测点ID */
+  id: string;
+  /** 测点编号 */
+  number: number;
+  /** 温度值 */
+  temperature: number;
+  /** 单位 */
+  unit: string;
+  /** 状态：normal/warning/alarm */
+  status?: 'normal' | 'warning' | 'alarm';
+}
+
+/**
+ * 包内单体信息响应（二级架构）
+ */
+export interface PackCellInfoResponse {
+  /** 包ID */
+  packId: string;
+  /** 包编号 */
+  packNumber: number;
+  /** 单体配置信息（如 "15S 2P (30 cells total)"） */
+  cellConfiguration: string;
+  /** 单体列表 */
+  cells: CellInfo[];
+}
+
+/**
+ * 包内温度测点响应（二级架构）
+ */
+export interface PackTemperatureResponse {
+  /** 包ID */
+  packId: string;
+  /** 包编号 */
+  packNumber: number;
+  /** 温度测点列表 */
+  temperaturePoints: TemperaturePoint[];
+}
+
+/**
+ * 包内单体信息响应（三级架构）
+ */
+export interface ClusterPackCellInfoResponse {
+  /** 簇ID */
+  clusterId: string;
+  /** 簇编号 */
+  clusterNumber: number;
+  /** 包ID */
+  packId: string;
+  /** 包编号 */
+  packNumber: number;
+  /** 单体配置信息（如 "15S 2P (30 cells total)"） */
+  cellConfiguration: string;
+  /** 单体列表 */
+  cells: CellInfo[];
+}
+
+/**
+ * 包内温度测点响应（三级架构）
+ */
+export interface ClusterPackTemperatureResponse {
+  /** 簇ID */
+  clusterId: string;
+  /** 簇编号 */
+  clusterNumber: number;
+  /** 包ID */
+  packId: string;
+  /** 包编号 */
+  packNumber: number;
+  /** 温度测点列表 */
+  temperaturePoints: TemperaturePoint[];
+}

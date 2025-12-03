@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type {
@@ -32,6 +33,10 @@ import type {
   TelecontrolEnum,
   TelecontrolBitfield,
   FaultResetRequest,
+  PackCellInfoResponse,
+  PackTemperatureResponse,
+  CellInfo,
+  TemperaturePoint,
 } from '@/types/bms-api'
 
 // ========== API调用函数（临时数据，待后端接口整理好后实现） ==========
@@ -223,6 +228,89 @@ const resetFault = async (request: FaultResetRequest): Promise<void> => {
   console.log('Fault reset:', request)
 }
 
+/**
+ * 获取包内单体信息（二级架构BMU）
+ * TODO: 实现实际的后端API调用
+ */
+const fetchPackCellInfo = async (packId: string): Promise<PackCellInfoResponse> => {
+  // TODO: 调用后端API获取包内单体信息
+  // const response = await fetch(`/api/bms/level2/pack/${packId}/cells`)
+  // return response.json()
+  
+  // 临时数据
+  const cellCount = 30 // 从后端获取
+  const cells: CellInfo[] = []
+  for (let i = 0; i < cellCount; i++) {
+    const voltage = 3.54 + (i % 5) * 0.02
+    const soc = 85.0 + (i % 3) * 2.0
+    const soh = 93.0 - (i % 2) * 1.0
+    
+    let status: 'normal' | 'warning' | 'alarm' = 'normal'
+    if (voltage > 3.60 || voltage < 3.50) {
+      status = 'warning'
+    }
+    if (voltage > 3.65 || voltage < 3.45) {
+      status = 'alarm'
+    }
+    
+    cells.push({
+      id: `cell-${i + 1}`,
+      number: i + 1,
+      dynamicFields: [
+        { nameEn: 'Voltage', nameZh: '电压', valueEn: voltage, valueZh: voltage, unitEn: 'V', unitZh: 'V' },
+        { nameEn: 'SOC', nameZh: 'SOC', valueEn: soc, valueZh: soc, unitEn: '%', unitZh: '%' },
+        { nameEn: 'SOH', nameZh: 'SOH', valueEn: soh, valueZh: soh, unitEn: '%', unitZh: '%' },
+      ],
+      status,
+    })
+  }
+  
+  return {
+    packId,
+    packNumber: 1,
+    cellConfiguration: '15S 2P (30 cells total)', // 从后端获取
+    cells,
+  }
+}
+
+/**
+ * 获取包内温度测点（二级架构BMU）
+ * TODO: 实现实际的后端API调用
+ */
+const fetchPackTemperature = async (packId: string): Promise<PackTemperatureResponse> => {
+  // TODO: 调用后端API获取包内温度测点
+  // const response = await fetch(`/api/bms/level2/pack/${packId}/temperature`)
+  // return response.json()
+  
+  // 临时数据
+  const tempCount = 8 // 从后端获取
+  const temperaturePoints: TemperaturePoint[] = []
+  for (let i = 0; i < tempCount; i++) {
+    const temp = 27.0 + i * 0.6
+    let status: 'normal' | 'warning' | 'alarm' = 'normal'
+    if (temp > 31.0) {
+      status = 'warning'
+    }
+    if (temp > 35.0) {
+      status = 'alarm'
+    }
+    
+    temperaturePoints.push({
+      id: `temp-${i + 1}`,
+      number: i + 1,
+      temperature: temp,
+      unit: '°C',
+      status,
+    })
+  }
+  
+  return {
+    packId,
+    packNumber: 1,
+    temperaturePoints,
+  }
+}
+
 // ========== 组件 ==========
 
 export default function BMSLevel2Page() {
@@ -239,6 +327,12 @@ export default function BMSLevel2Page() {
   // BCU页面数据
   const [clusterDetailInfo, setClusterDetailInfo] = useState<ClusterDetailInfoResponse | null>(null)
   
+  // BMU页面数据
+  const [selectedPackId, setSelectedPackId] = useState<string>('')
+  const [packCellInfo, setPackCellInfo] = useState<PackCellInfoResponse | null>(null)
+  const [packTemperature, setPackTemperature] = useState<PackTemperatureResponse | null>(null)
+  const [bmuActiveSubTab, setBmuActiveSubTab] = useState<'cell' | 'temperature'>('cell')
+  
   // 加载数据
   useEffect(() => {
     const loadData = async () => {
@@ -250,6 +344,11 @@ export default function BMSLevel2Page() {
       setClusterBasicInfo(basicInfo)
       setClusterBreakerClosed(basicInfo.fixedFields.breakerClosed)
       setPackList(packs)
+      
+      // 设置默认选中的包（第一个）
+      if (packs.packs.length > 0) {
+        setSelectedPackId(packs.packs[0].id)
+      }
     }
     
     loadData()
@@ -273,6 +372,26 @@ export default function BMSLevel2Page() {
       return () => clearInterval(interval)
     }
   }, [activeTab])
+  
+  // 加载BMU页面数据
+  useEffect(() => {
+    if (activeTab === 'bmu' && selectedPackId) {
+      const loadBMUData = async () => {
+        if (bmuActiveSubTab === 'cell') {
+          const data = await fetchPackCellInfo(selectedPackId)
+          setPackCellInfo(data)
+        } else {
+          const data = await fetchPackTemperature(selectedPackId)
+          setPackTemperature(data)
+        }
+      }
+      loadBMUData()
+      
+      // 定时刷新
+      const interval = setInterval(loadBMUData, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [activeTab, selectedPackId, bmuActiveSubTab])
   
   // 控制簇断路器
   const handleBreakerControl = async (action: 'close' | 'open') => {
@@ -765,17 +884,212 @@ export default function BMSLevel2Page() {
             </TabsContent>
 
             <TabsContent value="bmu" className="mt-4">
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t('bms.bmu_title', '包管理单元')}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      {t('bms.bmu_placeholder', 'BMU 页面内容待实现...')}
-                    </p>
-                  </CardContent>
-                </Card>
+              <div className="space-y-6">
+                {/* 包选择器 */}
+                {packList && packList.packs.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{t('bms.select_pack', '选择包')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-medium">
+                          {t('bms.pack', '包')}:
+                        </span>
+                        <Select
+                          value={selectedPackId}
+                          onValueChange={setSelectedPackId}
+                        >
+                          <SelectTrigger className="w-[200px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {packList.packs.map((pack) => (
+                              <SelectItem key={pack.id} value={pack.id}>
+                                {i18n.language === 'zh-CN' ? `包${pack.number}` : `Pack ${pack.number}`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {packList.packs.length > 1 && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const currentIndex = packList.packs.findIndex(p => p.id === selectedPackId)
+                                if (currentIndex > 0) {
+                                  setSelectedPackId(packList.packs[currentIndex - 1].id)
+                                }
+                              }}
+                              disabled={packList.packs.findIndex(p => p.id === selectedPackId) === 0}
+                            >
+                              {t('bms.previous', '上一个')}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const currentIndex = packList.packs.findIndex(p => p.id === selectedPackId)
+                                if (currentIndex < packList.packs.length - 1) {
+                                  setSelectedPackId(packList.packs[currentIndex + 1].id)
+                                }
+                              }}
+                              disabled={packList.packs.findIndex(p => p.id === selectedPackId) === packList.packs.length - 1}
+                            >
+                              {t('bms.next', '下一个')}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* BMU子标签页 */}
+                <Tabs value={bmuActiveSubTab} onValueChange={(v) => setBmuActiveSubTab(v as 'cell' | 'temperature')}>
+                  <TabsList>
+                    <TabsTrigger value="cell">{t('bms.cell_information', '单体信息')}</TabsTrigger>
+                    <TabsTrigger value="temperature">{t('bms.temperature_points', '温度测点')}</TabsTrigger>
+                  </TabsList>
+
+                  {/* 单体信息 */}
+                  <TabsContent value="cell" className="mt-4">
+                    {packCellInfo ? (
+                      <div className="space-y-4">
+                        {/* 单体配置 */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>{t('bms.cell_configuration', '单体配置')}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-lg font-semibold">{packCellInfo.cellConfiguration}</p>
+                          </CardContent>
+                        </Card>
+
+                        {/* 单体数据网格 */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>{t('bms.cell_data', '单体数据')}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10 gap-3">
+                              {packCellInfo.cells.map((cell) => {
+                                const voltageField = cell.dynamicFields.find(f => f.nameEn === 'Voltage' || f.nameZh === '电压')
+                                const socField = cell.dynamicFields.find(f => f.nameEn === 'SOC' || f.nameZh === 'SOC')
+                                const sohField = cell.dynamicFields.find(f => f.nameEn === 'SOH' || f.nameZh === 'SOH')
+                                
+                                const getStatusColor = (status?: string) => {
+                                  if (status === 'alarm') return 'border-red-500 bg-red-50 dark:bg-red-950/20'
+                                  if (status === 'warning') return 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                                  return 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                }
+                                
+                                return (
+                                  <Card
+                                    key={cell.id}
+                                    className={cn('p-3', getStatusColor(cell.status))}
+                                  >
+                                    <div className="space-y-1">
+                                      <div className="text-xs font-semibold">
+                                        {i18n.language === 'zh-CN' ? `单体${cell.number}` : `Cell ${cell.number}`}
+                                      </div>
+                                      {voltageField && (
+                                        <div className="text-xs">
+                                          {getDynamicFieldName(voltageField)}: {getDynamicFieldValue(voltageField)}
+                                        </div>
+                                      )}
+                                      {socField && (
+                                        <div className="text-xs">
+                                          {getDynamicFieldName(socField)}: {getDynamicFieldValue(socField)}
+                                        </div>
+                                      )}
+                                      {sohField && (
+                                        <div className="text-xs">
+                                          {getDynamicFieldName(sohField)}: {getDynamicFieldValue(sohField)}
+                                        </div>
+                                      )}
+                                      <div className="flex justify-end mt-1">
+                                        <div
+                                          className={cn(
+                                            'w-3 h-3 rounded-full',
+                                            cell.status === 'alarm' && 'bg-red-500',
+                                            cell.status === 'warning' && 'bg-yellow-500',
+                                            !cell.status || cell.status === 'normal' ? 'bg-green-500' : ''
+                                          )}
+                                        />
+                                      </div>
+                                    </div>
+                                  </Card>
+                                )
+                              })}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    ) : (
+                      <Card>
+                        <CardContent className="py-8 text-center text-muted-foreground">
+                          {t('bms.loading', '加载中...')}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </TabsContent>
+
+                  {/* 温度测点 */}
+                  <TabsContent value="temperature" className="mt-4">
+                    {packTemperature ? (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>{t('bms.temperature_points', '温度测点')}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                            {packTemperature.temperaturePoints.map((point) => {
+                              const getStatusColor = (status?: string) => {
+                                if (status === 'alarm') return 'border-red-500 bg-red-50 dark:bg-red-950/20'
+                                if (status === 'warning') return 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                                return 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                              }
+                              
+                              return (
+                                <Card
+                                  key={point.id}
+                                  className={cn('p-4', getStatusColor(point.status))}
+                                >
+                                  <div className="space-y-2">
+                                    <div className="text-sm font-semibold">
+                                      {i18n.language === 'zh-CN' ? `测点${point.number}` : `Point ${point.number}`}
+                                    </div>
+                                    <div className="text-2xl font-bold">
+                                      {point.temperature.toFixed(1)} {point.unit}
+                                    </div>
+                                    <div className="flex justify-end">
+                                      <div
+                                        className={cn(
+                                          'w-3 h-3 rounded-full',
+                                          point.status === 'alarm' && 'bg-red-500',
+                                          point.status === 'warning' && 'bg-yellow-500',
+                                          !point.status || point.status === 'normal' ? 'bg-green-500' : ''
+                                        )}
+                                      />
+                                    </div>
+                                  </div>
+                                </Card>
+                              )
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card>
+                        <CardContent className="py-8 text-center text-muted-foreground">
+                          {t('bms.loading', '加载中...')}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </TabsContent>
+                </Tabs>
               </div>
             </TabsContent>
 
