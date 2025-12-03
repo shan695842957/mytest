@@ -119,7 +119,20 @@
     "current": "Current",
     "series": "Series",
     "busbar_parallel": "Busbar (Parallel)",
-    "warning": "Warning"
+    "warning": "Warning",
+    "bau_title": "Stack Control Unit",
+    "bcu_title": "Cluster Control Unit",
+    "stack_data": "Stack Data",
+    "cluster_data": "Cluster Data",
+    "telemetry_data": "Telemetry Data",
+    "status_words": "Status Words",
+    "telecontrol_data": "Telecontrol Data",
+    "control_commands": "Control Commands",
+    "fault_reset": "Fault Reset",
+    "select_cluster": "Select Cluster",
+    "cluster": "Cluster",
+    "previous": "Previous",
+    "next": "Next"
   }
 }
 

@@ -26,6 +26,12 @@ import type {
   BreakerControlRequest,
   DynamicField,
   PackInfo,
+  ClusterDetailInfoResponse,
+  TelecontrolData,
+  TelecontrolBoolean,
+  TelecontrolEnum,
+  TelecontrolBitfield,
+  FaultResetRequest,
 } from '@/types/bms-api'
 
 // ========== API调用函数（临时数据，待后端接口整理好后实现） ==========
@@ -110,6 +116,121 @@ const controlBreaker = async (request: BreakerControlRequest): Promise<void> => 
   console.log('Breaker control:', request)
 }
 
+/**
+ * 获取簇详细信息（二级架构BCU）
+ * TODO: 实现实际的后端API调用
+ */
+const fetchClusterDetailInfo = async (): Promise<ClusterDetailInfoResponse> => {
+  // TODO: 调用后端API获取簇详细信息
+  // const response = await fetch('/api/bms/level2/cluster/detail-info')
+  // return response.json()
+  
+  // 临时数据（与三级架构BCU类似）
+  return {
+    telemetryData: [
+      { nameEn: 'SOC', nameZh: 'SOC', valueEn: 12.7, valueZh: 12.7, unitEn: '%', unitZh: '%' },
+      { nameEn: 'SOE', nameZh: 'SOE', valueEn: 0.0, valueZh: 0.0, unitEn: '%', unitZh: '%' },
+      { nameEn: 'SOH', nameZh: 'SOH', valueEn: 93, valueZh: 93, unitEn: '%', unitZh: '%' },
+      { nameEn: 'SOS', nameZh: 'SOS', valueEn: 50.0, valueZh: 50.0, unitEn: '%', unitZh: '%' },
+      { nameEn: 'Consistency', nameZh: '一致性', valueEn: 91, valueZh: 91, unitEn: '%', unitZh: '%' },
+      { nameEn: 'Cluster Voltage', nameZh: '簇电压', valueEn: 1250.5, valueZh: 1250.5, unitEn: 'V', unitZh: 'V' },
+      { nameEn: 'Cluster Current', nameZh: '簇电流', valueEn: 1320.0, valueZh: 1320.0, unitEn: 'A', unitZh: 'A' },
+      { nameEn: 'Power', nameZh: '功率', valueEn: 1650.6, valueZh: 1650.6, unitEn: 'kW', unitZh: 'kW' },
+      { nameEn: 'Max Cell Voltage', nameZh: '最大单体电压', valueEn: 3209, valueZh: 3209, unitEn: 'mV', unitZh: 'mV' },
+      { nameEn: 'Min Cell Voltage', nameZh: '最小单体电压', valueEn: 3200, valueZh: 3200, unitEn: 'mV', unitZh: 'mV' },
+      { nameEn: 'Max Cell Temp', nameZh: '最大单体温度', valueEn: 13.0, valueZh: 13.0, unitEn: '°C', unitZh: '°C' },
+      { nameEn: 'Min Cell Temp', nameZh: '最小单体温度', valueEn: 12.8, valueZh: 12.8, unitEn: '°C', unitZh: '°C' },
+    ],
+    statusWords: [
+      { id: 'status1', nameZh: '状态字1', nameEn: 'Status Word 1', rawValue: '0x0C26', numericValue: 0x0C26 },
+      { id: 'status2', nameZh: '状态字2', nameEn: 'Status Word 2', rawValue: '0x029E', numericValue: 0x029E },
+      { id: 'alarm1', nameZh: '告警字1', nameEn: 'Alarm Word 1', rawValue: '0x0000', numericValue: 0x0000 },
+      { id: 'alarm2', nameZh: '告警字2', nameEn: 'Alarm Word 2', rawValue: '0x0001', numericValue: 0x0001 },
+      { id: 'fault1', nameZh: '故障字1', nameEn: 'Fault Word 1', rawValue: '0x0400', numericValue: 0x0400 },
+      { id: 'fault2', nameZh: '故障字2', nameEn: 'Fault Word 2', rawValue: '0x0001', numericValue: 0x0001 },
+    ],
+    telecontrolData: [
+      // 布尔类型
+      { id: 'total_overvoltage', nameZh: '总过压', nameEn: 'Total Overvoltage', active: false, faultLevel: 1 },
+      { id: 'total_undervoltage', nameZh: '总欠压', nameEn: 'Total Undervoltage', active: false, faultLevel: 1 },
+      { id: 'insulation_failure', nameZh: '绝缘故障', nameEn: 'Insulation Failure', active: true, faultLevel: 4 },
+      { id: 'soc_high', nameZh: 'SOC过高', nameEn: 'SOC High', active: false, faultLevel: 2 },
+      { id: 'soc_low', nameZh: 'SOC过低', nameEn: 'SOC Low', active: true, faultLevel: 3 },
+      { id: 'cell_overvoltage', nameZh: '单体过压', nameEn: 'Cell Overvoltage', active: false, faultLevel: 2 },
+      { id: 'cell_undervoltage', nameZh: '单体欠压', nameEn: 'Cell Undervoltage', active: false, faultLevel: 2 },
+      { id: 'cell_overtemp', nameZh: '单体过温', nameEn: 'Cell Overtemp', active: false, faultLevel: 2 },
+      { id: 'cell_undertemp', nameZh: '单体欠温', nameEn: 'Cell Undertemp', active: false, faultLevel: 2 },
+      { id: 'voltage_diff', nameZh: '电压差', nameEn: 'Voltage Diff', active: false, faultLevel: 1 },
+      { id: 'temp_diff', nameZh: '温度差', nameEn: 'Temp Diff', active: false, faultLevel: 1 },
+      { id: 'temp_sensor', nameZh: '温度传感器', nameEn: 'Temp Sensor', active: true, faultLevel: 4 },
+      { id: 'voltage_sensor', nameZh: '电压传感器', nameEn: 'Voltage Sensor', active: true, faultLevel: 4 },
+      { id: 'current_sensor', nameZh: '电流传感器', nameEn: 'Current Sensor', active: true, faultLevel: 4 },
+      { id: 'dc_contactor', nameZh: '直流接触器', nameEn: 'DC Contactor', active: true, faultLevel: 4 },
+      { id: 'fuse', nameZh: '熔断器', nameEn: 'Fuse', active: true, faultLevel: 4 },
+      // 枚举类型示例
+      {
+        id: 'run_status',
+        nameZh: '运行状态',
+        nameEn: 'Run Status',
+        currentValue: 1,
+        faultLevel: 2,
+        enumValues: [
+          { value: 0, labelZh: '待机', labelEn: 'Standby' },
+          { value: 1, labelZh: '故障', labelEn: 'Fault' },
+          { value: 2, labelZh: '开机', labelEn: 'Running' },
+        ],
+      },
+      // 复杂位域示例
+      {
+        id: 'complex_bitfield',
+        nameZh: '复杂位域',
+        nameEn: 'Complex Bitfield',
+        rawValue: 0x8F01, // bit0, bit7, bit12~bit15 为1
+        booleanBits: [
+          { bitIndex: 0, nameZh: '报警1', nameEn: 'Alarm 1', active: true, faultLevel: 2 },
+          { bitIndex: 1, nameZh: '报警2', nameEn: 'Alarm 2', active: false, faultLevel: 1 },
+          { bitIndex: 2, nameZh: '报警3', nameEn: 'Alarm 3', active: false, faultLevel: 1 },
+          { bitIndex: 3, nameZh: '报警4', nameEn: 'Alarm 4', active: false, faultLevel: 1 },
+          { bitIndex: 4, nameZh: '报警5', nameEn: 'Alarm 5', active: false, faultLevel: 1 },
+          { bitIndex: 5, nameZh: '报警6', nameEn: 'Alarm 6', active: false, faultLevel: 1 },
+          { bitIndex: 6, nameZh: '报警7', nameEn: 'Alarm 7', active: false, faultLevel: 1 },
+          { bitIndex: 7, nameZh: '报警8', nameEn: 'Alarm 8', active: true, faultLevel: 3 },
+        ],
+        reservedBits: { startBit: 8, endBit: 11 },
+        enumBit: {
+          startBit: 12,
+          endBit: 15,
+          nameZh: '运行模式',
+          nameEn: 'Run Mode',
+          currentValue: 8, // 0x8 = 8
+          faultLevel: 2,
+          enumValues: [
+            { value: 0, labelZh: '待机', labelEn: 'Standby' },
+            { value: 1, labelZh: '运行', labelEn: 'Running' },
+            { value: 2, labelZh: '故障', labelEn: 'Fault' },
+            { value: 8, labelZh: '维护', labelEn: 'Maintenance' },
+          ],
+        },
+      },
+    ] as TelecontrolData[],
+  }
+}
+
+/**
+ * 故障复位
+ * TODO: 实现实际的后端API调用
+ */
+const resetFault = async (request: FaultResetRequest): Promise<void> => {
+  // TODO: 调用后端API故障复位
+  // await fetch('/api/bms/fault/reset', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify(request),
+  // })
+  
+  console.log('Fault reset:', request)
+}
+
 // ========== 组件 ==========
 
 export default function BMSLevel2Page() {
@@ -122,6 +243,9 @@ export default function BMSLevel2Page() {
   
   // 包列表
   const [packList, setPackList] = useState<PackListResponse | null>(null)
+  
+  // BCU页面数据
+  const [clusterDetailInfo, setClusterDetailInfo] = useState<ClusterDetailInfoResponse | null>(null)
   
   // 加载数据
   useEffect(() => {
@@ -142,6 +266,21 @@ export default function BMSLevel2Page() {
     const interval = setInterval(loadData, 5000)
     return () => clearInterval(interval)
   }, [])
+  
+  // 加载BCU页面数据
+  useEffect(() => {
+    if (activeTab === 'bcu') {
+      const loadBCUData = async () => {
+        const data = await fetchClusterDetailInfo()
+        setClusterDetailInfo(data)
+      }
+      loadBCUData()
+      
+      // 定时刷新
+      const interval = setInterval(loadBCUData, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [activeTab])
   
   // 控制簇断路器
   const handleBreakerControl = async (action: 'close' | 'open') => {
@@ -165,6 +304,144 @@ export default function BMSLevel2Page() {
   // 获取动态字段的显示名称（根据当前语言）
   const getDynamicFieldName = (field: DynamicField): string => {
     return i18n.language === 'zh-CN' ? field.nameZh : field.nameEn
+  }
+  
+  // 处理故障复位
+  const handleFaultReset = async () => {
+    await resetFault({ targetId: 'cluster-01' })
+    // TODO: 刷新数据
+  }
+  
+  // 渲染遥信数据
+  const renderTelecontrolData = (data: TelecontrolData, i18n: any) => {
+    const isZh = i18n.language === 'zh-CN'
+    
+    // 布尔类型
+    if ('active' in data && 'faultLevel' in data && !('currentValue' in data)) {
+      const boolData = data as TelecontrolBoolean
+      const getFaultColor = (level: number) => {
+        if (level === 4) return 'bg-red-600 hover:bg-red-700'
+        if (level === 3) return 'bg-orange-600 hover:bg-orange-700'
+        if (level === 2) return 'bg-yellow-600 hover:bg-yellow-700'
+        return 'bg-gray-500 hover:bg-gray-600'
+      }
+      
+      return (
+        <Button
+          key={boolData.id}
+          variant={boolData.active ? 'destructive' : 'outline'}
+          size="sm"
+          className={cn(
+            'text-xs min-w-[100px]',
+            boolData.active && getFaultColor(boolData.faultLevel),
+            boolData.active && 'font-semibold'
+          )}
+          disabled
+        >
+          {isZh ? boolData.nameZh : boolData.nameEn}
+        </Button>
+      )
+    }
+    
+    // 枚举类型
+    if ('currentValue' in data && 'enumValues' in data && !('rawValue' in data)) {
+      const enumData = data as TelecontrolEnum
+      return (
+        <div key={enumData.id} className="space-y-1">
+          <div className="text-xs text-muted-foreground">
+            {isZh ? enumData.nameZh : enumData.nameEn}:
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {enumData.enumValues.map((ev) => {
+              const isActive = ev.value === enumData.currentValue
+              return (
+                <Button
+                  key={ev.value}
+                  variant={isActive ? 'default' : 'outline'}
+                  size="sm"
+                  className={cn(
+                    'text-xs min-w-[60px]',
+                    isActive && 'font-semibold'
+                  )}
+                  disabled
+                >
+                  {isZh ? ev.labelZh : ev.labelEn}
+                </Button>
+              )
+            })}
+          </div>
+        </div>
+      )
+    }
+    
+    // 复杂位域类型
+    if ('rawValue' in data && 'booleanBits' in data) {
+      const bitfieldData = data as TelecontrolBitfield
+      return (
+        <div key={bitfieldData.id} className="space-y-2">
+          <div className="text-xs text-muted-foreground">
+            {isZh ? bitfieldData.nameZh : bitfieldData.nameEn}: 值: {bitfieldData.rawValue.toString(16).toUpperCase().padStart(4, '0')}
+          </div>
+          {/* 布尔位 (bit0~bit7) */}
+          <div className="grid grid-cols-4 gap-1">
+            {bitfieldData.booleanBits.map((bit) => {
+              const getFaultColor = (level: number) => {
+                if (level === 4) return 'bg-red-600 text-white border-red-700'
+                if (level === 3) return 'bg-orange-600 text-white border-orange-700'
+                if (level === 2) return 'bg-yellow-600 text-white border-yellow-700'
+                return 'bg-gray-500 text-white border-gray-600'
+              }
+              
+              return (
+                <div
+                  key={bit.bitIndex}
+                  className={cn(
+                    'p-1.5 text-xs text-center rounded border min-h-[3rem] flex flex-col items-center justify-center',
+                    bit.active
+                      ? getFaultColor(bit.faultLevel)
+                      : 'bg-muted/50 text-muted-foreground border-border'
+                  )}
+                >
+                  <div className="font-medium text-[10px] mb-0.5">Bit {bit.bitIndex}</div>
+                  <div className="text-[10px] font-semibold">
+                    {isZh ? bit.nameZh : bit.nameEn}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {/* 枚举位 (bit12~bit15) */}
+          {bitfieldData.enumBit && (
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground">
+                {isZh ? bitfieldData.enumBit.nameZh : bitfieldData.enumBit.nameEn} (Bit {bitfieldData.enumBit.startBit}~{bitfieldData.enumBit.endBit}):
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {bitfieldData.enumBit.enumValues.map((ev) => {
+                  const isActive = ev.value === bitfieldData.enumBit!.currentValue
+                  return (
+                    <Button
+                      key={ev.value}
+                      variant={isActive ? 'default' : 'outline'}
+                      size="sm"
+                      className={cn(
+                        'text-xs min-w-[60px]',
+                        isActive && 'font-semibold'
+                      )}
+                      disabled
+                    >
+                      {isZh ? ev.labelZh : ev.labelEn}
+                    </Button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )
+    }
+    
+    return null
   }
 
   return (
@@ -430,17 +707,85 @@ export default function BMSLevel2Page() {
             </TabsContent>
 
             <TabsContent value="bcu" className="mt-4">
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t('bms.bcu_title', '簇控制单元')}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      {t('bms.bcu_placeholder', 'BCU 页面内容待实现...')}
-                    </p>
-                  </CardContent>
-                </Card>
+              <div className="space-y-6">
+                {clusterDetailInfo ? (
+                  <>
+                    {/* 遥测数据 */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t('bms.telemetry_data', '遥测数据')}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                          {clusterDetailInfo.telemetryData.map((field) => (
+                            <Card key={field.nameEn} className="p-4">
+                              <div className="text-sm text-muted-foreground mb-1">
+                                {getDynamicFieldName(field)}
+                              </div>
+                              <div className="text-2xl font-bold">
+                                {getDynamicFieldValue(field)}
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* 状态字 */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t('bms.status_words', '状态字')}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                          {clusterDetailInfo.statusWords.map((word) => (
+                            <div key={word.id} className="space-y-1">
+                              <div className="text-sm text-muted-foreground">
+                                {i18n.language === 'zh-CN' ? word.nameZh : word.nameEn}:
+                              </div>
+                              <div className="text-xl font-bold font-mono">
+                                {word.rawValue}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* 遥控数据（遥信） */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t('bms.telecontrol_data', '遥控数据')}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {clusterDetailInfo.telecontrolData.map((data) => renderTelecontrolData(data, i18n))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* 控制命令 */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t('bms.control_commands', '控制命令')}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Button
+                          variant="destructive"
+                          onClick={handleFaultReset}
+                        >
+                          {t('bms.fault_reset', '故障复位')}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : (
+                  <Card>
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      {t('bms.loading', '加载中...')}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </TabsContent>
 

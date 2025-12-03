@@ -130,3 +130,177 @@ export interface BreakerControlResponse {
   /** 消息 */
   message?: string;
 }
+
+// ========== 遥测遥信数据 ==========
+
+/**
+ * 遥测数据（动态字段）
+ */
+export interface TelemetryData extends DynamicField {
+  // 继承 DynamicField 的所有属性
+}
+
+/**
+ * 遥信数据 - 布尔类型
+ */
+export interface TelecontrolBoolean {
+  /** 遥信ID */
+  id: string;
+  /** 汉字名 */
+  nameZh: string;
+  /** 英文名 */
+  nameEn: string;
+  /** 是否激活 */
+  active: boolean;
+  /** 故障等级 (1~4，越大越严重) */
+  faultLevel: number;
+}
+
+/**
+ * 枚举值定义
+ */
+export interface EnumValue {
+  /** 枚举值（数字） */
+  value: number;
+  /** 汉字含义 */
+  labelZh: string;
+  /** 英文含义 */
+  labelEn: string;
+}
+
+/**
+ * 遥信数据 - 枚举类型
+ */
+export interface TelecontrolEnum {
+  /** 遥信ID */
+  id: string;
+  /** 汉字名 */
+  nameZh: string;
+  /** 英文名 */
+  nameEn: string;
+  /** 当前值 */
+  currentValue: number;
+  /** 故障等级 (1~4) */
+  faultLevel: number;
+  /** 所有可能的枚举值 */
+  enumValues: EnumValue[];
+}
+
+/**
+ * 复杂位域 - 布尔位定义
+ */
+export interface BitfieldBooleanBit {
+  /** 位索引 (0-15) */
+  bitIndex: number;
+  /** 汉字名 */
+  nameZh: string;
+  /** 英文名 */
+  nameEn: string;
+  /** 是否激活 */
+  active: boolean;
+  /** 故障等级 (1~4) */
+  faultLevel: number;
+}
+
+/**
+ * 复杂位域 - 枚举位定义
+ */
+export interface BitfieldEnumBit {
+  /** 起始位索引 */
+  startBit: number;
+  /** 结束位索引 */
+  endBit: number;
+  /** 汉字名 */
+  nameZh: string;
+  /** 英文名 */
+  nameEn: string;
+  /** 当前值 */
+  currentValue: number;
+  /** 故障等级 (1~4) */
+  faultLevel: number;
+  /** 所有可能的枚举值 */
+  enumValues: EnumValue[];
+}
+
+/**
+ * 遥信数据 - 复杂位域类型
+ */
+export interface TelecontrolBitfield {
+  /** 遥信ID */
+  id: string;
+  /** 汉字名 */
+  nameZh: string;
+  /** 英文名 */
+  nameEn: string;
+  /** 原始值（16位整数） */
+  rawValue: number;
+  /** 布尔位列表 (bit0~bit7) */
+  booleanBits: BitfieldBooleanBit[];
+  /** 预留位范围 (bit8~bit11，不显示) */
+  reservedBits?: { startBit: number; endBit: number };
+  /** 枚举位 (bit12~bit15) */
+  enumBit?: BitfieldEnumBit;
+}
+
+/**
+ * 遥信数据（联合类型）
+ */
+export type TelecontrolData = TelecontrolBoolean | TelecontrolEnum | TelecontrolBitfield;
+
+/**
+ * 状态字数据
+ */
+export interface StatusWord {
+  /** 状态字ID */
+  id: string;
+  /** 汉字名 */
+  nameZh: string;
+  /** 英文名 */
+  nameEn: string;
+  /** 原始值（16进制字符串，如 "0x0C26"） */
+  rawValue: string;
+  /** 数值 */
+  numericValue: number;
+}
+
+/**
+ * 堆详细信息响应（三级架构BAU）
+ */
+export interface StackDetailInfoResponse {
+  /** 遥测数据列表 */
+  telemetryData: TelemetryData[];
+  /** 状态字列表 */
+  statusWords: StatusWord[];
+  /** 遥信数据列表 */
+  telecontrolData: TelecontrolData[];
+}
+
+/**
+ * 簇详细信息响应（三级架构BCU、二级架构BCU）
+ */
+export interface ClusterDetailInfoResponse {
+  /** 遥测数据列表 */
+  telemetryData: TelemetryData[];
+  /** 状态字列表 */
+  statusWords: StatusWord[];
+  /** 遥信数据列表 */
+  telecontrolData: TelecontrolData[];
+}
+
+/**
+ * 故障复位请求
+ */
+export interface FaultResetRequest {
+  /** 目标ID（堆ID或簇ID） */
+  targetId: string;
+}
+
+/**
+ * 故障复位响应
+ */
+export interface FaultResetResponse {
+  /** 是否成功 */
+  success: boolean;
+  /** 消息 */
+  message?: string;
+}

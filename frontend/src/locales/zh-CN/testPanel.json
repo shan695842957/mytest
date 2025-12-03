@@ -119,7 +119,20 @@
     "current": "电流",
     "series": "串联",
     "busbar_parallel": "母线（并联）",
-    "warning": "警告"
+    "warning": "警告",
+    "bau_title": "堆控制单元",
+    "bcu_title": "簇控制单元",
+    "stack_data": "堆数据",
+    "cluster_data": "簇数据",
+    "telemetry_data": "遥测数据",
+    "status_words": "状态字",
+    "telecontrol_data": "遥控数据",
+    "control_commands": "控制命令",
+    "fault_reset": "故障复位",
+    "select_cluster": "选择簇",
+    "cluster": "簇",
+    "previous": "上一个",
+    "next": "下一个"
   }
 }
 
