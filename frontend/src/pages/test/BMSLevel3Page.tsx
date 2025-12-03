@@ -143,14 +143,7 @@ const fetchStackDetailInfo = async (): Promise<StackDetailInfoResponse> => {
       { nameEn: 'Max Cell Temp', nameZh: '最大单体温度', valueEn: 13.0, valueZh: 13.0, unitEn: '°C', unitZh: '°C' },
       { nameEn: 'Min Cell Temp', nameZh: '最小单体温度', valueEn: 12.8, valueZh: 12.8, unitEn: '°C', unitZh: '°C' },
     ],
-    statusWords: [
-      { id: 'status1', nameZh: '状态字1', nameEn: 'Status Word 1', rawValue: '0x0C26', numericValue: 0x0C26 },
-      { id: 'status2', nameZh: '状态字2', nameEn: 'Status Word 2', rawValue: '0x029E', numericValue: 0x029E },
-      { id: 'alarm1', nameZh: '告警字1', nameEn: 'Alarm Word 1', rawValue: '0x0000', numericValue: 0x0000 },
-      { id: 'alarm2', nameZh: '告警字2', nameEn: 'Alarm Word 2', rawValue: '0x0001', numericValue: 0x0001 },
-      { id: 'fault1', nameZh: '故障字1', nameEn: 'Fault Word 1', rawValue: '0x0400', numericValue: 0x0400 },
-      { id: 'fault2', nameZh: '故障字2', nameEn: 'Fault Word 2', rawValue: '0x0001', numericValue: 0x0001 },
-    ],
+    statusWords: [], // 已移除，数据在其他地方展示
     telecontrolData: [
       // 布尔类型
       { id: 'total_overvoltage', nameZh: '总过压', nameEn: 'Total Overvoltage', active: false, faultLevel: 1 },
@@ -169,6 +162,51 @@ const fetchStackDetailInfo = async (): Promise<StackDetailInfoResponse> => {
       { id: 'current_sensor', nameZh: '电流传感器', nameEn: 'Current Sensor', active: true, faultLevel: 4 },
       { id: 'dc_contactor', nameZh: '直流接触器', nameEn: 'DC Contactor', active: true, faultLevel: 4 },
       { id: 'fuse', nameZh: '熔断器', nameEn: 'Fuse', active: true, faultLevel: 4 },
+      // 枚举类型示例
+      {
+        id: 'run_status',
+        nameZh: '运行状态',
+        nameEn: 'Run Status',
+        currentValue: 1,
+        faultLevel: 2,
+        enumValues: [
+          { value: 0, labelZh: '待机', labelEn: 'Standby' },
+          { value: 1, labelZh: '故障', labelEn: 'Fault' },
+          { value: 2, labelZh: '开机', labelEn: 'Running' },
+        ],
+      },
+      // 复杂位域示例
+      {
+        id: 'complex_bitfield',
+        nameZh: '复杂位域',
+        nameEn: 'Complex Bitfield',
+        rawValue: 0x8F01, // bit0, bit7, bit12~bit15 为1
+        booleanBits: [
+          { bitIndex: 0, nameZh: '报警1', nameEn: 'Alarm 1', active: true, faultLevel: 2 },
+          { bitIndex: 1, nameZh: '报警2', nameEn: 'Alarm 2', active: false, faultLevel: 1 },
+          { bitIndex: 2, nameZh: '报警3', nameEn: 'Alarm 3', active: false, faultLevel: 1 },
+          { bitIndex: 3, nameZh: '报警4', nameEn: 'Alarm 4', active: false, faultLevel: 1 },
+          { bitIndex: 4, nameZh: '报警5', nameEn: 'Alarm 5', active: false, faultLevel: 1 },
+          { bitIndex: 5, nameZh: '报警6', nameEn: 'Alarm 6', active: false, faultLevel: 1 },
+          { bitIndex: 6, nameZh: '报警7', nameEn: 'Alarm 7', active: false, faultLevel: 1 },
+          { bitIndex: 7, nameZh: '报警8', nameEn: 'Alarm 8', active: true, faultLevel: 3 },
+        ],
+        reservedBits: { startBit: 8, endBit: 11 },
+        enumBit: {
+          startBit: 12,
+          endBit: 15,
+          nameZh: '运行模式',
+          nameEn: 'Run Mode',
+          currentValue: 8, // 0x8 = 8
+          faultLevel: 2,
+          enumValues: [
+            { value: 0, labelZh: '待机', labelEn: 'Standby' },
+            { value: 1, labelZh: '运行', labelEn: 'Running' },
+            { value: 2, labelZh: '故障', labelEn: 'Fault' },
+            { value: 8, labelZh: '维护', labelEn: 'Maintenance' },
+          ],
+        },
+      },
     ] as TelecontrolData[],
   }
 }
@@ -198,14 +236,7 @@ const fetchClusterDetailInfo = async (clusterId: string): Promise<ClusterDetailI
       { nameEn: 'Max Cell Temp', nameZh: '最大单体温度', valueEn: 13.0, valueZh: 13.0, unitEn: '°C', unitZh: '°C' },
       { nameEn: 'Min Cell Temp', nameZh: '最小单体温度', valueEn: 12.8, valueZh: 12.8, unitEn: '°C', unitZh: '°C' },
     ],
-    statusWords: [
-      { id: 'status1', nameZh: '状态字1', nameEn: 'Status Word 1', rawValue: '0x0C26', numericValue: 0x0C26 },
-      { id: 'status2', nameZh: '状态字2', nameEn: 'Status Word 2', rawValue: '0x029E', numericValue: 0x029E },
-      { id: 'alarm1', nameZh: '告警字1', nameEn: 'Alarm Word 1', rawValue: '0x0000', numericValue: 0x0000 },
-      { id: 'alarm2', nameZh: '告警字2', nameEn: 'Alarm Word 2', rawValue: '0x0001', numericValue: 0x0001 },
-      { id: 'fault1', nameZh: '故障字1', nameEn: 'Fault Word 1', rawValue: '0x0400', numericValue: 0x0400 },
-      { id: 'fault2', nameZh: '故障字2', nameEn: 'Fault Word 2', rawValue: '0x0001', numericValue: 0x0001 },
-    ],
+    statusWords: [], // 已移除，数据在其他地方展示
     telecontrolData: [
       // 布尔类型
       { id: 'total_overvoltage', nameZh: '总过压', nameEn: 'Total Overvoltage', active: false, faultLevel: 1 },
@@ -426,7 +457,7 @@ export default function BMSLevel3Page() {
     if ('currentValue' in data && 'enumValues' in data && !('rawValue' in data)) {
       const enumData = data as TelecontrolEnum
       return (
-        <div key={enumData.id} className="space-y-1">
+        <div key={enumData.id} className="w-full space-y-1">
           <div className="text-xs text-muted-foreground">
             {isZh ? enumData.nameZh : enumData.nameEn}:
           </div>
@@ -457,7 +488,7 @@ export default function BMSLevel3Page() {
     if ('rawValue' in data && 'booleanBits' in data) {
       const bitfieldData = data as TelecontrolBitfield
       return (
-        <div key={bitfieldData.id} className="space-y-2">
+        <div key={bitfieldData.id} className="w-full space-y-2">
           <div className="text-xs text-muted-foreground">
             {isZh ? bitfieldData.nameZh : bitfieldData.nameEn}: 值: {bitfieldData.rawValue.toString(16).toUpperCase().padStart(4, '0')}
           </div>
@@ -894,35 +925,18 @@ export default function BMSLevel3Page() {
                       </CardContent>
                     </Card>
 
-                    {/* 状态字 */}
+                    {/* 遥信数据 */}
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('bms.status_words', '状态字')}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                          {stackDetailInfo.statusWords.map((word) => (
-                            <div key={word.id} className="space-y-1">
-                              <div className="text-sm text-muted-foreground">
-                                {i18n.language === 'zh-CN' ? word.nameZh : word.nameEn}:
-                              </div>
-                              <div className="text-xl font-bold font-mono">
-                                {word.rawValue}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* 遥控数据（遥信） */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{t('bms.telecontrol_data', '遥控数据')}</CardTitle>
+                        <CardTitle>{t('bms.telecontrol_data', '遥信数据')}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex flex-wrap gap-2">
-                          {stackDetailInfo.telecontrolData.map((data) => renderTelecontrolData(data, i18n))}
+                          {stackDetailInfo.telecontrolData.map((data) => (
+                            <div key={data.id} className="w-full">
+                              {renderTelecontrolData(data, i18n)}
+                            </div>
+                          ))}
                         </div>
                       </CardContent>
                     </Card>
@@ -1038,35 +1052,18 @@ export default function BMSLevel3Page() {
                       </CardContent>
                     </Card>
 
-                    {/* 状态字 */}
+                    {/* 遥信数据 */}
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('bms.status_words', '状态字')}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                          {clusterDetailInfo.statusWords.map((word) => (
-                            <div key={word.id} className="space-y-1">
-                              <div className="text-sm text-muted-foreground">
-                                {i18n.language === 'zh-CN' ? word.nameZh : word.nameEn}:
-                              </div>
-                              <div className="text-xl font-bold font-mono">
-                                {word.rawValue}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* 遥控数据（遥信） */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{t('bms.telecontrol_data', '遥控数据')}</CardTitle>
+                        <CardTitle>{t('bms.telecontrol_data', '遥信数据')}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex flex-wrap gap-2">
-                          {clusterDetailInfo.telecontrolData.map((data) => renderTelecontrolData(data, i18n))}
+                          {clusterDetailInfo.telecontrolData.map((data) => (
+                            <div key={data.id} className="w-full">
+                              {renderTelecontrolData(data, i18n)}
+                            </div>
+                          ))}
                         </div>
                       </CardContent>
                     </Card>

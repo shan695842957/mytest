@@ -126,7 +126,7 @@
     "cluster_data": "簇数据",
     "telemetry_data": "遥测数据",
     "status_words": "状态字",
-    "telecontrol_data": "遥控数据",
+    "telecontrol_data": "遥信数据",
     "control_commands": "控制命令",
     "fault_reset": "故障复位",
     "select_cluster": "选择簇",

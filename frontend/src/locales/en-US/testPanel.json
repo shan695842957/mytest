@@ -126,7 +126,7 @@
     "cluster_data": "Cluster Data",
     "telemetry_data": "Telemetry Data",
     "status_words": "Status Words",
-    "telecontrol_data": "Telecontrol Data",
+    "telecontrol_data": "Teleindication Data",
     "control_commands": "Control Commands",
     "fault_reset": "Fault Reset",
     "select_cluster": "Select Cluster",
