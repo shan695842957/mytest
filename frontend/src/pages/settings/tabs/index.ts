@@ -7,5 +7,4 @@ export { NetworkSettingsTab } from './NetworkSettingsTab'
 export { TimeSettingsTab } from './TimeSettingsTab'
 export { SystemInfoTab } from './SystemInfoTab'
 export { ServiceManagementTab } from './ServiceManagementTab'
-export { SecuritySettingsTab } from './SecuritySettingsTab'
 
