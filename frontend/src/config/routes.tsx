@@ -28,7 +28,6 @@ const SoftwareServicePage = lazy(() => import('@/pages/settings/SoftwareServiceP
 const SoftwareAPIPage = lazy(() => import('@/pages/settings/SoftwareAPIPage'))
 const SoftwareDatabasePage = lazy(() => import('@/pages/settings/SoftwareDatabasePage'))
 const FrontendSettingsPage = lazy(() => import('@/pages/settings/FrontendSettingsPage'))
-const ThemeTestPage = lazy(() => import('@/pages/ThemeTestPage'))
 const NotFoundPage = lazy(() => import('@/pages/errors/NotFoundPage'))
 const ForbiddenPage = lazy(() => import('@/pages/errors/ForbiddenPage'))
 
@@ -78,12 +77,6 @@ export const routes: RouteObject[] = [
   {
     path: '/login',
     element: <LoginPage />,
-  },
-  
-  // 主题测试页
-  {
-    path: '/theme-test',
-    element: <ThemeTestPage />,
   },
   
   // 受保护的路由
