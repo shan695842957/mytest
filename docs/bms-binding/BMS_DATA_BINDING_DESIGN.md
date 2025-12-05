@@ -52,7 +52,7 @@
     - 可配置字段：SOC、SOH、SOS 等（取决于供应商）
     - 拓扑图：包数量、包展示变量（可配置）
   - **BCU 页面**：簇控制单元
-    - 遥测量：全部可配置，需绑定资产字段
+    - 遥测量：全部可配置，需配置数据来源（资产字段或DI点）
     - 遥信量：全部可配置，支持三种类型（布尔/枚举/位域）
   - **BMU 页面**：包管理单元
     - 串并数：可配置（如 15串2并）
@@ -586,13 +586,13 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 ### 4.4 第四阶段：测试面板改造
 
 1. **改造现有 BMS 页面**
-   - 从配置中读取字段列表
-   - 从绑定中读取资产字段关联
-   - 实时数据从资产字段中获取
+   - 从配置中读取字段列表（根据 `bms_instance_id` 和 `page_type` 查询）
+   - 从字段配置中读取数据来源（`source_type`、`read_device_type_tag_id`、`read_comm_instance_id`、`read_point_id`）
+   - 实时数据从资产字段或 DI 点中获取（通过 WebSocket 或轮询）
 
 2. **创建数据查询 API**
    - 实现 `/api/bms/instances/{id}/data/*` 接口
-   - 根据绑定配置，从资产字段中聚合数据
+   - 根据字段配置的数据来源，从资产字段或 DI 点中聚合数据
 
 ---
 
@@ -629,20 +629,22 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
    → 三级架构：创建堆节点 → 创建簇节点（指定数量）→ 创建包节点（指定数量、串并数）
    → 二级架构：创建簇节点 → 创建包节点（指定数量、串并数）
   ↓
-4. 配置字段绑定（BMS 字段 → 数据来源）
-   → 资产字段（主要）
-   → DI 点（某些 BMS 的 DO 量）
-   → 二次变量计算（将来实现）
+4. 配置 SYS 页面字段（固定字段 + 可配置字段，每个字段配置数据来源）
+   → 资产字段（主要，通过外键关联 device_type_tags.id）
+   → DI 点（某些 BMS 的 DO 量，通过外键关联 comm_instances.id 和 point_table_points.id）
+   → 自定义字段（仅用于显示，无数据来源）
   ↓
-4. 配置遥信量绑定（BMS 遥信量 → 数据来源）
-   → 资产字段（主要）
-   → DI 点（某些 BMS 的 DO 量）
+5. 配置 BCU/BAU 页面字段（遥测量和遥信量，每个字段配置数据来源）
+   → 遥测量：在 bms_field_configs 表中配置（page_type='BCU' 或 'BAU'）
+   → 遥信量：在 bms_teleindication_configs 表中配置（page_type='BCU' 或 'BAU'）
   ↓
-5. 配置拓扑绑定（拓扑节点字段 → 数据来源）
-   → 拓扑图的节点从层级节点中获取
+6. 配置拓扑图字段（簇/包的显示字段，每个字段配置数据来源）
+   → 在 bms_topology_field_configs 表中配置
+   → 拓扑图的节点从 bms_hierarchy_nodes 表中获取
   ↓
-6. 配置 BMU 绑定（单体字段 → 数据来源）
-   → 包的串并数从层级节点中获取
+7. 配置 BMU 页面字段（单体字段，每个字段配置数据来源）
+   → 在 bms_bmu_cell_field_configs 表中配置
+   → 包的串并数从 bms_hierarchy_nodes 表中获取
 ```
 
 ### 5.3 运行阶段
@@ -686,8 +688,8 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
   - `breaker_command`（断路器指令）- 可写，COMMAND类型
 - **固定字段绑定**：需要绑定到数据来源（资产字段或DI点），不是硬编码
 - **读写分离**：
-  - 读：从 `read_source_type` 指定的数据来源读取
-  - 写：写入到 `write_source_type` 指定的数据来源（资产字段必须是 COMMAND/SETPOINT/PARAM_SET 类型）
+  - 读：根据 `source_type` 和对应的读字段（`read_device_type_tag_id` 或 `read_comm_instance_id` + `read_point_id`）获取数据
+  - 写：根据 `source_type` 和对应的写字段（`write_device_type_tag_id` 或 `write_comm_instance_id` + `write_point_id`）写入数据（资产字段必须是 COMMAND/SETPOINT/PARAM_SET 类型）
 
 ### 6.2 可配置字段处理
 
@@ -715,7 +717,6 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
   - 三级架构：查询 `node_type='cluster'` 且 `parent_node_id` 指向 stack 节点的所有节点
   - 二级架构：查询 `node_type='pack'` 且 `parent_node_id` 指向 cluster 节点的所有节点
 - **节点信息**：每个节点的编号、显示名称从 `bms_hierarchy_nodes` 表获取
-- **节点字段**：拓扑图中的节点字段（如簇的电压、电流、SOC）需要绑定到数据来源（读）
 - **节点字段**：拓扑图中的节点字段（如簇的电压、电流、SOC）在 `bms_topology_field_configs` 表中配置
   - 每个字段的数据来源在配置表中直接定义（`source_type`、`read_device_type_tag_id`、`read_comm_instance_id`、`read_point_id`）
 - **簇的分合闸**（三级架构）：
@@ -768,7 +769,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
   3. 根据字段配置的 `write_device_type_tag_id` 或 `write_comm_instance_id` + `write_point_id` 找到写入目标
   4. 如果是资产字段，调用资产字段写入API（参考 `device.md` 第 9.3 节）
   5. 如果是 DI 点，直接通过通信实例写入
-  6. 写入成功后生成相应的 SOE（CMD_SENT/CMD_FAIL/SETPOINT_CHANGE/PARAM_CHANGE）
+  6. 写入成功后生成相应的事件记录（SOE：CMD_SENT/CMD_FAIL/SETPOINT_CHANGE/PARAM_CHANGE）
 
 ### 7.2 多架构支持
 
