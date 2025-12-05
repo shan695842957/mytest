@@ -1,6 +1,6 @@
 # BMS 数据绑定功能设计文档
 
-> **版本**: v1.2.0  
+> **版本**: v1.2.1  
 > **创建时间**: 2025-01-XX  
 > **最后更新**: 2025-01-XX  
 > **作者**: AI Assistant  
@@ -116,8 +116,10 @@
 CREATE TABLE IF NOT EXISTS bms_architectures (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,                    -- 架构名称：'level2' | 'level3'
-    display_name TEXT NOT NULL,                   -- 显示名称：'二级架构' | '三级架构'
-    description TEXT NOT NULL DEFAULT '',
+    display_name_zh TEXT NOT NULL,                -- 中文显示名称：'二级架构'
+    display_name_en TEXT NOT NULL,                -- 英文显示名称：'Level 2 Architecture'
+    description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',      -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -127,8 +129,10 @@ CREATE TABLE IF NOT EXISTS bms_page_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     architecture_id INTEGER NOT NULL,             -- 架构ID
     page_type TEXT NOT NULL,                     -- 页面类型：'SYS' | 'BCU' | 'BAU' | 'BMU'
-    display_name TEXT NOT NULL,                   -- 显示名称
-    description TEXT NOT NULL DEFAULT '',
+    display_name_zh TEXT NOT NULL,                -- 中文显示名称
+    display_name_en TEXT NOT NULL,                -- 英文显示名称
+    description_zh TEXT NOT NULL DEFAULT '',      -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',       -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(architecture_id) REFERENCES bms_architectures(id) ON DELETE CASCADE,
@@ -165,8 +169,9 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
     -- 三级架构拓扑图（簇）固定字段：
     --   'breaker_status'（簇分合闸状态，只读，STATUS类型）
     --   'breaker_command'（簇分合闸指令，可写，COMMAND类型）
-    order_index INTEGER NOT NULL DEFAULT 0,        -- 排序索引
-    description TEXT NOT NULL DEFAULT '',
+    sort_order INTEGER NOT NULL DEFAULT 0,        -- 排序索引（避免使用 index 关键字）
+    description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',       -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
@@ -186,8 +191,9 @@ CREATE TABLE IF NOT EXISTS bms_telecontrol_configs (
     display_name_en TEXT NOT NULL,                -- 英文显示名
     telecontrol_type TEXT NOT NULL,                -- 遥信类型：'boolean' | 'enum' | 'bitfield'
     -- 注意：故障等级和枚举值定义使用资产字段的配置（device_type_tags.severity 和 enum_json）
-    order_index INTEGER NOT NULL DEFAULT 0,       -- 排序索引
-    description TEXT NOT NULL DEFAULT '',
+    sort_order INTEGER NOT NULL DEFAULT 0,        -- 排序索引（避免使用 index 关键字）
+    description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',       -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
@@ -201,7 +207,8 @@ CREATE TABLE IF NOT EXISTS bms_topology_configs (
     topology_type TEXT NOT NULL,                   -- 拓扑类型：'pack' | 'cluster'
     display_name_zh TEXT NOT NULL,                 -- 中文显示名
     display_name_en TEXT NOT NULL,                 -- 英文显示名
-    description TEXT NOT NULL DEFAULT '',
+    description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',        -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
@@ -215,7 +222,7 @@ CREATE TABLE IF NOT EXISTS bms_topology_field_configs (
     field_key TEXT NOT NULL,                       -- 字段键（引用 bms_field_configs.field_key）
     display_name_zh TEXT NOT NULL,                -- 中文显示名
     display_name_en TEXT NOT NULL,                -- 英文显示名
-    order_index INTEGER NOT NULL DEFAULT 0,        -- 排序索引
+    sort_order INTEGER NOT NULL DEFAULT 0,        -- 排序索引（避免使用 index 关键字）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(topology_config_id) REFERENCES bms_topology_configs(id) ON DELETE CASCADE,
@@ -229,7 +236,8 @@ CREATE TABLE IF NOT EXISTS bms_bmu_configs (
     series_count INTEGER NOT NULL DEFAULT 0,       -- 串联数（如 15）
     parallel_count INTEGER NOT NULL DEFAULT 0,      -- 并联数（如 2）
     has_temperature_points BOOLEAN NOT NULL DEFAULT 0, -- 是否有温度测点
-    description TEXT NOT NULL DEFAULT '',
+    description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',        -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
@@ -246,7 +254,7 @@ CREATE TABLE IF NOT EXISTS bms_bmu_cell_field_configs (
     data_type TEXT NOT NULL,                       -- 数据类型：'number'
     unit_zh TEXT NOT NULL DEFAULT '',               -- 中文单位
     unit_en TEXT NOT NULL DEFAULT '',               -- 英文单位
-    order_index INTEGER NOT NULL DEFAULT 0,         -- 排序索引
+    sort_order INTEGER NOT NULL DEFAULT 0,          -- 排序索引（避免使用 index 关键字）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(bmu_config_id) REFERENCES bms_bmu_configs(id) ON DELETE CASCADE,
@@ -819,6 +827,7 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 | v1.0.0 | 2025-01-XX | AI Assistant | 初始版本，完成设计文档 |
 | v1.1.0 | 2025-01-XX | AI Assistant | 重大调整：<br/>1. 删除重复配置（位域拆分、故障等级、枚举值）<br/>2. 明确 BMS 识别方式（通过 bms_instances.asset_id）<br/>3. 支持多种数据来源（资产字段/DI点/二次变量）<br/>4. 遵循现有设计文档（device.md、DATABASE_DESIGN.md） |
 | v1.2.0 | 2025-01-XX | AI Assistant | 功能增强：<br/>1. 固定字段单独配置（告警状态、电压、电流、功率、断路器状态、断路器指令）<br/>2. 支持写入功能（读写分离，支持 COMMAND/SETPOINT/PARAM_SET）<br/>3. 支持簇分合闸指令绑定（三级架构拓扑图） |
+| v1.2.1 | 2025-01-XX | AI Assistant | 国际化修正：<br/>1. 所有显示名称字段改为双语（display_name_zh/display_name_en）<br/>2. 所有描述字段改为双语（description_zh/description_en）<br/>3. 避免 SQLite 关键字冲突（order_index → sort_order） |
 
 ---
 
