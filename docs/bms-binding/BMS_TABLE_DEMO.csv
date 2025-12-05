@@ -1,6 +1,7 @@
 # BMS 数据绑定表设计 Demo（CSV 格式）
 # 说明：本文件展示所有 BMS 相关表的示例数据
 # 场景：三级架构 BMS，SYS 页面包含固定字段和可配置字段，拓扑图显示簇信息
+# 版本：v1.3.0（所有配置表关联到 bms_instances，字段配置表直接包含数据来源信息）
 
 # ============================================
 # 1. bms_architectures（BMS 架构类型表）
@@ -10,9 +11,9 @@ id,name,display_name_zh,display_name_en,description_zh,description_en,created_at
 2,level3,三级架构,Level 3 Architecture,电池堆 → 电池簇 → 电池包 → 电池单体,Battery Stack → Battery Cluster → Battery Pack → Battery Cell,2025-01-01 00:00:00,2025-01-01 00:00:00
 
 # ============================================
-# 2. bms_page_configs（BMS 页面配置表）
+# 2. bms_page_configs（BMS 页面配置表 - 全局配置）
 # ============================================
-# 说明：三级架构的页面配置
+# 说明：页面配置是全局的，所有 BMS 实例共享
 id,architecture_id,page_type,display_name_zh,display_name_en,description_zh,description_en,created_at,updated_at
 1,2,SYS,系统监控,System Monitoring,三级架构系统监控页面,Level 3 System Monitoring Page,2025-01-01 00:00:00,2025-01-01 00:00:00
 2,2,BAU,堆控制单元,Stack Control Unit,三级架构堆控制单元页面,Level 3 Stack Control Unit Page,2025-01-01 00:00:00,2025-01-01 00:00:00
@@ -20,52 +21,92 @@ id,architecture_id,page_type,display_name_zh,display_name_en,description_zh,desc
 4,2,BMU,包管理单元,Pack Management Unit,三级架构包管理单元页面,Level 3 Pack Management Unit Page,2025-01-01 00:00:00,2025-01-01 00:00:00
 
 # ============================================
-# 3. bms_field_configs（BMS 字段配置表）
-# ============================================
-# 说明：SYS 页面的字段配置（固定字段 + 可配置字段）
-# 固定字段：fault, voltage, current, power, breaker_status, breaker_command
-# 可配置字段：soc, soh, sos（根据供应商配置）
-id,page_config_id,field_key,display_name_zh,display_name_en,field_type,data_type,unit_zh,unit_en,is_required,is_readable,is_writable,sort_order,description_zh,description_en,created_at,updated_at
-1,1,fault,告警状态,Fault Status,fixed,boolean,,,1,1,0,1,告警状态（所有BMS厂家都能提供）,Fault Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-2,1,voltage,电压,Voltage,fixed,number,V,V,1,1,0,2,电压（所有BMS厂家都能提供）,Voltage (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-3,1,current,电流,Current,fixed,number,A,A,1,1,0,3,电流（所有BMS厂家都能提供）,Current (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-4,1,power,功率,Power,fixed,number,kW,kW,1,1,0,4,功率（所有BMS厂家都能提供，可能通过计算）,Power (available from all BMS vendors, may be calculated),2025-01-01 00:00:00,2025-01-01 00:00:00
-5,1,breaker_status,断路器状态,Breaker Status,fixed,boolean,,,1,1,0,5,断路器状态（所有BMS厂家都能提供）,Breaker Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-6,1,breaker_command,断路器指令,Breaker Command,fixed,boolean,,,1,1,1,6,断路器指令（所有BMS厂家都能提供）,Breaker Command (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-7,1,soc,荷电状态,State of Charge,dynamic,number,%,%,0,1,0,7,SOC（取决于供应商）,SOC (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
-8,1,soh,健康状态,State of Health,dynamic,number,%,%,0,1,0,8,SOH（取决于供应商）,SOH (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
-9,1,sos,安全状态,State of Safety,dynamic,number,%,%,0,1,0,9,SOS（取决于供应商）,SOS (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
-
-# ============================================
-# 4. bms_topology_configs（BMS 拓扑配置表）
-# ============================================
-# 说明：三级架构 SYS 页面的拓扑图配置（显示簇）
-id,page_config_id,topology_type,display_name_zh,display_name_en,description_zh,description_en,created_at,updated_at
-1,1,cluster,电池簇,Battery Cluster,三级架构拓扑图中的簇节点,Cluster nodes in Level 3 topology diagram,2025-01-01 00:00:00,2025-01-01 00:00:00
-
-# ============================================
-# 5. bms_topology_field_configs（拓扑字段配置表）
-# ============================================
-# 说明：拓扑图中每个簇节点显示的字段
-# display_position: 'header'（卡片头部，如簇编号）、'card'（卡片主体，如电压、电流、SOC）、'footer'（卡片底部，如分合闸按钮）
-# 注意：拓扑图的字段键独立定义，不一定与主页面字段相同
-id,topology_config_id,field_key,display_name_zh,display_name_en,display_position,sort_order,created_at,updated_at
-1,1,cluster_number,簇编号,Cluster Number,header,1,2025-01-01 00:00:00,2025-01-01 00:00:00
-2,1,cluster_voltage,簇电压,Cluster Voltage,card,1,2025-01-01 00:00:00,2025-01-01 00:00:00
-3,1,cluster_current,簇电流,Cluster Current,card,2,2025-01-01 00:00:00,2025-01-01 00:00:00
-4,1,cluster_soc,簇SOC,Cluster SOC,card,3,2025-01-01 00:00:00,2025-01-01 00:00:00
-5,1,cluster_breaker_status,分合闸状态,Breaker Status,footer,1,2025-01-01 00:00:00,2025-01-01 00:00:00
-6,1,cluster_breaker_command,分合闸指令,Breaker Command,footer,2,2025-01-01 00:00:00,2025-01-01 00:00:00
-
-# ============================================
-# 6. bms_instances（BMS 实例表）
+# 3. bms_instances（BMS 实例表）
 # ============================================
 # 说明：创建一个三级架构的 BMS 实例
+# 注意：一旦资产关联到此表，就被系统识别为 BMS
 id,asset_id,architecture_id,instance_name,display_name_zh,display_name_en,enabled,metadata_json,created_at,updated_at
 1,100,2,1号电池堆,1号电池堆,Battery Stack 1,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
 
 # ============================================
-# 7. bms_hierarchy_nodes（BMS 层级节点表）
+# 4. bms_field_configs（BMS 字段配置表 - 实例级别）
+# ============================================
+# 说明：SYS 页面的字段配置（固定字段 + 可配置字段）
+# 注意：每个 BMS 实例有自己独立的字段配置，数据来源直接在配置表中定义
+# 字段说明：
+#   - source_type: 'asset_field'（资产字段，通过外键关联）| 'custom'（自定义字段）| 'di_point'（DI点）
+#   - read_device_type_tag_id: 当 source_type='asset_field' 时，外键关联 device_type_tags.id（假设资产字段ID为 1001-1010）
+#   - write_device_type_tag_id: 当字段可写且 source_type='asset_field' 时，外键关联 device_type_tags.id
+#   - read_comm_instance_id / read_point_id: 当 source_type='di_point' 时，外键关联 comm_instances.id 和 point_table_points.id
+# 固定字段：fault, voltage, current, power, breaker_status, breaker_command
+# 可配置字段：soc, soh, sos（根据供应商配置）
+id,bms_instance_id,page_type,field_key,display_name_zh,display_name_en,field_type,data_type,unit_zh,unit_en,is_required,is_readable,is_writable,source_type,read_device_type_tag_id,write_device_type_tag_id,read_comm_instance_id,read_point_id,write_comm_instance_id,write_point_id,sort_order,description_zh,description_en,created_at,updated_at
+1,1,SYS,fault,告警状态,Fault Status,fixed,boolean,,,1,1,0,asset_field,1001,NULL,NULL,NULL,NULL,NULL,1,告警状态（所有BMS厂家都能提供）,Fault Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+2,1,SYS,voltage,电压,Voltage,fixed,number,V,V,1,1,0,asset_field,1002,NULL,NULL,NULL,NULL,NULL,2,电压（所有BMS厂家都能提供）,Voltage (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+3,1,SYS,current,电流,Current,fixed,number,A,A,1,1,0,asset_field,1003,NULL,NULL,NULL,NULL,NULL,3,电流（所有BMS厂家都能提供）,Current (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+4,1,SYS,power,功率,Power,fixed,number,kW,kW,1,1,0,asset_field,1004,NULL,NULL,NULL,NULL,NULL,4,功率（所有BMS厂家都能提供，可能通过计算）,Power (available from all BMS vendors, may be calculated),2025-01-01 00:00:00,2025-01-01 00:00:00
+5,1,SYS,breaker_status,断路器状态,Breaker Status,fixed,boolean,,,1,1,0,asset_field,1005,NULL,NULL,NULL,NULL,NULL,5,断路器状态（所有BMS厂家都能提供）,Breaker Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+6,1,SYS,breaker_command,断路器指令,Breaker Command,fixed,boolean,,,1,1,1,asset_field,1005,1006,NULL,NULL,NULL,NULL,6,断路器指令（所有BMS厂家都能提供）,Breaker Command (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+7,1,SYS,soc,荷电状态,State of Charge,dynamic,number,%,%,0,1,0,asset_field,1007,NULL,NULL,NULL,NULL,NULL,7,SOC（取决于供应商）,SOC (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+8,1,SYS,soh,健康状态,State of Health,dynamic,number,%,%,0,1,0,asset_field,1008,NULL,NULL,NULL,NULL,NULL,8,SOH（取决于供应商）,SOH (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+9,1,SYS,sos,安全状态,State of Safety,dynamic,number,%,%,0,1,0,asset_field,1009,NULL,NULL,NULL,NULL,NULL,9,SOS（取决于供应商）,SOS (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 5. bms_telecontrol_configs（BMS 遥信量配置表 - 实例级别）
+# ============================================
+# 说明：BCU/BAU 页面的遥信量配置
+# 注意：每个 BMS 实例有自己独立的遥信量配置，数据来源直接在配置表中定义
+# 示例：BCU 页面的遥信量配置
+id,bms_instance_id,page_type,telecontrol_key,display_name_zh,display_name_en,telecontrol_type,source_type,device_type_tag_id,comm_instance_id,point_id,sort_order,description_zh,description_en,created_at,updated_at
+1,1,BCU,total_overvoltage,总过压,Total Overvoltage,boolean,asset_field,2001,NULL,NULL,1,总过压报警,Total Overvoltage Alarm,2025-01-01 00:00:00,2025-01-01 00:00:00
+2,1,BCU,run_mode,运行模式,Run Mode,enum,asset_field,2002,NULL,NULL,2,运行模式（0=待机,1=故障,2=开机）,Run Mode (0=Standby,1=Fault,2=Running),2025-01-01 00:00:00,2025-01-01 00:00:00
+3,1,BCU,status_word,状态字,Status Word,bitfield,di_point,NULL,3001,4001,3,状态字（位域，通过子点映射）,Status Word (bitfield, mapped via sub-points),2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 6. bms_topology_configs（BMS 拓扑配置表 - 实例级别）
+# ============================================
+# 说明：三级架构 SYS 页面的拓扑图配置（显示簇）
+# 注意：每个 BMS 实例有自己独立的拓扑配置
+id,bms_instance_id,topology_type,display_name_zh,display_name_en,description_zh,description_en,created_at,updated_at
+1,1,cluster,电池簇,Battery Cluster,三级架构拓扑图中的簇节点,Cluster nodes in Level 3 topology diagram,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 7. bms_topology_field_configs（拓扑字段配置表 - 实例级别）
+# ============================================
+# 说明：拓扑图中每个簇节点显示的字段
+# display_position: 'header'（卡片头部，如簇编号）、'card'（卡片主体，如电压、电流、SOC）、'footer'（卡片底部，如分合闸按钮）
+# 注意：拓扑图的字段键独立定义，不一定与主页面字段相同
+# 注意：每个字段的数据来源直接在配置表中定义
+id,topology_config_id,field_key,display_name_zh,display_name_en,display_position,source_type,read_device_type_tag_id,write_device_type_tag_id,read_comm_instance_id,read_point_id,write_comm_instance_id,write_point_id,sort_order,created_at,updated_at
+1,1,cluster_number,簇编号,Cluster Number,header,custom,NULL,NULL,NULL,NULL,NULL,NULL,1,2025-01-01 00:00:00,2025-01-01 00:00:00
+2,1,cluster_voltage,簇电压,Cluster Voltage,card,asset_field,2003,NULL,NULL,NULL,NULL,NULL,1,2025-01-01 00:00:00,2025-01-01 00:00:00
+3,1,cluster_current,簇电流,Cluster Current,card,asset_field,2004,NULL,NULL,NULL,NULL,NULL,2,2025-01-01 00:00:00,2025-01-01 00:00:00
+4,1,cluster_soc,簇SOC,Cluster SOC,card,asset_field,2005,NULL,NULL,NULL,NULL,NULL,3,2025-01-01 00:00:00,2025-01-01 00:00:00
+5,1,cluster_breaker_status,分合闸状态,Breaker Status,footer,asset_field,2006,NULL,NULL,NULL,NULL,NULL,1,2025-01-01 00:00:00,2025-01-01 00:00:00
+6,1,cluster_breaker_command,分合闸指令,Breaker Command,footer,asset_field,2006,2007,NULL,NULL,NULL,NULL,2,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 8. bms_bmu_configs（BMS BMU 配置表 - 实例级别）
+# ============================================
+# 说明：BMU 页面的配置
+# 注意：每个 BMS 实例有自己独立的 BMU 配置
+id,bms_instance_id,description_zh,description_en,created_at,updated_at
+1,1,BMU配置,BMU Configuration,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 9. bms_bmu_cell_field_configs（BMU 单体字段配置表 - 实例级别）
+# ============================================
+# 说明：BMU 页面显示的单体字段配置
+# 注意：每个字段的数据来源直接在配置表中定义
+# 注意：串并数从 bms_hierarchy_nodes 表获取（series_count, parallel_count）
+id,bmu_config_id,field_key,display_name_zh,display_name_en,data_type,unit_zh,unit_en,source_type,device_type_tag_id,comm_instance_id,point_id,sort_order,created_at,updated_at
+1,1,voltage,单体电压,Cell Voltage,number,V,V,asset_field,3001,NULL,NULL,1,2025-01-01 00:00:00,2025-01-01 00:00:00
+2,1,temperature,温度,Temperature,number,℃,℃,asset_field,3002,NULL,NULL,2,2025-01-01 00:00:00,2025-01-01 00:00:00
+3,1,soc,单体SOC,Cell SOC,number,%,%,asset_field,3003,NULL,NULL,3,2025-01-01 00:00:00,2025-01-01 00:00:00
+4,1,soh,单体SOH,Cell SOH,number,%,%,asset_field,3004,NULL,NULL,4,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 10. bms_hierarchy_nodes（BMS 层级节点表）
 # ============================================
 # 说明：配置三级架构的层级结构
 # 示例：1个堆 → 3个簇 → 每个簇10个包 → 每个包15串2并
@@ -89,48 +130,15 @@ id,bms_instance_id,node_type,parent_node_id,node_number,display_name_zh,display_
 12,1,pack,2,8,8号电池包,Pack 8,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
 13,1,pack,2,9,9号电池包,Pack 9,15,2,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
 14,1,pack,2,10,10号电池包,Pack 10,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
-# 簇2的包（1-10号包）
+# 簇2的包（1-10号包，示例只列出前2个）
 15,1,pack,3,1,1号电池包,Pack 1,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
 16,1,pack,3,2,2号电池包,Pack 2,15,2,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
 # ... 簇2的其他包（3-10号）省略，实际应该有10个包
-# 簇3的包（1-10号包）
+# 簇3的包（1-10号包，示例只列出前2个）
 25,1,pack,4,1,1号电池包,Pack 1,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
 26,1,pack,4,2,2号电池包,Pack 2,15,2,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
 # ... 簇3的其他包（3-10号）省略，实际应该有10个包
 # 注意：cell节点通常不需要显式创建，系统根据包的串并数自动计算（15串2并 = 30个单体）
-
-# ============================================
-# 8. bms_field_bindings（字段绑定表）
-# ============================================
-# 说明：SYS 页面字段的数据来源绑定
-# 固定字段绑定示例（堆的电压、电流、功率等）
-id,bms_instance_id,page_config_id,field_config_id,read_source_type,read_asset_tag_name,read_instance_id,read_point_name,write_source_type,write_asset_tag_name,write_instance_id,write_point_name,created_at,updated_at
-1,1,1,1,asset_field,STACK_FAULT_STATUS,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-2,1,1,2,asset_field,STACK_VOLTAGE,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-3,1,1,3,asset_field,STACK_CURRENT,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-4,1,1,4,asset_field,STACK_POWER,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-5,1,1,5,asset_field,STACK_BREAKER_STATUS,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-6,1,1,6,asset_field,STACK_BREAKER_STATUS,,,asset_field,STACK_BREAKER_COMMAND,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-# 可配置字段绑定示例（SOC、SOH、SOS）
-7,1,1,7,asset_field,STACK_SOC,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-8,1,1,8,asset_field,STACK_SOH,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-9,1,1,9,asset_field,STACK_SOS,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-
-# ============================================
-# 9. bms_topology_bindings（拓扑绑定表）
-# ============================================
-# 说明：拓扑图中簇字段的数据来源绑定
-# 注意：簇编号（cluster_number, topology_field_config_id=1）通常不需要绑定，由系统自动生成
-id,bms_instance_id,topology_config_id,topology_field_config_id,read_source_type,read_asset_tag_name,read_instance_id,read_point_name,write_source_type,write_asset_tag_name,write_instance_id,write_point_name,created_at,updated_at
-# 簇电压（从资产字段读取，对应 topology_field_config_id=2）
-1,1,1,2,asset_field,CLUSTER_VOLTAGE,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-# 簇电流（从资产字段读取，对应 topology_field_config_id=3）
-2,1,1,3,asset_field,CLUSTER_CURRENT,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-# 簇SOC（从资产字段读取，可配置，对应 topology_field_config_id=4）
-3,1,1,4,asset_field,CLUSTER_SOC,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-# 簇分合闸状态（读）和指令（写），对应 topology_field_config_id=5（状态）和6（指令）
-4,1,1,5,asset_field,CLUSTER_BREAKER_STATUS,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
-5,1,1,6,asset_field,CLUSTER_BREAKER_STATUS,,,asset_field,CLUSTER_BREAKER_COMMAND,,,2025-01-01 00:00:00,2025-01-01 00:00:00
 
 # ============================================
 # 界面显示说明
@@ -138,41 +146,71 @@ id,bms_instance_id,topology_config_id,topology_field_config_id,read_source_type,
 # SYS 页面布局：
 # 
 # 【上方区域 - 固定字段】
-# - 告警状态 (fault, sort_order=1)
-# - 电压 (voltage, sort_order=2)
-# - 电流 (current, sort_order=3)
-# - 功率 (power, sort_order=4)
-# - 断路器状态 (breaker_status, sort_order=5)
-# - 断路器指令按钮 (breaker_command, sort_order=6)
+# - 告警状态 (fault, sort_order=1, source_type='asset_field', read_device_type_tag_id=1001)
+# - 电压 (voltage, sort_order=2, source_type='asset_field', read_device_type_tag_id=1002)
+# - 电流 (current, sort_order=3, source_type='asset_field', read_device_type_tag_id=1003)
+# - 功率 (power, sort_order=4, source_type='asset_field', read_device_type_tag_id=1004)
+# - 断路器状态 (breaker_status, sort_order=5, source_type='asset_field', read_device_type_tag_id=1005)
+# - 断路器指令按钮 (breaker_command, sort_order=6, source_type='asset_field', read_device_type_tag_id=1005, write_device_type_tag_id=1006)
 #
 # 【中间区域 - 可配置字段】
-# - SOC (soc, sort_order=7)
-# - SOH (soh, sort_order=8)
-# - SOS (sos, sort_order=9)
+# - SOC (soc, sort_order=7, source_type='asset_field', read_device_type_tag_id=1007)
+# - SOH (soh, sort_order=8, source_type='asset_field', read_device_type_tag_id=1008)
+# - SOS (sos, sort_order=9, source_type='asset_field', read_device_type_tag_id=1009)
 #
 # 【下方区域 - 拓扑图】
 # 拓扑图的簇节点从 bms_hierarchy_nodes 表获取（node_type='cluster', parent_node_id=堆节点ID）
 # 每个簇节点卡片显示：
-# - Header（头部）：簇编号 (cluster_number, display_position='header', sort_order=1)
+# - Header（头部）：簇编号 (cluster_number, display_position='header', sort_order=1, source_type='custom')
 # - Card（主体）：
-#   - 簇电压 (cluster_voltage, display_position='card', sort_order=1)
-#   - 簇电流 (cluster_current, display_position='card', sort_order=2)
-#   - 簇SOC (cluster_soc, display_position='card', sort_order=3)
+#   - 簇电压 (cluster_voltage, display_position='card', sort_order=1, source_type='asset_field', read_device_type_tag_id=2003)
+#   - 簇电流 (cluster_current, display_position='card', sort_order=2, source_type='asset_field', read_device_type_tag_id=2004)
+#   - 簇SOC (cluster_soc, display_position='card', sort_order=3, source_type='asset_field', read_device_type_tag_id=2005)
 # - Footer（底部）：
-#   - 分合闸状态 (cluster_breaker_status, display_position='footer', sort_order=1)
-#   - 分合闸指令按钮 (cluster_breaker_command, display_position='footer', sort_order=2)
+#   - 分合闸状态 (cluster_breaker_status, display_position='footer', sort_order=1, source_type='asset_field', read_device_type_tag_id=2006)
+#   - 分合闸指令按钮 (cluster_breaker_command, display_position='footer', sort_order=2, source_type='asset_field', read_device_type_tag_id=2006, write_device_type_tag_id=2007)
+#
+# BCU 页面布局：
+# 【遥测量区域】
+# （从 bms_field_configs 表查询，bms_instance_id=1, page_type='BCU'）
+#
+# 【遥信量区域】
+# - 总过压 (total_overvoltage, telecontrol_type='boolean', source_type='asset_field', device_type_tag_id=2001)
+# - 运行模式 (run_mode, telecontrol_type='enum', source_type='asset_field', device_type_tag_id=2002)
+# - 状态字 (status_word, telecontrol_type='bitfield', source_type='di_point', comm_instance_id=3001, point_id=4001)
+#
+# BMU 页面布局：
+# 【包选择】
+# 从 bms_hierarchy_nodes 表获取包列表（node_type='pack'）
+# 每个包显示：编号、串并数（从 series_count, parallel_count 获取，如 15串2并）
+#
+# 【单体字段】
+# 从 bms_bmu_cell_field_configs 表获取字段列表（bmu_config_id=1）
+# - 单体电压 (voltage, source_type='asset_field', device_type_tag_id=3001)
+# - 温度 (temperature, source_type='asset_field', device_type_tag_id=3002)
+# - 单体SOC (soc, source_type='asset_field', device_type_tag_id=3003)
+# - 单体SOH (soh, source_type='asset_field', device_type_tag_id=3004)
+#
+# 【温度测点】
+# 从 bms_hierarchy_nodes.has_temperature_points 判断是否有温度测点
+# 如果有，从 bms_bmu_cell_field_configs 表查询 field_key='temperature' 的字段配置
 #
 # 说明：
-# 1. 固定字段通过 field_type='fixed' 标识，is_required=1，系统初始化时自动创建
-# 2. 可配置字段通过 field_type='dynamic' 标识，is_required=0，用户可配置
-# 3. 拓扑图字段通过 bms_topology_field_configs 配置，display_position 控制显示位置（header/card/footer）
-# 4. sort_order 控制同一位置内的显示顺序
-# 5. 拓扑图字段的 field_key 独立定义，不一定与主页面字段相同（如主页面是 stack_voltage，拓扑图是 cluster_voltage）
-# 6. 拓扑图字段通过 bms_topology_bindings 绑定数据来源，每个簇节点使用相同的字段配置
-# 7. 层级结构通过 bms_hierarchy_nodes 表配置：
+# 1. 所有配置表都关联到 bms_instances（每个实例独立配置）
+# 2. 字段配置表直接包含数据来源信息（外键关联，不使用名称依赖）
+# 3. 固定字段通过 field_type='fixed' 标识，is_required=1，系统初始化时自动创建
+# 4. 可配置字段通过 field_type='dynamic' 标识，is_required=0，用户可配置
+# 5. 拓扑图字段通过 bms_topology_field_configs 配置，display_position 控制显示位置（header/card/footer）
+# 6. sort_order 控制同一位置内的显示顺序
+# 7. 拓扑图字段的 field_key 独立定义，不一定与主页面字段相同（如主页面是 stack_voltage，拓扑图是 cluster_voltage）
+# 8. 层级结构通过 bms_hierarchy_nodes 表配置：
 #    - 三级架构：堆节点（根）→ 簇节点（子节点）→ 包节点（子节点）
 #    - 二级架构：簇节点（根）→ 包节点（子节点）
 #    - 堆下簇数量：查询 node_type='cluster' 且 parent_node_id=堆节点ID 的节点数量
 #    - 簇下包数量：查询 node_type='pack' 且 parent_node_id=簇节点ID 的节点数量
 #    - 包的串并数：从 node_type='pack' 的节点的 series_count 和 parallel_count 字段获取
 #    - 单体数量：系统自动计算（series_count * parallel_count，如 15串2并 = 30个单体）
+# 9. 数据来源类型：
+#    - asset_field：通过外键 read_device_type_tag_id / write_device_type_tag_id 关联 device_type_tags.id
+#    - di_point：通过外键 read_comm_instance_id / read_point_id 关联 comm_instances.id 和 point_table_points.id
+#    - custom：自定义字段，无数据来源，仅用于显示（如簇编号）
