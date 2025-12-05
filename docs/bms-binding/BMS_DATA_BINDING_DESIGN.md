@@ -1,7 +1,8 @@
 # BMS 数据绑定功能设计文档
 
-> **版本**: v1.0.0  
+> **版本**: v1.1.0  
 > **创建时间**: 2025-01-XX  
+> **最后更新**: 2025-01-XX  
 > **作者**: AI Assistant  
 > **状态**: 设计阶段
 
@@ -23,6 +24,22 @@
 2. **通信实例**创建流程：
    - 外设管理 → 协议类型 → 通信模板 → 通信实例
 3. **资产映射**：将资产字段与通信实例的采集点关联
+
+### 2.1.1 BMS 识别方式
+
+**BMS 识别**：如果一个资产被关联到 `bms_instances` 表（通过 `asset_id`），就被系统识别为 BMS。
+
+**识别逻辑**：
+- 查询 BMS 资产：`SELECT DISTINCT asset_id FROM bms_instances`
+- 判断资产是否为 BMS：检查资产 ID 是否存在于 `bms_instances.asset_id` 中
+- 一个资产可以创建多个 BMS 实例（如：同一个资产可以是二级架构和三级架构）
+
+**数据来源说明**：
+- BMS 页面的数据**主要**来自资产字段（通过 `asset_mappings` 关联）
+- 但**非 100%** 来自资产字段，还支持：
+  1. **资产字段**（主要来源）：通过 `asset_mappings` 关联的资产字段（`device_type_tags.tag_name`）
+  2. **DI 点**：某些 BMS 厂家提供的 DO 量，在我们的系统中是 DI，需要直接关联到通信实例的 DI 点（`comm_instances` + `point_table_points.point_name`）
+  3. **二次变量计算**（将来实现）：用户用原始数据根据四则运算计算出新值（如：总功率 = 电压 * 电流 / 1000），**暂时不设计和实现**
 
 ### 2.2 BMS 架构说明
 
@@ -61,26 +78,30 @@
 
 ### 2.3 遥信量类型说明
 
+**重要说明**：遥信量的位域拆分已在 `point_table_points.parse_rules_json` 中配置（参考 `device.md` 和 `DATABASE_DESIGN.md`），本设计不再重复配置。BMS 遥信量配置仅定义业务层面的显示信息，实际的数据拆分和解析由通信模板的点表配置完成。
+
 #### 2.3.1 布尔类型（Boolean）
 
-- **字段**：汉字名、英文名、是否激活、故障等级（1~4）
-- **后端返回**：当前值（true/false）、故障等级
+- **字段**：汉字名、英文名
+- **故障等级**：使用 `device_type_tags.severity`（0~4，参考 `DATABASE_DESIGN.md`）
+- **后端返回**：当前值（true/false）、故障等级（来自资产字段的 severity）
 
 #### 2.3.2 枚举类型（Enum）
 
-- **字段**：汉字名、英文名、当前值、故障等级（1~4）
+- **字段**：汉字名、英文名
+- **枚举值定义**：使用 `device_type_tags.enum_json`（参考 `DATABASE_DESIGN.md`）
+- **故障等级**：使用 `device_type_tags.severity`（0~4）
 - **后端返回**：
   - 当前值（数字）
-  - 当前值对应的故障等级
-  - 每个值对应的汉字含义和英文含义
+  - 当前值对应的故障等级（来自资产字段的 severity）
+  - 每个值对应的汉字含义和英文含义（来自资产字段的 enum_json）
 
 #### 2.3.3 复杂位域（Bitfield）
 
-- **示例**：bit0~bit7 代表 8 个遥信值，bit8~bit11 未用到，bit12~bit15 是一个枚举
-- **字段**：
-  - 布尔位：位索引、汉字名、英文名、是否激活、故障等级
-  - 枚举位：起始位、结束位、汉字名、英文名、当前值、故障等级、枚举值列表
-  - 预留位：起始位、结束位（不显示）
+- **说明**：位域的拆分已在通信模板的 `point_table_points.parse_rules_json` 中配置（通过 `sub_points` 定义）
+- **BMS 配置**：仅配置业务层面的显示信息（汉字名、英文名）
+- **故障等级**：使用 `device_type_tags.severity`（0~4）
+- **数据来源**：通过资产映射关联到通信实例的子点（如 `StatusWord4.mode_code`、`StatusWord4.high_temp_bit`）
 
 ---
 
@@ -135,6 +156,8 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
 );
 
 -- BMS 遥信量配置表
+-- 注意：位域拆分已在 point_table_points.parse_rules_json 中配置，此处仅配置业务显示信息
+-- 故障等级使用 device_type_tags.severity（0~4），枚举值使用 device_type_tags.enum_json
 CREATE TABLE IF NOT EXISTS bms_telecontrol_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     page_config_id INTEGER NOT NULL,              -- 页面配置ID
@@ -142,59 +165,13 @@ CREATE TABLE IF NOT EXISTS bms_telecontrol_configs (
     display_name_zh TEXT NOT NULL,                -- 中文显示名
     display_name_en TEXT NOT NULL,                -- 英文显示名
     telecontrol_type TEXT NOT NULL,                -- 遥信类型：'boolean' | 'enum' | 'bitfield'
-    fault_level INTEGER NOT NULL DEFAULT 1,        -- 故障等级（1~4）
+    -- 注意：故障等级和枚举值定义使用资产字段的配置（device_type_tags.severity 和 enum_json）
     order_index INTEGER NOT NULL DEFAULT 0,       -- 排序索引
     description TEXT NOT NULL DEFAULT '',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
     UNIQUE(page_config_id, telecontrol_key)
-);
-
--- BMS 遥信量枚举值配置表
-CREATE TABLE IF NOT EXISTS bms_telecontrol_enum_values (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    telecontrol_config_id INTEGER NOT NULL,       -- 遥信量配置ID
-    enum_value INTEGER NOT NULL,                   -- 枚举值（数字）
-    label_zh TEXT NOT NULL,                        -- 中文标签
-    label_en TEXT NOT NULL,                        -- 英文标签
-    fault_level INTEGER NOT NULL DEFAULT 1,        -- 该枚举值对应的故障等级
-    order_index INTEGER NOT NULL DEFAULT 0,       -- 排序索引
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(telecontrol_config_id) REFERENCES bms_telecontrol_configs(id) ON DELETE CASCADE,
-    UNIQUE(telecontrol_config_id, enum_value)
-);
-
--- BMS 遥信量位域配置表
-CREATE TABLE IF NOT EXISTS bms_telecontrol_bitfield_configs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    telecontrol_config_id INTEGER NOT NULL,       -- 遥信量配置ID
-    bit_type TEXT NOT NULL,                        -- 位类型：'boolean' | 'enum' | 'reserved'
-    start_bit INTEGER NOT NULL,                   -- 起始位索引（0-15）
-    end_bit INTEGER NOT NULL,                      -- 结束位索引（0-15）
-    display_name_zh TEXT,                          -- 中文显示名（boolean/enum 类型需要）
-    display_name_en TEXT,                          -- 英文显示名（boolean/enum 类型需要）
-    fault_level INTEGER,                           -- 故障等级（boolean/enum 类型需要）
-    order_index INTEGER NOT NULL DEFAULT 0,       -- 排序索引
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(telecontrol_config_id) REFERENCES bms_telecontrol_configs(id) ON DELETE CASCADE
-);
-
--- BMS 遥信量位域枚举值配置表
-CREATE TABLE IF NOT EXISTS bms_telecontrol_bitfield_enum_values (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bitfield_config_id INTEGER NOT NULL,          -- 位域配置ID
-    enum_value INTEGER NOT NULL,                   -- 枚举值（数字）
-    label_zh TEXT NOT NULL,                        -- 中文标签
-    label_en TEXT NOT NULL,                        -- 英文标签
-    fault_level INTEGER NOT NULL DEFAULT 1,        -- 该枚举值对应的故障等级
-    order_index INTEGER NOT NULL DEFAULT 0,       -- 排序索引
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(bitfield_config_id) REFERENCES bms_telecontrol_bitfield_configs(id) ON DELETE CASCADE,
-    UNIQUE(bitfield_config_id, enum_value)
 );
 
 -- BMS 拓扑配置表（SYS 页面的拓扑图配置）
@@ -257,10 +234,18 @@ CREATE TABLE IF NOT EXISTS bms_bmu_cell_field_configs (
 );
 ```
 
-#### 3.1.2 BMS 绑定表（关联资产字段）
+#### 3.1.2 BMS 绑定表（关联数据来源）
+
+**重要说明**：
+- **BMS 识别**：如果一个资产被关联到 `bms_instances` 表，就被系统识别为 BMS
+- **数据来源**：BMS 页面的数据主要来自资产字段，但非 100% 来自资产字段，还支持：
+  1. **资产字段**（主要来源）：通过 `asset_mappings` 关联的资产字段
+  2. **DI 点**（某些 BMS 的 DO 量）：某些 BMS 厂家提供的 DO 量，在我们的系统中是 DI，需要直接关联到通信实例的 DI 点
+  3. **二次变量计算**（将来实现）：用户用原始数据根据四则运算计算出新值（如：总功率 = 电压 * 电流 / 1000），**暂时不设计和实现**
 
 ```sql
 -- BMS 实例表（每个 BMS 设备对应一个实例）
+-- 如果一个资产被关联到此表，就被系统识别为 BMS
 CREATE TABLE IF NOT EXISTS bms_instances (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     asset_id INTEGER NOT NULL,                     -- 资产ID（外键关联 assets.id）
@@ -277,63 +262,120 @@ CREATE TABLE IF NOT EXISTS bms_instances (
     UNIQUE(asset_id, architecture_id, instance_name)
 );
 
--- BMS 字段绑定表（将 BMS 字段与资产字段关联）
+-- BMS 字段绑定表（将 BMS 字段与数据来源关联）
+-- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点）| 'calculated'（二次变量，将来实现）
 CREATE TABLE IF NOT EXISTS bms_field_bindings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
     page_config_id INTEGER NOT NULL,                -- 页面配置ID
     field_config_id INTEGER NOT NULL,                -- 字段配置ID
-    asset_tag_name TEXT NOT NULL,                   -- 资产字段名（对应 device_type_tags.tag_name）
+    source_type TEXT NOT NULL,                      -- 数据来源类型：'asset_field' | 'di_point' | 'calculated'
+    -- 当 source_type='asset_field' 时使用
+    asset_tag_name TEXT,                            -- 资产字段名（对应 device_type_tags.tag_name）
+    -- 当 source_type='di_point' 时使用
+    instance_id INTEGER,                            -- 通信实例ID（外键关联 comm_instances.id）
+    point_name TEXT,                                -- 点表点名（对应 point_table_points.point_name，支持子点）
+    -- 当 source_type='calculated' 时使用（将来实现，暂时不设计）
+    -- calculated_expression TEXT,                  -- 计算公式（如 'voltage * current / 1000'）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
     FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE RESTRICT,
     FOREIGN KEY(field_config_id) REFERENCES bms_field_configs(id) ON DELETE RESTRICT,
+    FOREIGN KEY(instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (source_type IN ('asset_field', 'di_point', 'calculated')),
+    CHECK (
+        (source_type = 'asset_field' AND asset_tag_name IS NOT NULL) OR
+        (source_type = 'di_point' AND instance_id IS NOT NULL AND point_name IS NOT NULL) OR
+        (source_type = 'calculated')
+    ),
     UNIQUE(bms_instance_id, page_config_id, field_config_id)
 );
 
--- BMS 遥信量绑定表（将 BMS 遥信量与资产字段关联）
+-- BMS 遥信量绑定表（将 BMS 遥信量与数据来源关联）
+-- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点，某些BMS的DO量）
 CREATE TABLE IF NOT EXISTS bms_telecontrol_bindings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
     page_config_id INTEGER NOT NULL,                -- 页面配置ID
     telecontrol_config_id INTEGER NOT NULL,         -- 遥信量配置ID
-    asset_tag_name TEXT NOT NULL,                   -- 资产字段名（对应 device_type_tags.tag_name）
+    source_type TEXT NOT NULL,                      -- 数据来源类型：'asset_field' | 'di_point'
+    -- 当 source_type='asset_field' 时使用
+    asset_tag_name TEXT,                            -- 资产字段名（对应 device_type_tags.tag_name）
+    -- 当 source_type='di_point' 时使用
+    instance_id INTEGER,                            -- 通信实例ID（外键关联 comm_instances.id）
+    point_name TEXT,                                -- 点表点名（对应 point_table_points.point_name，支持子点）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
     FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE RESTRICT,
     FOREIGN KEY(telecontrol_config_id) REFERENCES bms_telecontrol_configs(id) ON DELETE RESTRICT,
+    FOREIGN KEY(instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (source_type IN ('asset_field', 'di_point')),
+    CHECK (
+        (source_type = 'asset_field' AND asset_tag_name IS NOT NULL) OR
+        (source_type = 'di_point' AND instance_id IS NOT NULL AND point_name IS NOT NULL)
+    ),
     UNIQUE(bms_instance_id, page_config_id, telecontrol_config_id)
 );
 
--- BMS 拓扑绑定表（将拓扑节点与资产字段关联）
+-- BMS 拓扑绑定表（将拓扑节点与数据来源关联）
+-- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点）| 'calculated'（二次变量，将来实现）
 CREATE TABLE IF NOT EXISTS bms_topology_bindings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
     topology_config_id INTEGER NOT NULL,            -- 拓扑配置ID
     topology_field_config_id INTEGER NOT NULL,       -- 拓扑字段配置ID
-    asset_tag_name TEXT NOT NULL,                   -- 资产字段名（对应 device_type_tags.tag_name）
+    source_type TEXT NOT NULL,                      -- 数据来源类型：'asset_field' | 'di_point' | 'calculated'
+    -- 当 source_type='asset_field' 时使用
+    asset_tag_name TEXT,                            -- 资产字段名（对应 device_type_tags.tag_name）
+    -- 当 source_type='di_point' 时使用
+    instance_id INTEGER,                            -- 通信实例ID（外键关联 comm_instances.id）
+    point_name TEXT,                                -- 点表点名（对应 point_table_points.point_name，支持子点）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
     FOREIGN KEY(topology_config_id) REFERENCES bms_topology_configs(id) ON DELETE RESTRICT,
     FOREIGN KEY(topology_field_config_id) REFERENCES bms_topology_field_configs(id) ON DELETE RESTRICT,
+    FOREIGN KEY(instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (source_type IN ('asset_field', 'di_point', 'calculated')),
+    CHECK (
+        (source_type = 'asset_field' AND asset_tag_name IS NOT NULL) OR
+        (source_type = 'di_point' AND instance_id IS NOT NULL AND point_name IS NOT NULL) OR
+        (source_type = 'calculated')
+    ),
     UNIQUE(bms_instance_id, topology_config_id, topology_field_config_id)
 );
 
--- BMS BMU 绑定表（将 BMU 单体字段与资产字段关联）
+-- BMS BMU 绑定表（将 BMU 单体字段与数据来源关联）
+-- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点）| 'calculated'（二次变量，将来实现）
 CREATE TABLE IF NOT EXISTS bms_bmu_cell_bindings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
     bmu_config_id INTEGER NOT NULL,                 -- BMU 配置ID
     cell_field_config_id INTEGER NOT NULL,          -- 单体字段配置ID
-    asset_tag_name TEXT NOT NULL,                   -- 资产字段名（对应 device_type_tags.tag_name）
+    source_type TEXT NOT NULL,                      -- 数据来源类型：'asset_field' | 'di_point' | 'calculated'
+    -- 当 source_type='asset_field' 时使用
+    asset_tag_name TEXT,                            -- 资产字段名（对应 device_type_tags.tag_name）
+    -- 当 source_type='di_point' 时使用
+    instance_id INTEGER,                            -- 通信实例ID（外键关联 comm_instances.id）
+    point_name TEXT,                                -- 点表点名（对应 point_table_points.point_name，支持子点）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
     FOREIGN KEY(bmu_config_id) REFERENCES bms_bmu_configs(id) ON DELETE RESTRICT,
     FOREIGN KEY(cell_field_config_id) REFERENCES bms_bmu_cell_field_configs(id) ON DELETE RESTRICT,
+    FOREIGN KEY(instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (source_type IN ('asset_field', 'di_point', 'calculated')),
+    CHECK (
+        (source_type = 'asset_field' AND asset_tag_name IS NOT NULL) OR
+        (source_type = 'di_point' AND instance_id IS NOT NULL AND point_name IS NOT NULL) OR
+        (source_type = 'calculated')
+    ),
     UNIQUE(bms_instance_id, bmu_config_id, cell_field_config_id)
 );
 ```
@@ -447,13 +489,18 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 **路径**: `/config/bms-bindings`
 
 **功能**:
-1. 选择资产（下拉选择）
+1. 选择资产（下拉选择，只显示已配置的资产）
 2. 选择架构类型（二级/三级）
-3. 创建 BMS 实例
-4. 配置字段绑定（将 BMS 字段与资产字段关联）
-5. 配置遥信量绑定（将 BMS 遥信量与资产字段关联）
-6. 配置拓扑绑定（将拓扑节点字段与资产字段关联）
-7. 配置 BMU 绑定（将单体字段与资产字段关联）
+3. 创建 BMS 实例（关联资产和架构，一旦关联，资产即被识别为 BMS）
+4. 配置字段绑定（将 BMS 字段与数据来源关联）：
+   - 资产字段（主要来源）
+   - DI 点（某些 BMS 的 DO 量）
+   - 二次变量计算（将来实现，暂时不设计）
+5. 配置遥信量绑定（将 BMS 遥信量与数据来源关联）：
+   - 资产字段（主要来源）
+   - DI 点（某些 BMS 的 DO 量）
+6. 配置拓扑绑定（将拓扑节点字段与数据来源关联）
+7. 配置 BMU 绑定（将单体字段与数据来源关联）
 
 **UI 设计**:
 - 左侧：BMS 实例列表
@@ -555,14 +602,20 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 1. 选择资产（已配置好的资产）
   ↓
 2. 创建 BMS 实例（关联资产和架构）
+   → 一旦关联，资产即被识别为 BMS
   ↓
-3. 配置字段绑定（BMS 字段 → 资产字段）
+3. 配置字段绑定（BMS 字段 → 数据来源）
+   → 资产字段（主要）
+   → DI 点（某些 BMS 的 DO 量）
+   → 二次变量计算（将来实现）
   ↓
-4. 配置遥信量绑定（BMS 遥信量 → 资产字段）
+4. 配置遥信量绑定（BMS 遥信量 → 数据来源）
+   → 资产字段（主要）
+   → DI 点（某些 BMS 的 DO 量）
   ↓
-5. 配置拓扑绑定（拓扑节点字段 → 资产字段）
+5. 配置拓扑绑定（拓扑节点字段 → 数据来源）
   ↓
-6. 配置 BMU 绑定（单体字段 → 资产字段）
+6. 配置 BMU 绑定（单体字段 → 数据来源）
 ```
 
 ### 5.3 运行阶段
@@ -574,8 +627,11 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
   ↓
 后端处理：
   1. 查询 BMS 实例配置
-  2. 查询字段绑定配置
-  3. 从资产字段中获取实时数据（通过 asset_state）
+  2. 查询字段绑定配置（根据 source_type 区分数据来源）
+  3. 获取实时数据：
+     - 资产字段：从 asset_state 中获取（通过 asset_tag_name）
+     - DI 点：从通信实例的实时数据中获取（通过 instance_id + point_name）
+     - 二次变量：根据计算公式计算（将来实现）
   4. 组装返回数据（固定字段 + 动态字段）
   ↓
 前端展示：
@@ -597,14 +653,20 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 ### 6.2 可配置字段处理
 
 - 可配置字段（如 SOC、SOH、SOS）在配置表中标记为 `is_required=0`
-- 可配置字段需要绑定到资产字段
+- 可配置字段需要绑定到数据来源：
+  - **资产字段**（主要）：绑定到 `device_type_tags.tag_name`
+  - **DI 点**：某些 BMS 的 DO 量，直接关联到通信实例的 DI 点
+  - **二次变量计算**（将来实现）：如总功率 = 电压 * 电流 / 1000，暂时不设计和实现
 - 如果某个供应商不支持某个字段，可以不绑定，前端不显示
 
 ### 6.3 遥信量处理
 
-- 布尔类型：直接绑定到资产的布尔字段
-- 枚举类型：需要配置枚举值列表，绑定到资产的枚举字段
-- 位域类型：需要配置位域结构，绑定到资产的位域字段（或通过子点映射）
+- **数据来源**：
+  - **资产字段**（主要）：绑定到 `device_type_tags.tag_name`，故障等级和枚举值使用资产字段的配置
+  - **DI 点**（某些 BMS 的 DO 量）：某些 BMS 厂家提供的 DO 量，在我们的系统中是 DI，需要直接关联到通信实例的 DI 点
+- **位域拆分**：已在通信模板的 `point_table_points.parse_rules_json` 中配置，通过子点映射（如 `StatusWord4.mode_code`、`StatusWord4.high_temp_bit`）
+- **故障等级**：使用 `device_type_tags.severity`（0~4），不在 BMS 配置中重复定义
+- **枚举值**：使用 `device_type_tags.enum_json`，不在 BMS 配置中重复定义
 
 ### 6.4 拓扑图处理
 
@@ -626,7 +688,17 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 
 - 不同供应商的 BMS 可能有不同的字段和遥信量
 - 通过配置表可以灵活配置不同供应商的字段列表
-- 通过绑定表可以将不同供应商的字段映射到统一的资产字段
+- 通过绑定表可以将不同供应商的字段映射到统一的数据来源：
+  - 资产字段（主要）
+  - DI 点（某些 BMS 的 DO 量）
+  - 二次变量计算（将来实现）
+
+### 7.4 二次变量计算（将来实现）
+
+- **需求**：某些 BMS 厂家只提供总电压和总电流，总功率需要自己计算（电压 * 电流 / 1000）
+- **实现方式**：用户用原始数据根据四则运算计算出新值
+- **状态**：暂时不设计和实现，但已在绑定表中预留 `source_type='calculated'` 字段
+- **未来扩展**：在 `bms_field_bindings` 表中添加 `calculated_expression` 字段，支持公式计算
 
 ### 7.2 多架构支持
 
@@ -644,10 +716,19 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 
 ## 8. 参考文档
 
-- [设备管理文档](./device.md) - 设备模板、资产、通信实例的配置流程
+- [设备管理文档](../device.md) - 设备模板、资产、通信实例的配置流程
 - [数据库设计文档](../DATABASE_DESIGN.md) - 数据库表结构设计
-- [前端开发规范](../.cursor/rules/frontend.mdc) - 前端开发规范
-- [后端开发规范](../.cursor/rules/backend.mdc) - 后端开发规范
+- [前端开发规范](../../.cursor/rules/frontend.mdc) - 前端开发规范
+- [后端开发规范](../../.cursor/rules/backend.mdc) - 后端开发规范
+
+### 8.1 复用现有设计
+
+本设计遵循以下原则，避免重复配置：
+
+1. **遥信量位域拆分**：已在 `point_table_points.parse_rules_json` 中配置（参考 `device.md` 第 5.4 节），通过 `sub_points` 定义子点，BMS 配置不再重复设计
+2. **故障等级**：已在 `device_type_tags.severity` 中定义（0~4，参考 `DATABASE_DESIGN.md` 第 4.4 节），BMS 配置直接使用资产字段的 severity
+3. **枚举值定义**：已在 `device_type_tags.enum_json` 中定义（参考 `DATABASE_DESIGN.md` 第 4.4 节），BMS 配置直接使用资产字段的 enum_json
+4. **资产映射**：已在 `asset_mappings` 表中实现（参考 `DATABASE_DESIGN.md` 第 4.7 节），BMS 绑定复用此机制
 
 ---
 
@@ -656,6 +737,7 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 | 版本 | 日期 | 作者 | 说明 |
 |------|------|------|------|
 | v1.0.0 | 2025-01-XX | AI Assistant | 初始版本，完成设计文档 |
+| v1.1.0 | 2025-01-XX | AI Assistant | 重大调整：<br/>1. 删除重复配置（位域拆分、故障等级、枚举值）<br/>2. 明确 BMS 识别方式（通过 bms_instances.asset_id）<br/>3. 支持多种数据来源（资产字段/DI点/二次变量）<br/>4. 遵循现有设计文档（device.md、DATABASE_DESIGN.md） |
 
 ---
 
