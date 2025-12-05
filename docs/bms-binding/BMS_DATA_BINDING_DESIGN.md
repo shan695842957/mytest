@@ -1,6 +1,6 @@
 # BMS 数据绑定功能设计文档
 
-> **版本**: v1.1.0  
+> **版本**: v1.2.0  
 > **创建时间**: 2025-01-XX  
 > **最后更新**: 2025-01-XX  
 > **作者**: AI Assistant  
@@ -48,7 +48,7 @@
 - **层级结构**：电池簇 → 电池包 → 电池单体
 - **页面结构**：
   - **SYS 页面**：系统监控
-    - 固定字段（写死）：故障状态、簇电压、簇电流、簇功率、接触器状态
+    - 固定字段（所有BMS厂家都能提供）：告警状态（读）、电压（读）、电流（读）、功率（读，可能通过计算）、断路器状态（读）、断路器指令（写）
     - 可配置字段：SOC、SOH、SOS 等（取决于供应商）
     - 拓扑图：包数量、包展示变量（可配置）
   - **BCU 页面**：簇控制单元
@@ -64,9 +64,9 @@
 - **层级结构**：电池堆 → 电池簇 → 电池包 → 电池单体
 - **页面结构**：
   - **SYS 页面**：系统监控
-    - 固定字段（写死）：堆电压、堆电流、堆功率、故障状态、分合闸指令、分合闸状态
+    - 固定字段（所有BMS厂家都能提供）：告警状态（读）、堆电压（读）、堆电流（读）、堆功率（读，可能通过计算）、分合闸状态（读）、分合闸指令（写）
     - 可配置字段：堆的 SOC、SOE 等
-    - 拓扑图：簇数、簇字段、簇分合闸指令（若有，关联什么变量）可配置
+    - 拓扑图：簇数、簇字段、簇分合闸状态（读）、簇分合闸指令（写）可配置
   - **BAU 页面**：堆控制单元
     - 遥测量：全部可配置
     - 遥信量：全部可配置（布尔/枚举/位域）
@@ -136,10 +136,12 @@ CREATE TABLE IF NOT EXISTS bms_page_configs (
 );
 
 -- BMS 字段配置表（固定字段和可配置字段）
+-- 固定字段：所有BMS厂家都能提供的字段（告警状态、电压、电流、功率、断路器状态、断路器指令）
+-- 可配置字段：取决于供应商的字段（SOC、SOH、SOS等）
 CREATE TABLE IF NOT EXISTS bms_field_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     page_config_id INTEGER NOT NULL,              -- 页面配置ID
-    field_key TEXT NOT NULL,                     -- 字段键（如 'fault', 'voltage', 'soc'）
+    field_key TEXT NOT NULL,                     -- 字段键（如 'fault', 'voltage', 'current', 'power', 'breaker_status', 'breaker_command', 'soc'）
     display_name_zh TEXT NOT NULL,                -- 中文显示名
     display_name_en TEXT NOT NULL,                -- 英文显示名
     field_type TEXT NOT NULL,                     -- 字段类型：'fixed' | 'dynamic'
@@ -147,12 +149,30 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
     unit_zh TEXT NOT NULL DEFAULT '',              -- 中文单位
     unit_en TEXT NOT NULL DEFAULT '',              -- 英文单位
     is_required BOOLEAN NOT NULL DEFAULT 0,       -- 是否必填（固定字段为1）
+    -- 读写权限
+    is_readable BOOLEAN NOT NULL DEFAULT 1,       -- 是否可读（1=可读，0=只写）
+    is_writable BOOLEAN NOT NULL DEFAULT 0,       -- 是否可写（1=可写，0=只读）
+    -- 固定字段的预定义键（仅当 field_type='fixed' 时使用）
+    -- 二级架构SYS页面固定字段：
+    --   'fault'（告警状态，只读，STATUS类型）
+    --   'voltage'（电压，只读，MEASURE类型）
+    --   'current'（电流，只读，MEASURE类型）
+    --   'power'（功率，只读，MEASURE类型，可能通过计算）
+    --   'breaker_status'（断路器状态，只读，STATUS类型）
+    --   'breaker_command'（断路器指令，可写，COMMAND类型）
+    -- 三级架构SYS页面固定字段（同二级架构）：
+    --   'fault', 'voltage', 'current', 'power', 'breaker_status', 'breaker_command'
+    -- 三级架构拓扑图（簇）固定字段：
+    --   'breaker_status'（簇分合闸状态，只读，STATUS类型）
+    --   'breaker_command'（簇分合闸指令，可写，COMMAND类型）
     order_index INTEGER NOT NULL DEFAULT 0,        -- 排序索引
     description TEXT NOT NULL DEFAULT '',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
-    UNIQUE(page_config_id, field_key)
+    UNIQUE(page_config_id, field_key),
+    -- 检查约束：可写字段必须可读（写入后需要读取反馈）
+    CHECK (is_writable = 0 OR is_readable = 1)
 );
 
 -- BMS 遥信量配置表
@@ -264,17 +284,22 @@ CREATE TABLE IF NOT EXISTS bms_instances (
 
 -- BMS 字段绑定表（将 BMS 字段与数据来源关联）
 -- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点）| 'calculated'（二次变量，将来实现）
+-- 支持读写分离：读和写可以绑定到不同的数据来源
 CREATE TABLE IF NOT EXISTS bms_field_bindings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
     page_config_id INTEGER NOT NULL,                -- 页面配置ID
     field_config_id INTEGER NOT NULL,                -- 字段配置ID
-    source_type TEXT NOT NULL,                      -- 数据来源类型：'asset_field' | 'di_point' | 'calculated'
-    -- 当 source_type='asset_field' 时使用
-    asset_tag_name TEXT,                            -- 资产字段名（对应 device_type_tags.tag_name）
-    -- 当 source_type='di_point' 时使用
-    instance_id INTEGER,                            -- 通信实例ID（外键关联 comm_instances.id）
-    point_name TEXT,                                -- 点表点名（对应 point_table_points.point_name，支持子点）
+    -- 读数据来源
+    read_source_type TEXT NOT NULL,                 -- 读数据来源类型：'asset_field' | 'di_point' | 'calculated'
+    read_asset_tag_name TEXT,                       -- 读：资产字段名（当 read_source_type='asset_field' 时使用）
+    read_instance_id INTEGER,                        -- 读：通信实例ID（当 read_source_type='di_point' 时使用）
+    read_point_name TEXT,                           -- 读：点表点名（当 read_source_type='di_point' 时使用）
+    -- 写数据来源（仅当字段 is_writable=1 时使用）
+    write_source_type TEXT,                         -- 写数据来源类型：'asset_field' | 'di_point' | 'calculated'
+    write_asset_tag_name TEXT,                       -- 写：资产字段名（当 write_source_type='asset_field' 时使用，必须是 COMMAND/SETPOINT/PARAM_SET 类型）
+    write_instance_id INTEGER,                      -- 写：通信实例ID（当 write_source_type='di_point' 时使用）
+    write_point_name TEXT,                          -- 写：点表点名（当 write_source_type='di_point' 时使用）
     -- 当 source_type='calculated' 时使用（将来实现，暂时不设计）
     -- calculated_expression TEXT,                  -- 计算公式（如 'voltage * current / 1000'）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -282,13 +307,21 @@ CREATE TABLE IF NOT EXISTS bms_field_bindings (
     FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
     FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE RESTRICT,
     FOREIGN KEY(field_config_id) REFERENCES bms_field_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(read_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(write_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
     -- 检查约束：根据 source_type 验证必填字段
-    CHECK (source_type IN ('asset_field', 'di_point', 'calculated')),
+    CHECK (read_source_type IN ('asset_field', 'di_point', 'calculated')),
+    CHECK (write_source_type IS NULL OR write_source_type IN ('asset_field', 'di_point', 'calculated')),
     CHECK (
-        (source_type = 'asset_field' AND asset_tag_name IS NOT NULL) OR
-        (source_type = 'di_point' AND instance_id IS NOT NULL AND point_name IS NOT NULL) OR
-        (source_type = 'calculated')
+        (read_source_type = 'asset_field' AND read_asset_tag_name IS NOT NULL) OR
+        (read_source_type = 'di_point' AND read_instance_id IS NOT NULL AND read_point_name IS NOT NULL) OR
+        (read_source_type = 'calculated')
+    ),
+    CHECK (
+        write_source_type IS NULL OR
+        (write_source_type = 'asset_field' AND write_asset_tag_name IS NOT NULL) OR
+        (write_source_type = 'di_point' AND write_instance_id IS NOT NULL AND write_point_name IS NOT NULL) OR
+        (write_source_type = 'calculated')
     ),
     UNIQUE(bms_instance_id, page_config_id, field_config_id)
 );
@@ -323,29 +356,42 @@ CREATE TABLE IF NOT EXISTS bms_telecontrol_bindings (
 
 -- BMS 拓扑绑定表（将拓扑节点与数据来源关联）
 -- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点）| 'calculated'（二次变量，将来实现）
+-- 支持读写分离：读和写可以绑定到不同的数据来源（如簇分合闸状态和指令）
 CREATE TABLE IF NOT EXISTS bms_topology_bindings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
     topology_config_id INTEGER NOT NULL,            -- 拓扑配置ID
     topology_field_config_id INTEGER NOT NULL,       -- 拓扑字段配置ID
-    source_type TEXT NOT NULL,                      -- 数据来源类型：'asset_field' | 'di_point' | 'calculated'
-    -- 当 source_type='asset_field' 时使用
-    asset_tag_name TEXT,                            -- 资产字段名（对应 device_type_tags.tag_name）
-    -- 当 source_type='di_point' 时使用
-    instance_id INTEGER,                            -- 通信实例ID（外键关联 comm_instances.id）
-    point_name TEXT,                                -- 点表点名（对应 point_table_points.point_name，支持子点）
+    -- 读数据来源
+    read_source_type TEXT NOT NULL,                 -- 读数据来源类型：'asset_field' | 'di_point' | 'calculated'
+    read_asset_tag_name TEXT,                       -- 读：资产字段名（当 read_source_type='asset_field' 时使用）
+    read_instance_id INTEGER,                        -- 读：通信实例ID（当 read_source_type='di_point' 时使用）
+    read_point_name TEXT,                           -- 读：点表点名（当 read_source_type='di_point' 时使用）
+    -- 写数据来源（仅当字段可写时使用，如簇分合闸指令）
+    write_source_type TEXT,                         -- 写数据来源类型：'asset_field' | 'di_point' | 'calculated'
+    write_asset_tag_name TEXT,                       -- 写：资产字段名（当 write_source_type='asset_field' 时使用，必须是 COMMAND/SETPOINT/PARAM_SET 类型）
+    write_instance_id INTEGER,                      -- 写：通信实例ID（当 write_source_type='di_point' 时使用）
+    write_point_name TEXT,                          -- 写：点表点名（当 write_source_type='di_point' 时使用）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
     FOREIGN KEY(topology_config_id) REFERENCES bms_topology_configs(id) ON DELETE RESTRICT,
     FOREIGN KEY(topology_field_config_id) REFERENCES bms_topology_field_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(read_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(write_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
     -- 检查约束：根据 source_type 验证必填字段
-    CHECK (source_type IN ('asset_field', 'di_point', 'calculated')),
+    CHECK (read_source_type IN ('asset_field', 'di_point', 'calculated')),
+    CHECK (write_source_type IS NULL OR write_source_type IN ('asset_field', 'di_point', 'calculated')),
     CHECK (
-        (source_type = 'asset_field' AND asset_tag_name IS NOT NULL) OR
-        (source_type = 'di_point' AND instance_id IS NOT NULL AND point_name IS NOT NULL) OR
-        (source_type = 'calculated')
+        (read_source_type = 'asset_field' AND read_asset_tag_name IS NOT NULL) OR
+        (read_source_type = 'di_point' AND read_instance_id IS NOT NULL AND read_point_name IS NOT NULL) OR
+        (read_source_type = 'calculated')
+    ),
+    CHECK (
+        write_source_type IS NULL OR
+        (write_source_type = 'asset_field' AND write_asset_tag_name IS NOT NULL) OR
+        (write_source_type = 'di_point' AND write_instance_id IS NOT NULL AND write_point_name IS NOT NULL) OR
+        (write_source_type = 'calculated')
     ),
     UNIQUE(bms_instance_id, topology_config_id, topology_field_config_id)
 );
@@ -436,6 +482,9 @@ GET    /api/bms/instances/{id}/field-bindings        # 获取字段绑定列表
 POST   /api/bms/instances/{id}/field-bindings        # 创建字段绑定
 PATCH  /api/bms/field-bindings/{id}                 # 更新字段绑定
 DELETE /api/bms/field-bindings/{id}                 # 删除字段绑定
+
+# 字段写入操作
+POST   /api/bms/instances/{id}/fields/{field_key}/write  # 写入字段值（如断路器指令）
 
 # 遥信量绑定管理
 GET    /api/bms/instances/{id}/telecontrol-bindings # 获取遥信量绑定列表
@@ -627,12 +676,15 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
   ↓
 后端处理：
   1. 查询 BMS 实例配置
-  2. 查询字段绑定配置（根据 source_type 区分数据来源）
-  3. 获取实时数据：
-     - 资产字段：从 asset_state 中获取（通过 asset_tag_name）
-     - DI 点：从通信实例的实时数据中获取（通过 instance_id + point_name）
+  2. 查询字段绑定配置（根据 read_source_type 和 write_source_type 区分数据来源）
+  3. 获取实时数据（读）：
+     - 资产字段：从 asset_state 中获取（通过 read_asset_tag_name）
+     - DI 点：从通信实例的实时数据中获取（通过 read_instance_id + read_point_name）
      - 二次变量：根据计算公式计算（将来实现）
   4. 组装返回数据（固定字段 + 动态字段）
+  5. 写入操作（写）：
+     - 资产字段：通过资产字段的写入API（必须是 COMMAND/SETPOINT/PARAM_SET 类型）
+     - DI 点：通过通信实例的写入API（直接写DO点）
   ↓
 前端展示：
   1. 根据配置渲染字段列表
@@ -646,9 +698,18 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 
 ### 6.1 固定字段处理
 
-- 固定字段（如故障状态、电压、电流、功率）在配置表中标记为 `is_required=1`
-- 固定字段不需要绑定，直接从资产的标准字段中获取
-- 固定字段的字段键是预定义的（如 `fault`, `voltage`, `current`, `power`）
+- **固定字段定义**：所有BMS厂家都能提供的字段，在配置表中标记为 `field_type='fixed'` 和 `is_required=1`
+- **固定字段列表**（SYS页面）：
+  - `fault`（告警状态）- 只读，STATUS类型
+  - `voltage`（电压）- 只读，MEASURE类型
+  - `current`（电流）- 只读，MEASURE类型
+  - `power`（功率）- 只读，MEASURE类型（可能通过计算：电压 * 电流 / 1000）
+  - `breaker_status`（断路器状态）- 只读，STATUS类型
+  - `breaker_command`（断路器指令）- 可写，COMMAND类型
+- **固定字段绑定**：需要绑定到数据来源（资产字段或DI点），不是硬编码
+- **读写分离**：
+  - 读：从 `read_source_type` 指定的数据来源读取
+  - 写：写入到 `write_source_type` 指定的数据来源（资产字段必须是 COMMAND/SETPOINT/PARAM_SET 类型）
 
 ### 6.2 可配置字段处理
 
@@ -671,8 +732,11 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 ### 6.4 拓扑图处理
 
 - 拓扑图中的节点数量（包数量、簇数量）从资产字段中获取
-- 拓扑图中的节点字段（如包的电压、电流）需要绑定到资产字段
-- 簇的分合闸指令（三级架构）需要绑定到资产字段
+- 拓扑图中的节点字段（如包的电压、电流）需要绑定到数据来源（读）
+- **簇的分合闸**（三级架构）：
+  - 分合闸状态（读）：通过 `read_source_type` 绑定到数据来源
+  - 分合闸指令（写）：通过 `write_source_type` 绑定到数据来源（资产字段必须是 COMMAND 类型）
+  - 在 `bms_topology_bindings` 表中，同一个 `topology_field_config_id` 可以同时配置读和写数据来源
 
 ### 6.5 BMU 处理
 
@@ -697,8 +761,24 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 
 - **需求**：某些 BMS 厂家只提供总电压和总电流，总功率需要自己计算（电压 * 电流 / 1000）
 - **实现方式**：用户用原始数据根据四则运算计算出新值
-- **状态**：暂时不设计和实现，但已在绑定表中预留 `source_type='calculated'` 字段
+- **状态**：暂时不设计和实现，但已在绑定表中预留 `read_source_type='calculated'` 字段
 - **未来扩展**：在 `bms_field_bindings` 表中添加 `calculated_expression` 字段，支持公式计算
+
+### 7.5 写入功能支持
+
+- **写入类型**：
+  - **COMMAND**：控制命令（如断路器指令、簇分合闸指令）
+  - **SETPOINT**：设定值（如目标功率）
+  - **PARAM_SET**：参数设定（如保护定值）
+- **写入数据来源**：
+  - **资产字段**：绑定到 `device_type_tags.tag_name`，字段的 `semantic_type` 必须是 COMMAND/SETPOINT/PARAM_SET
+  - **DI 点**：某些 BMS 的 DO 量，直接写入到通信实例的 DO 点
+- **写入流程**：
+  1. 前端调用写入API：`POST /api/bms/instances/{id}/fields/{field_key}/write`
+  2. 后端根据 `write_source_type` 和 `write_asset_tag_name`/`write_point_name` 找到写入目标
+  3. 如果是资产字段，调用资产字段写入API（参考 `device.md` 第 9.3 节）
+  4. 如果是 DI 点，直接通过通信实例写入
+  5. 写入成功后生成相应的 SOE（CMD_SENT/CMD_FAIL/SETPOINT_CHANGE/PARAM_CHANGE）
 
 ### 7.2 多架构支持
 
@@ -738,6 +818,7 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 |------|------|------|------|
 | v1.0.0 | 2025-01-XX | AI Assistant | 初始版本，完成设计文档 |
 | v1.1.0 | 2025-01-XX | AI Assistant | 重大调整：<br/>1. 删除重复配置（位域拆分、故障等级、枚举值）<br/>2. 明确 BMS 识别方式（通过 bms_instances.asset_id）<br/>3. 支持多种数据来源（资产字段/DI点/二次变量）<br/>4. 遵循现有设计文档（device.md、DATABASE_DESIGN.md） |
+| v1.2.0 | 2025-01-XX | AI Assistant | 功能增强：<br/>1. 固定字段单独配置（告警状态、电压、电流、功率、断路器状态、断路器指令）<br/>2. 支持写入功能（读写分离，支持 COMMAND/SETPOINT/PARAM_SET）<br/>3. 支持簇分合闸指令绑定（三级架构拓扑图） |
 
 ---
 
