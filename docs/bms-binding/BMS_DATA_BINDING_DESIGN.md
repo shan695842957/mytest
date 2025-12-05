@@ -1,6 +1,6 @@
 # BMS 数据绑定功能设计文档
 
-> **版本**: v1.2.3  
+> **版本**: v1.3.0  
 > **创建时间**: 2025-01-XX  
 > **最后更新**: 2025-01-XX  
 > **作者**: AI Assistant  
@@ -142,20 +142,32 @@ CREATE TABLE IF NOT EXISTS bms_page_configs (
 -- BMS 字段配置表（固定字段和可配置字段）
 -- 固定字段：所有BMS厂家都能提供的字段（告警状态、电压、电流、功率、断路器状态、断路器指令）
 -- 可配置字段：取决于供应商的字段（SOC、SOH、SOS等）
+-- 说明：每个 BMS 实例有自己独立的字段配置
 CREATE TABLE IF NOT EXISTS bms_field_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    page_config_id INTEGER NOT NULL,              -- 页面配置ID
-    field_key TEXT NOT NULL,                     -- 字段键（如 'fault', 'voltage', 'current', 'power', 'breaker_status', 'breaker_command', 'soc'）
-    display_name_zh TEXT NOT NULL,                -- 中文显示名
-    display_name_en TEXT NOT NULL,                -- 英文显示名
-    field_type TEXT NOT NULL,                     -- 字段类型：'fixed' | 'dynamic'
-    data_type TEXT NOT NULL,                      -- 数据类型：'boolean' | 'number' | 'enum'
-    unit_zh TEXT NOT NULL DEFAULT '',              -- 中文单位
-    unit_en TEXT NOT NULL DEFAULT '',              -- 英文单位
-    is_required BOOLEAN NOT NULL DEFAULT 0,       -- 是否必填（固定字段为1）
+    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID（外键关联 bms_instances.id）
+    page_type TEXT NOT NULL,                        -- 页面类型：'SYS' | 'BCU' | 'BAU' | 'BMU'
+    field_key TEXT NOT NULL,                       -- 字段键（如 'fault', 'voltage', 'current', 'power', 'breaker_status', 'breaker_command', 'soc'）
+    display_name_zh TEXT NOT NULL,                  -- 中文显示名
+    display_name_en TEXT NOT NULL,                  -- 英文显示名
+    field_type TEXT NOT NULL,                       -- 字段类型：'fixed' | 'dynamic'
+    data_type TEXT NOT NULL,                        -- 数据类型：'boolean' | 'number' | 'enum'
+    unit_zh TEXT NOT NULL DEFAULT '',               -- 中文单位
+    unit_en TEXT NOT NULL DEFAULT '',               -- 英文单位
+    is_required BOOLEAN NOT NULL DEFAULT 0,        -- 是否必填（固定字段为1）
     -- 读写权限
-    is_readable BOOLEAN NOT NULL DEFAULT 1,       -- 是否可读（1=可读，0=只写）
-    is_writable BOOLEAN NOT NULL DEFAULT 0,       -- 是否可写（1=可写，0=只读）
+    is_readable BOOLEAN NOT NULL DEFAULT 1,         -- 是否可读（1=可读，0=只写）
+    is_writable BOOLEAN NOT NULL DEFAULT 0,         -- 是否可写（1=可写，0=只读）
+    -- 字段来源类型（明确字段的数据来源）
+    source_type TEXT NOT NULL,                      -- 字段来源类型：'asset_field'（资产字段）| 'custom'（自定义字段）| 'di_point'（DI点）
+    -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
+    read_device_type_tag_id INTEGER,                -- 读：资产字段ID（外键关联 device_type_tags.id）
+    write_device_type_tag_id INTEGER,                -- 写：资产字段ID（外键关联 device_type_tags.id，仅当 is_writable=1 时使用）
+    -- 当 source_type='di_point' 时使用
+    read_comm_instance_id INTEGER,                  -- 读：通信实例ID（外键关联 comm_instances.id）
+    read_point_id INTEGER,                          -- 读：点表点ID（外键关联 point_table_points.id）
+    write_comm_instance_id INTEGER,                  -- 写：通信实例ID（外键关联 comm_instances.id，仅当 is_writable=1 时使用）
+    write_point_id INTEGER,                         -- 写：点表点ID（外键关联 point_table_points.id，仅当 is_writable=1 时使用）
     -- 固定字段的预定义键（仅当 field_type='fixed' 时使用）
     -- 二级架构SYS页面固定字段：
     --   'fault'（告警状态，只读，STATUS类型）
@@ -169,109 +181,192 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
     -- 三级架构拓扑图（簇）固定字段：
     --   'breaker_status'（簇分合闸状态，只读，STATUS类型）
     --   'breaker_command'（簇分合闸指令，可写，COMMAND类型）
-    sort_order INTEGER NOT NULL DEFAULT 0,        -- 排序索引（避免使用 index 关键字）
-    description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
-    description_en TEXT NOT NULL DEFAULT '',       -- 英文描述
+    sort_order INTEGER NOT NULL DEFAULT 0,          -- 排序索引（避免使用 index 关键字）
+    description_zh TEXT NOT NULL DEFAULT '',        -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',        -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
-    UNIQUE(page_config_id, field_key),
+    FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
+    FOREIGN KEY(read_device_type_tag_id) REFERENCES device_type_tags(id) ON DELETE RESTRICT,
+    FOREIGN KEY(write_device_type_tag_id) REFERENCES device_type_tags(id) ON DELETE RESTRICT,
+    FOREIGN KEY(read_comm_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(read_point_id) REFERENCES point_table_points(id) ON DELETE RESTRICT,
+    FOREIGN KEY(write_comm_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(write_point_id) REFERENCES point_table_points(id) ON DELETE RESTRICT,
+    -- 检查约束：字段来源类型验证
+    CHECK (source_type IN ('asset_field', 'custom', 'di_point')),
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (
+        (source_type = 'asset_field' AND read_device_type_tag_id IS NOT NULL) OR
+        (source_type = 'custom') OR
+        (source_type = 'di_point' AND read_comm_instance_id IS NOT NULL AND read_point_id IS NOT NULL)
+    ),
     -- 检查约束：可写字段必须可读（写入后需要读取反馈）
-    CHECK (is_writable = 0 OR is_readable = 1)
+    CHECK (is_writable = 0 OR is_readable = 1),
+    -- 检查约束：可写字段必须配置写数据来源
+    CHECK (
+        is_writable = 0 OR
+        (source_type = 'asset_field' AND write_device_type_tag_id IS NOT NULL) OR
+        (source_type = 'di_point' AND write_comm_instance_id IS NOT NULL AND write_point_id IS NOT NULL)
+    ),
+    UNIQUE(bms_instance_id, page_type, field_key)
 );
 
 -- BMS 遥信量配置表
 -- 注意：位域拆分已在 point_table_points.parse_rules_json 中配置，此处仅配置业务显示信息
--- 故障等级使用 device_type_tags.severity（0~4），枚举值使用 device_type_tags.enum_json
+-- 说明：每个 BMS 实例有自己独立的遥信量配置
 CREATE TABLE IF NOT EXISTS bms_telecontrol_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    page_config_id INTEGER NOT NULL,              -- 页面配置ID
-    telecontrol_key TEXT NOT NULL,                -- 遥信量键（如 'total_overvoltage'）
-    display_name_zh TEXT NOT NULL,                -- 中文显示名
-    display_name_en TEXT NOT NULL,                -- 英文显示名
-    telecontrol_type TEXT NOT NULL,                -- 遥信类型：'boolean' | 'enum' | 'bitfield'
+    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID（外键关联 bms_instances.id）
+    page_type TEXT NOT NULL,                        -- 页面类型：'BCU' | 'BAU'
+    telecontrol_key TEXT NOT NULL,                  -- 遥信量键（如 'total_overvoltage'）
+    display_name_zh TEXT NOT NULL,                  -- 中文显示名
+    display_name_en TEXT NOT NULL,                  -- 英文显示名
+    telecontrol_type TEXT NOT NULL,                 -- 遥信类型：'boolean' | 'enum' | 'bitfield'
+    -- 字段来源类型（明确遥信量的数据来源）
+    source_type TEXT NOT NULL,                      -- 字段来源类型：'asset_field'（资产字段）| 'di_point'（DI点）
+    -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
+    device_type_tag_id INTEGER,                     -- 资产字段ID（外键关联 device_type_tags.id）
+    -- 当 source_type='di_point' 时使用
+    comm_instance_id INTEGER,                       -- 通信实例ID（外键关联 comm_instances.id）
+    point_id INTEGER,                                -- 点表点ID（外键关联 point_table_points.id，支持子点）
     -- 注意：故障等级和枚举值定义使用资产字段的配置（device_type_tags.severity 和 enum_json）
-    sort_order INTEGER NOT NULL DEFAULT 0,        -- 排序索引（避免使用 index 关键字）
-    description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
-    description_en TEXT NOT NULL DEFAULT '',       -- 英文描述
+    sort_order INTEGER NOT NULL DEFAULT 0,          -- 排序索引（避免使用 index 关键字）
+    description_zh TEXT NOT NULL DEFAULT '',         -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',         -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
-    UNIQUE(page_config_id, telecontrol_key)
+    FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
+    FOREIGN KEY(device_type_tag_id) REFERENCES device_type_tags(id) ON DELETE RESTRICT,
+    FOREIGN KEY(comm_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(point_id) REFERENCES point_table_points(id) ON DELETE RESTRICT,
+    -- 检查约束：字段来源类型验证
+    CHECK (source_type IN ('asset_field', 'di_point')),
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (
+        (source_type = 'asset_field' AND device_type_tag_id IS NOT NULL) OR
+        (source_type = 'di_point' AND comm_instance_id IS NOT NULL AND point_id IS NOT NULL)
+    ),
+    UNIQUE(bms_instance_id, page_type, telecontrol_key)
 );
 
 -- BMS 拓扑配置表（SYS 页面的拓扑图配置）
+-- 说明：每个 BMS 实例有自己独立的拓扑配置
 CREATE TABLE IF NOT EXISTS bms_topology_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    page_config_id INTEGER NOT NULL,               -- 页面配置ID（SYS 页面）
-    topology_type TEXT NOT NULL,                   -- 拓扑类型：'pack' | 'cluster'
-    display_name_zh TEXT NOT NULL,                 -- 中文显示名
-    display_name_en TEXT NOT NULL,                 -- 英文显示名
-    description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
-    description_en TEXT NOT NULL DEFAULT '',        -- 英文描述
+    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID（外键关联 bms_instances.id）
+    topology_type TEXT NOT NULL,                    -- 拓扑类型：'pack'（二级架构）| 'cluster'（三级架构）
+    display_name_zh TEXT NOT NULL,                  -- 中文显示名
+    display_name_en TEXT NOT NULL,                  -- 英文显示名
+    description_zh TEXT NOT NULL DEFAULT '',        -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',         -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
-    UNIQUE(page_config_id, topology_type)
+    FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
+    UNIQUE(bms_instance_id, topology_type)
 );
 
 -- BMS 拓扑字段配置表（拓扑图中每个节点显示的字段）
 -- 说明：拓扑图的字段可以独立配置，不一定与主页面字段相同
 -- 例如：主页面显示"堆电压"，拓扑图显示"簇电压"
+-- 说明：每个 BMS 实例有自己独立的拓扑字段配置
 CREATE TABLE IF NOT EXISTS bms_topology_field_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    topology_config_id INTEGER NOT NULL,           -- 拓扑配置ID
-    field_key TEXT NOT NULL,                       -- 字段键（独立定义，如 'cluster_voltage', 'cluster_current', 'cluster_soc', 'cluster_breaker_status'）
-    display_name_zh TEXT NOT NULL,                -- 中文显示名
-    display_name_en TEXT NOT NULL,                -- 英文显示名
-    display_position TEXT NOT NULL DEFAULT 'card', -- 显示位置：'header'（卡片头部，如簇编号）| 'card'（卡片主体，如电压、电流、SOC）| 'footer'（卡片底部，如分合闸按钮）
-    sort_order INTEGER NOT NULL DEFAULT 0,        -- 排序索引（同一位置内的显示顺序）
+    topology_config_id INTEGER NOT NULL,            -- 拓扑配置ID
+    field_key TEXT NOT NULL,                        -- 字段键（独立定义，如 'cluster_voltage', 'cluster_current', 'cluster_soc', 'cluster_breaker_status'）
+    display_name_zh TEXT NOT NULL,                  -- 中文显示名
+    display_name_en TEXT NOT NULL,                  -- 英文显示名
+    display_position TEXT NOT NULL DEFAULT 'card',  -- 显示位置：'header'（卡片头部，如簇编号）| 'card'（卡片主体，如电压、电流、SOC）| 'footer'（卡片底部，如分合闸按钮）
+    -- 字段来源类型（明确字段的数据来源）
+    source_type TEXT NOT NULL,                      -- 字段来源类型：'asset_field'（资产字段）| 'di_point'（DI点）
+    -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
+    read_device_type_tag_id INTEGER,                 -- 读：资产字段ID（外键关联 device_type_tags.id）
+    write_device_type_tag_id INTEGER,                -- 写：资产字段ID（外键关联 device_type_tags.id，仅当字段可写时使用）
+    -- 当 source_type='di_point' 时使用
+    read_comm_instance_id INTEGER,                  -- 读：通信实例ID（外键关联 comm_instances.id）
+    read_point_id INTEGER,                           -- 读：点表点ID（外键关联 point_table_points.id）
+    write_comm_instance_id INTEGER,                  -- 写：通信实例ID（外键关联 comm_instances.id，仅当字段可写时使用）
+    write_point_id INTEGER,                         -- 写：点表点ID（外键关联 point_table_points.id，仅当字段可写时使用）
+    sort_order INTEGER NOT NULL DEFAULT 0,          -- 排序索引（同一位置内的显示顺序）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(topology_config_id) REFERENCES bms_topology_configs(id) ON DELETE CASCADE,
+    FOREIGN KEY(read_device_type_tag_id) REFERENCES device_type_tags(id) ON DELETE RESTRICT,
+    FOREIGN KEY(write_device_type_tag_id) REFERENCES device_type_tags(id) ON DELETE RESTRICT,
+    FOREIGN KEY(read_comm_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(read_point_id) REFERENCES point_table_points(id) ON DELETE RESTRICT,
+    FOREIGN KEY(write_comm_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(write_point_id) REFERENCES point_table_points(id) ON DELETE RESTRICT,
+    -- 检查约束：字段来源类型验证
+    CHECK (source_type IN ('asset_field', 'di_point')),
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (
+        (source_type = 'asset_field' AND read_device_type_tag_id IS NOT NULL) OR
+        (source_type = 'di_point' AND read_comm_instance_id IS NOT NULL AND read_point_id IS NOT NULL)
+    ),
     UNIQUE(topology_config_id, field_key),
     CHECK (display_position IN ('header', 'card', 'footer'))
 );
 
 -- BMS BMU 配置表（BMU 页面的字段配置）
 -- 注意：串并数（series_count、parallel_count）现在从 bms_hierarchy_nodes 表获取，不再在此表配置
+-- 说明：每个 BMS 实例有自己独立的 BMU 配置
 CREATE TABLE IF NOT EXISTS bms_bmu_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    page_config_id INTEGER NOT NULL,              -- 页面配置ID（BMU 页面）
-    description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
-    description_en TEXT NOT NULL DEFAULT '',        -- 英文描述
+    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID（外键关联 bms_instances.id）
+    description_zh TEXT NOT NULL DEFAULT '',        -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',         -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE CASCADE,
-    UNIQUE(page_config_id)
+    FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
+    UNIQUE(bms_instance_id)
 );
 
 -- BMS BMU 单体字段配置表
+-- 说明：每个 BMS 实例有自己独立的单体字段配置
 CREATE TABLE IF NOT EXISTS bms_bmu_cell_field_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bmu_config_id INTEGER NOT NULL,                -- BMU 配置ID
-    field_key TEXT NOT NULL,                        -- 字段键（如 'voltage', 'temperature', 'soc', 'soh'）
-    display_name_zh TEXT NOT NULL,                 -- 中文显示名
-    display_name_en TEXT NOT NULL,                 -- 英文显示名
-    data_type TEXT NOT NULL,                       -- 数据类型：'number'
-    unit_zh TEXT NOT NULL DEFAULT '',               -- 中文单位
-    unit_en TEXT NOT NULL DEFAULT '',               -- 英文单位
-    sort_order INTEGER NOT NULL DEFAULT 0,          -- 排序索引（避免使用 index 关键字）
+    bmu_config_id INTEGER NOT NULL,                 -- BMU 配置ID
+    field_key TEXT NOT NULL,                         -- 字段键（如 'voltage', 'temperature', 'soc', 'soh'）
+    display_name_zh TEXT NOT NULL,                   -- 中文显示名
+    display_name_en TEXT NOT NULL,                   -- 英文显示名
+    data_type TEXT NOT NULL,                         -- 数据类型：'number'
+    unit_zh TEXT NOT NULL DEFAULT '',                -- 中文单位
+    unit_en TEXT NOT NULL DEFAULT '',                -- 英文单位
+    -- 字段来源类型（明确字段的数据来源）
+    source_type TEXT NOT NULL,                       -- 字段来源类型：'asset_field'（资产字段）| 'di_point'（DI点）
+    -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
+    device_type_tag_id INTEGER,                      -- 资产字段ID（外键关联 device_type_tags.id）
+    -- 当 source_type='di_point' 时使用
+    comm_instance_id INTEGER,                         -- 通信实例ID（外键关联 comm_instances.id）
+    point_id INTEGER,                                 -- 点表点ID（外键关联 point_table_points.id，支持子点）
+    sort_order INTEGER NOT NULL DEFAULT 0,           -- 排序索引（避免使用 index 关键字）
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(bmu_config_id) REFERENCES bms_bmu_configs(id) ON DELETE CASCADE,
+    FOREIGN KEY(device_type_tag_id) REFERENCES device_type_tags(id) ON DELETE RESTRICT,
+    FOREIGN KEY(comm_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(point_id) REFERENCES point_table_points(id) ON DELETE RESTRICT,
+    -- 检查约束：字段来源类型验证
+    CHECK (source_type IN ('asset_field', 'di_point')),
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (
+        (source_type = 'asset_field' AND device_type_tag_id IS NOT NULL) OR
+        (source_type = 'di_point' AND comm_instance_id IS NOT NULL AND point_id IS NOT NULL)
+    ),
     UNIQUE(bmu_config_id, field_key)
 );
 ```
 
-#### 3.1.2 BMS 绑定表（关联数据来源）
+#### 3.1.2 BMS 实例和层级节点表
 
 **重要说明**：
 - **BMS 识别**：如果一个资产被关联到 `bms_instances` 表，就被系统识别为 BMS
-- **数据来源**：BMS 页面的数据主要来自资产字段，但非 100% 来自资产字段，还支持：
-  1. **资产字段**（主要来源）：通过 `asset_mappings` 关联的资产字段
-  2. **DI 点**（某些 BMS 的 DO 量）：某些 BMS 厂家提供的 DO 量，在我们的系统中是 DI，需要直接关联到通信实例的 DI 点
-  3. **二次变量计算**（将来实现）：用户用原始数据根据四则运算计算出新值（如：总功率 = 电压 * 电流 / 1000），**暂时不设计和实现**
+- **字段来源**：BMS 页面的数据来源在字段配置表中直接定义，支持：
+  1. **资产字段**（主要来源）：通过外键关联 `device_type_tags.id`
+  2. **DI 点**（某些 BMS 的 DO 量）：通过外键关联 `comm_instances.id` 和 `point_table_points.id`
+  3. **自定义字段**（仅用于显示，无数据来源）
+  4. **二次变量计算**（将来实现）：用户用原始数据根据四则运算计算出新值（如：总功率 = 电压 * 电流 / 1000），**暂时不设计和实现**
 
 ```sql
 -- BMS 实例表（每个 BMS 设备对应一个实例）
@@ -333,189 +428,30 @@ CREATE TABLE IF NOT EXISTS bms_hierarchy_nodes (
     UNIQUE(bms_instance_id, parent_node_id, node_number)
 );
 
--- BMS 字段绑定表（将 BMS 字段与数据来源关联）
--- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点）| 'calculated'（二次变量，将来实现）
--- 支持读写分离：读和写可以绑定到不同的数据来源
-CREATE TABLE IF NOT EXISTS bms_field_bindings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
-    page_config_id INTEGER NOT NULL,                -- 页面配置ID
-    field_config_id INTEGER NOT NULL,                -- 字段配置ID
-    -- 读数据来源
-    read_source_type TEXT NOT NULL,                 -- 读数据来源类型：'asset_field' | 'di_point' | 'calculated'
-    read_asset_tag_name TEXT,                       -- 读：资产字段名（当 read_source_type='asset_field' 时使用）
-    read_instance_id INTEGER,                        -- 读：通信实例ID（当 read_source_type='di_point' 时使用）
-    read_point_name TEXT,                           -- 读：点表点名（当 read_source_type='di_point' 时使用）
-    -- 写数据来源（仅当字段 is_writable=1 时使用）
-    write_source_type TEXT,                         -- 写数据来源类型：'asset_field' | 'di_point' | 'calculated'
-    write_asset_tag_name TEXT,                       -- 写：资产字段名（当 write_source_type='asset_field' 时使用，必须是 COMMAND/SETPOINT/PARAM_SET 类型）
-    write_instance_id INTEGER,                      -- 写：通信实例ID（当 write_source_type='di_point' 时使用）
-    write_point_name TEXT,                          -- 写：点表点名（当 write_source_type='di_point' 时使用）
-    -- 当 source_type='calculated' 时使用（将来实现，暂时不设计）
-    -- calculated_expression TEXT,                  -- 计算公式（如 'voltage * current / 1000'）
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
-    FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(field_config_id) REFERENCES bms_field_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(read_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
-    FOREIGN KEY(write_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
-    -- 检查约束：根据 source_type 验证必填字段
-    CHECK (read_source_type IN ('asset_field', 'di_point', 'calculated')),
-    CHECK (write_source_type IS NULL OR write_source_type IN ('asset_field', 'di_point', 'calculated')),
-    CHECK (
-        (read_source_type = 'asset_field' AND read_asset_tag_name IS NOT NULL) OR
-        (read_source_type = 'di_point' AND read_instance_id IS NOT NULL AND read_point_name IS NOT NULL) OR
-        (read_source_type = 'calculated')
-    ),
-    CHECK (
-        write_source_type IS NULL OR
-        (write_source_type = 'asset_field' AND write_asset_tag_name IS NOT NULL) OR
-        (write_source_type = 'di_point' AND write_instance_id IS NOT NULL AND write_point_name IS NOT NULL) OR
-        (write_source_type = 'calculated')
-    ),
-    UNIQUE(bms_instance_id, page_config_id, field_config_id)
-);
-
--- BMS 遥信量绑定表（将 BMS 遥信量与数据来源关联）
--- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点，某些BMS的DO量）
-CREATE TABLE IF NOT EXISTS bms_telecontrol_bindings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
-    page_config_id INTEGER NOT NULL,                -- 页面配置ID
-    telecontrol_config_id INTEGER NOT NULL,         -- 遥信量配置ID
-    source_type TEXT NOT NULL,                      -- 数据来源类型：'asset_field' | 'di_point'
-    -- 当 source_type='asset_field' 时使用
-    asset_tag_name TEXT,                            -- 资产字段名（对应 device_type_tags.tag_name）
-    -- 当 source_type='di_point' 时使用
-    instance_id INTEGER,                            -- 通信实例ID（外键关联 comm_instances.id）
-    point_name TEXT,                                -- 点表点名（对应 point_table_points.point_name，支持子点）
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
-    FOREIGN KEY(page_config_id) REFERENCES bms_page_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(telecontrol_config_id) REFERENCES bms_telecontrol_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
-    -- 检查约束：根据 source_type 验证必填字段
-    CHECK (source_type IN ('asset_field', 'di_point')),
-    CHECK (
-        (source_type = 'asset_field' AND asset_tag_name IS NOT NULL) OR
-        (source_type = 'di_point' AND instance_id IS NOT NULL AND point_name IS NOT NULL)
-    ),
-    UNIQUE(bms_instance_id, page_config_id, telecontrol_config_id)
-);
-
--- BMS 拓扑绑定表（将拓扑节点与数据来源关联）
--- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点）| 'calculated'（二次变量，将来实现）
--- 支持读写分离：读和写可以绑定到不同的数据来源（如簇分合闸状态和指令）
-CREATE TABLE IF NOT EXISTS bms_topology_bindings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
-    topology_config_id INTEGER NOT NULL,            -- 拓扑配置ID
-    topology_field_config_id INTEGER NOT NULL,       -- 拓扑字段配置ID
-    -- 读数据来源
-    read_source_type TEXT NOT NULL,                 -- 读数据来源类型：'asset_field' | 'di_point' | 'calculated'
-    read_asset_tag_name TEXT,                       -- 读：资产字段名（当 read_source_type='asset_field' 时使用）
-    read_instance_id INTEGER,                        -- 读：通信实例ID（当 read_source_type='di_point' 时使用）
-    read_point_name TEXT,                           -- 读：点表点名（当 read_source_type='di_point' 时使用）
-    -- 写数据来源（仅当字段可写时使用，如簇分合闸指令）
-    write_source_type TEXT,                         -- 写数据来源类型：'asset_field' | 'di_point' | 'calculated'
-    write_asset_tag_name TEXT,                       -- 写：资产字段名（当 write_source_type='asset_field' 时使用，必须是 COMMAND/SETPOINT/PARAM_SET 类型）
-    write_instance_id INTEGER,                      -- 写：通信实例ID（当 write_source_type='di_point' 时使用）
-    write_point_name TEXT,                          -- 写：点表点名（当 write_source_type='di_point' 时使用）
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
-    FOREIGN KEY(topology_config_id) REFERENCES bms_topology_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(topology_field_config_id) REFERENCES bms_topology_field_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(read_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
-    FOREIGN KEY(write_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
-    -- 检查约束：根据 source_type 验证必填字段
-    CHECK (read_source_type IN ('asset_field', 'di_point', 'calculated')),
-    CHECK (write_source_type IS NULL OR write_source_type IN ('asset_field', 'di_point', 'calculated')),
-    CHECK (
-        (read_source_type = 'asset_field' AND read_asset_tag_name IS NOT NULL) OR
-        (read_source_type = 'di_point' AND read_instance_id IS NOT NULL AND read_point_name IS NOT NULL) OR
-        (read_source_type = 'calculated')
-    ),
-    CHECK (
-        write_source_type IS NULL OR
-        (write_source_type = 'asset_field' AND write_asset_tag_name IS NOT NULL) OR
-        (write_source_type = 'di_point' AND write_instance_id IS NOT NULL AND write_point_name IS NOT NULL) OR
-        (write_source_type = 'calculated')
-    ),
-    UNIQUE(bms_instance_id, topology_config_id, topology_field_config_id)
-);
-
--- BMS BMU 绑定表（将 BMU 单体字段与数据来源关联）
--- 数据来源类型：'asset_field'（资产字段）| 'di_point'（DI点）| 'calculated'（二次变量，将来实现）
-CREATE TABLE IF NOT EXISTS bms_bmu_cell_bindings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID
-    bmu_config_id INTEGER NOT NULL,                 -- BMU 配置ID
-    cell_field_config_id INTEGER NOT NULL,          -- 单体字段配置ID
-    source_type TEXT NOT NULL,                      -- 数据来源类型：'asset_field' | 'di_point' | 'calculated'
-    -- 当 source_type='asset_field' 时使用
-    asset_tag_name TEXT,                            -- 资产字段名（对应 device_type_tags.tag_name）
-    -- 当 source_type='di_point' 时使用
-    instance_id INTEGER,                            -- 通信实例ID（外键关联 comm_instances.id）
-    point_name TEXT,                                -- 点表点名（对应 point_table_points.point_name，支持子点）
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
-    FOREIGN KEY(bmu_config_id) REFERENCES bms_bmu_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(cell_field_config_id) REFERENCES bms_bmu_cell_field_configs(id) ON DELETE RESTRICT,
-    FOREIGN KEY(instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
-    -- 检查约束：根据 source_type 验证必填字段
-    CHECK (source_type IN ('asset_field', 'di_point', 'calculated')),
-    CHECK (
-        (source_type = 'asset_field' AND asset_tag_name IS NOT NULL) OR
-        (source_type = 'di_point' AND instance_id IS NOT NULL AND point_name IS NOT NULL) OR
-        (source_type = 'calculated')
-    ),
-    UNIQUE(bms_instance_id, bmu_config_id, cell_field_config_id)
-);
+-- 注意：字段绑定信息现在直接存储在字段配置表中，不再需要单独的绑定表
+-- bms_field_configs 表已经包含了字段来源信息（source_type、device_type_tag_id、comm_instance_id、point_id）
+-- bms_telecontrol_configs 表已经包含了遥信量来源信息
+-- bms_topology_field_configs 表已经包含了拓扑字段来源信息
+-- bms_bmu_cell_field_configs 表已经包含了单体字段来源信息
 ```
 
 ### 3.2 后端 API 设计
 
-#### 3.2.1 BMS 配置管理 API
+#### 3.2.1 BMS 架构和页面配置 API
+
+**说明**：架构和页面配置是全局的，所有 BMS 实例共享。
 
 ```
 # 架构管理
 GET    /api/bms/architectures              # 获取架构列表
 GET    /api/bms/architectures/{id}         # 获取架构详情
 
-# 页面配置管理
+# 页面配置管理（全局配置，所有实例共享）
 GET    /api/bms/page-configs              # 获取页面配置列表
 GET    /api/bms/page-configs/{id}          # 获取页面配置详情
 POST   /api/bms/page-configs               # 创建页面配置
 PATCH  /api/bms/page-configs/{id}          # 更新页面配置
 DELETE /api/bms/page-configs/{id}          # 删除页面配置
-
-# 字段配置管理
-GET    /api/bms/field-configs              # 获取字段配置列表（按页面配置ID筛选）
-POST   /api/bms/field-configs              # 创建字段配置
-PATCH  /api/bms/field-configs/{id}         # 更新字段配置
-DELETE /api/bms/field-configs/{id}         # 删除字段配置
-
-# 遥信量配置管理
-GET    /api/bms/telecontrol-configs        # 获取遥信量配置列表（按页面配置ID筛选）
-POST   /api/bms/telecontrol-configs        # 创建遥信量配置
-PATCH  /api/bms/telecontrol-configs/{id}   # 更新遥信量配置
-DELETE /api/bms/telecontrol-configs/{id}   # 删除遥信量配置
-
-# 拓扑配置管理
-GET    /api/bms/topology-configs           # 获取拓扑配置列表（按页面配置ID筛选）
-POST   /api/bms/topology-configs           # 创建拓扑配置
-PATCH  /api/bms/topology-configs/{id}      # 更新拓扑配置
-DELETE /api/bms/topology-configs/{id}      # 删除拓扑配置
-
-# BMU 配置管理
-GET    /api/bms/bmu-configs                # 获取 BMU 配置列表（按页面配置ID筛选）
-POST   /api/bms/bmu-configs                # 创建 BMU 配置
-PATCH  /api/bms/bmu-configs/{id}           # 更新 BMU 配置
-DELETE /api/bms/bmu-configs/{id}           # 删除 BMU 配置
 ```
 
 #### 3.2.2 BMS 实例和层级管理 API
@@ -534,43 +470,12 @@ POST   /api/bms/instances/{id}/hierarchy-nodes        # 创建层级节点
 PATCH  /api/bms/hierarchy-nodes/{id}                  # 更新层级节点
 DELETE /api/bms/hierarchy-nodes/{id}                  # 删除层级节点
 
-#### 3.2.3 BMS 绑定管理 API
+#### 3.2.3 BMS 字段配置管理 API
 
-```
-# BMS 实例管理
-GET    /api/bms/instances                  # 获取 BMS 实例列表
-GET    /api/bms/instances/{id}             # 获取 BMS 实例详情
-POST   /api/bms/instances                  # 创建 BMS 实例
-PATCH  /api/bms/instances/{id}             # 更新 BMS 实例
-DELETE /api/bms/instances/{id}             # 删除 BMS 实例
-
-# 字段绑定管理
-GET    /api/bms/instances/{id}/field-bindings        # 获取字段绑定列表
-POST   /api/bms/instances/{id}/field-bindings        # 创建字段绑定
-PATCH  /api/bms/field-bindings/{id}                 # 更新字段绑定
-DELETE /api/bms/field-bindings/{id}                 # 删除字段绑定
+**说明**：字段绑定信息现在直接存储在字段配置表中，不再需要单独的绑定表。配置字段时直接指定数据来源。
 
 # 字段写入操作
 POST   /api/bms/instances/{id}/fields/{field_key}/write  # 写入字段值（如断路器指令）
-
-# 遥信量绑定管理
-GET    /api/bms/instances/{id}/telecontrol-bindings # 获取遥信量绑定列表
-POST   /api/bms/instances/{id}/telecontrol-bindings # 创建遥信量绑定
-PATCH  /api/bms/telecontrol-bindings/{id}           # 更新遥信量绑定
-DELETE /api/bms/telecontrol-bindings/{id}             # 删除遥信量绑定
-
-# 拓扑绑定管理
-GET    /api/bms/instances/{id}/topology-bindings     # 获取拓扑绑定列表
-POST   /api/bms/instances/{id}/topology-bindings     # 创建拓扑绑定
-PATCH  /api/bms/topology-bindings/{id}               # 更新拓扑绑定
-DELETE /api/bms/topology-bindings/{id}               # 删除拓扑绑定
-
-# BMU 绑定管理
-GET    /api/bms/instances/{id}/bmu-bindings          # 获取 BMU 绑定列表
-POST   /api/bms/instances/{id}/bmu-bindings          # 创建 BMU 绑定
-PATCH  /api/bms/bmu-bindings/{id}                   # 更新 BMU 绑定
-DELETE /api/bms/bmu-bindings/{id}                    # 删除 BMU 绑定
-```
 
 #### 3.2.4 BMS 数据查询 API（用于前端展示）
 
@@ -602,24 +507,19 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 6. 配置层级结构（堆/簇/包节点，包括数量、串并数等）
 7. 配置 BMU（单体字段、温度测点）
 
-#### 3.3.2 BMS 绑定管理页面
+#### 3.3.2 BMS 配置管理页面（实例级别）
 
-**路径**: `/config/bms-bindings`
+**路径**: `/config/bms-instances`
 
 **功能**:
 1. 选择资产（下拉选择，只显示已配置的资产）
 2. 选择架构类型（二级/三级）
 3. 创建 BMS 实例（关联资产和架构，一旦关联，资产即被识别为 BMS）
 4. 配置层级结构（堆/簇/包节点，包括数量、串并数等）
-4. 配置字段绑定（将 BMS 字段与数据来源关联）：
-   - 资产字段（主要来源）
-   - DI 点（某些 BMS 的 DO 量）
-   - 二次变量计算（将来实现，暂时不设计）
-5. 配置遥信量绑定（将 BMS 遥信量与数据来源关联）：
-   - 资产字段（主要来源）
-   - DI 点（某些 BMS 的 DO 量）
-6. 配置拓扑绑定（将拓扑节点字段与数据来源关联）
-7. 配置 BMU 绑定（将单体字段与数据来源关联）
+5. 配置 SYS 页面字段（固定字段 + 可配置字段，每个字段配置数据来源）
+6. 配置 BCU/BAU 页面字段（遥测量和遥信量，每个字段配置数据来源）
+7. 配置拓扑图字段（簇/包的显示字段，每个字段配置数据来源）
+8. 配置 BMU 页面字段（单体字段，每个字段配置数据来源）
 
 **UI 设计**:
 - 左侧：BMS 实例列表
@@ -631,9 +531,9 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 **路径**: `/test/bms-level2`, `/test/bms-level3`
 
 **改造点**:
-1. 从配置中读取字段列表（而不是硬编码）
-2. 从绑定中读取资产字段关联（而不是使用临时数据）
-3. 实时数据从资产字段中获取（通过 WebSocket 或轮询）
+1. 从配置中读取字段列表（根据 `bms_instance_id` 和 `page_type` 查询）
+2. 从字段配置中读取数据来源（`source_type`、`device_type_tag_id`、`comm_instance_id`、`point_id`）
+3. 实时数据从资产字段或 DI 点中获取（通过 WebSocket 或轮询）
 
 ---
 
@@ -642,7 +542,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 ### 4.1 第一阶段：数据库和基础 API
 
 1. **创建数据库迁移脚本**
-   - 创建所有 BMS 配置表和绑定表
+   - 创建所有 BMS 配置表（字段绑定信息集成在配置表中）
    - 初始化默认数据（二级架构、三级架构的基础配置）
 
 2. **创建后端模型**
@@ -669,18 +569,18 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
    - 拓扑配置对话框
    - BMU 配置对话框
 
-### 4.3 第三阶段：绑定管理前端
+### 4.3 第三阶段：实例配置管理前端
 
-1. **创建绑定管理页面**
-   - `frontend/src/pages/config/BMSBindingsPage.tsx`
-   - 支持实例创建和字段绑定
+1. **创建实例配置管理页面**
+   - `frontend/src/pages/config/BMSInstancesPage.tsx`
+   - 支持实例创建和字段配置（数据来源直接在配置时指定）
 
-2. **创建绑定管理组件**
+2. **创建配置管理组件**
    - 实例创建对话框
-   - 字段绑定对话框
-   - 遥信量绑定对话框
-   - 拓扑绑定对话框
-   - BMU 绑定对话框
+   - 字段配置对话框（直接选择数据来源：asset_field / custom / di_point）
+   - 遥信量配置对话框
+   - 拓扑字段配置对话框
+   - BMU 字段配置对话框
 
 ### 4.4 第四阶段：测试面板改造
 
@@ -753,15 +653,15 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
   ↓
 后端处理：
   1. 查询 BMS 实例配置
-  2. 查询字段绑定配置（根据 read_source_type 和 write_source_type 区分数据来源）
-  3. 获取实时数据（读）：
-     - 资产字段：从 asset_state 中获取（通过 read_asset_tag_name）
-     - DI 点：从通信实例的实时数据中获取（通过 read_instance_id + read_point_name）
-     - 二次变量：根据计算公式计算（将来实现）
+  2. 查询字段配置（根据 bms_instance_id 和 page_type）
+  3. 根据字段配置的 source_type 获取实时数据（读）：
+     - asset_field：从字段配置的 read_device_type_tag_id 获取 device_type_tags，然后从 asset_state 中获取数据
+     - di_point：从字段配置的 read_comm_instance_id 和 read_point_id 获取实时数据
+     - custom：无数据来源，仅用于显示
   4. 组装返回数据（固定字段 + 动态字段）
   5. 写入操作（写）：
-     - 资产字段：通过资产字段的写入API（必须是 COMMAND/SETPOINT/PARAM_SET 类型）
-     - DI 点：通过通信实例的写入API（直接写DO点）
+     - asset_field：从字段配置的 write_device_type_tag_id 获取 device_type_tags，通过资产字段的写入API（必须是 COMMAND/SETPOINT/PARAM_SET 类型）
+     - di_point：从字段配置的 write_comm_instance_id 和 write_point_id，通过通信实例的写入API（直接写DO点）
   ↓
 前端展示：
   1. 根据配置渲染字段列表
@@ -790,18 +690,20 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 
 ### 6.2 可配置字段处理
 
-- 可配置字段（如 SOC、SOH、SOS）在配置表中标记为 `is_required=0`
-- 可配置字段需要绑定到数据来源：
-  - **资产字段**（主要）：绑定到 `device_type_tags.tag_name`
-  - **DI 点**：某些 BMS 的 DO 量，直接关联到通信实例的 DI 点
+- 可配置字段（如 SOC、SOH、SOS）在配置表中标记为 `field_type='dynamic'` 和 `is_required=0`
+- 可配置字段的数据来源在配置表中直接定义：
+  - **资产字段**（主要）：通过外键 `device_type_tag_id` 关联到 `device_type_tags.id`
+  - **DI 点**：某些 BMS 的 DO 量，通过外键 `comm_instance_id` 和 `point_id` 关联
+  - **自定义字段**：`source_type='custom'`，无数据来源，仅用于显示
   - **二次变量计算**（将来实现）：如总功率 = 电压 * 电流 / 1000，暂时不设计和实现
-- 如果某个供应商不支持某个字段，可以不绑定，前端不显示
+- 如果某个供应商不支持某个字段，可以不创建该字段配置，前端不显示
 
-### 6.3 遥信量处理
+### 6.3 遥信量处理（BCU/BAU 页面）
 
-- **数据来源**：
-  - **资产字段**（主要）：绑定到 `device_type_tags.tag_name`，故障等级和枚举值使用资产字段的配置
-  - **DI 点**（某些 BMS 的 DO 量）：某些 BMS 厂家提供的 DO 量，在我们的系统中是 DI，需要直接关联到通信实例的 DI 点
+- **数据来源**：在 `bms_telecontrol_configs` 表中直接定义
+  - **资产字段**（主要）：通过外键 `device_type_tag_id` 关联到 `device_type_tags.id`
+    - 故障等级和枚举值使用资产字段的配置（`device_type_tags.severity` 和 `enum_json`）
+  - **DI 点**（某些 BMS 的 DO 量）：通过外键 `comm_instance_id` 和 `point_id` 关联
 - **位域拆分**：已在通信模板的 `point_table_points.parse_rules_json` 中配置，通过子点映射（如 `StatusWord4.mode_code`、`StatusWord4.high_temp_bit`）
 - **故障等级**：使用 `device_type_tags.severity`（0~4），不在 BMS 配置中重复定义
 - **枚举值**：使用 `device_type_tags.enum_json`，不在 BMS 配置中重复定义
@@ -813,16 +715,21 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
   - 二级架构：查询 `node_type='pack'` 且 `parent_node_id` 指向 cluster 节点的所有节点
 - **节点信息**：每个节点的编号、显示名称从 `bms_hierarchy_nodes` 表获取
 - **节点字段**：拓扑图中的节点字段（如簇的电压、电流、SOC）需要绑定到数据来源（读）
+- **节点字段**：拓扑图中的节点字段（如簇的电压、电流、SOC）在 `bms_topology_field_configs` 表中配置
+  - 每个字段的数据来源在配置表中直接定义（`source_type`、`read_device_type_tag_id`、`read_comm_instance_id`、`read_point_id`）
 - **簇的分合闸**（三级架构）：
-  - 分合闸状态（读）：通过 `read_source_type` 绑定到数据来源
-  - 分合闸指令（写）：通过 `write_source_type` 绑定到数据来源（资产字段必须是 COMMAND 类型）
-  - 在 `bms_topology_bindings` 表中，同一个 `topology_field_config_id` 可以同时配置读和写数据来源
+  - 分合闸状态（读）：在 `bms_topology_field_configs` 表中配置 `read_device_type_tag_id` 或 `read_comm_instance_id` + `read_point_id`
+  - 分合闸指令（写）：在 `bms_topology_field_configs` 表中配置 `write_device_type_tag_id` 或 `write_comm_instance_id` + `write_point_id`（资产字段必须是 COMMAND 类型）
 
 ### 6.5 BMU 处理
 
-- 串并数（如 15串2并）在层级节点中设置（`bms_hierarchy_nodes` 表的 `series_count` 和 `parallel_count` 字段）
-- 单体字段（电压、温度、SOC、SOH）需要绑定到资产字段
-- 温度测点需要绑定到资产字段（如果资产有温度测点字段）
+- **串并数**：在层级节点中设置（`bms_hierarchy_nodes` 表的 `series_count` 和 `parallel_count` 字段）
+- **单体字段**（电压、温度、SOC、SOH）：在 `bms_bmu_cell_field_configs` 表中配置
+  - 每个字段的数据来源在配置表中直接定义（`source_type`、`device_type_tag_id`、`comm_instance_id`、`point_id`）
+- **温度测点**：
+  - 从 `bms_hierarchy_nodes.has_temperature_points` 判断是否有温度测点
+  - 如果有温度测点，从 `bms_bmu_cell_field_configs` 表中查询 `field_key='temperature'` 的字段配置
+  - 温度字段的数据来源在配置表中直接定义（`source_type`、`device_type_tag_id`、`comm_instance_id`、`point_id`）
 
 ---
 
@@ -832,17 +739,18 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 
 - 不同供应商的 BMS 可能有不同的字段和遥信量
 - 通过配置表可以灵活配置不同供应商的字段列表
-- 通过绑定表可以将不同供应商的字段映射到统一的数据来源：
-  - 资产字段（主要）
-  - DI 点（某些 BMS 的 DO 量）
+- 每个字段的数据来源在配置表中直接定义，支持：
+  - 资产字段（主要，通过外键关联）
+  - DI 点（某些 BMS 的 DO 量，通过外键关联）
+  - 自定义字段（仅用于显示）
   - 二次变量计算（将来实现）
 
 ### 7.4 二次变量计算（将来实现）
 
 - **需求**：某些 BMS 厂家只提供总电压和总电流，总功率需要自己计算（电压 * 电流 / 1000）
 - **实现方式**：用户用原始数据根据四则运算计算出新值
-- **状态**：暂时不设计和实现，但已在绑定表中预留 `read_source_type='calculated'` 字段
-- **未来扩展**：在 `bms_field_bindings` 表中添加 `calculated_expression` 字段，支持公式计算
+- **状态**：暂时不设计和实现，但已在字段配置表中预留 `source_type='calculated'` 字段
+- **未来扩展**：在字段配置表中添加 `calculated_expression` 字段，支持公式计算
 
 ### 7.5 写入功能支持
 
@@ -851,14 +759,15 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
   - **SETPOINT**：设定值（如目标功率）
   - **PARAM_SET**：参数设定（如保护定值）
 - **写入数据来源**：
-  - **资产字段**：绑定到 `device_type_tags.tag_name`，字段的 `semantic_type` 必须是 COMMAND/SETPOINT/PARAM_SET
-  - **DI 点**：某些 BMS 的 DO 量，直接写入到通信实例的 DO 点
+  - **资产字段**：通过外键关联 `device_type_tags.id`，字段的 `semantic_type` 必须是 COMMAND/SETPOINT/PARAM_SET
+  - **DI 点**：某些 BMS 的 DO 量，通过外键关联 `comm_instances.id` 和 `point_table_points.id`，直接写入到通信实例的 DO 点
 - **写入流程**：
   1. 前端调用写入API：`POST /api/bms/instances/{id}/fields/{field_key}/write`
-  2. 后端根据 `write_source_type` 和 `write_asset_tag_name`/`write_point_name` 找到写入目标
-  3. 如果是资产字段，调用资产字段写入API（参考 `device.md` 第 9.3 节）
-  4. 如果是 DI 点，直接通过通信实例写入
-  5. 写入成功后生成相应的 SOE（CMD_SENT/CMD_FAIL/SETPOINT_CHANGE/PARAM_CHANGE）
+  2. 后端查询字段配置（`bms_field_configs` 表，根据 `bms_instance_id` 和 `field_key`）
+  3. 根据字段配置的 `write_device_type_tag_id` 或 `write_comm_instance_id` + `write_point_id` 找到写入目标
+  4. 如果是资产字段，调用资产字段写入API（参考 `device.md` 第 9.3 节）
+  5. 如果是 DI 点，直接通过通信实例写入
+  6. 写入成功后生成相应的 SOE（CMD_SENT/CMD_FAIL/SETPOINT_CHANGE/PARAM_CHANGE）
 
 ### 7.2 多架构支持
 
@@ -902,6 +811,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 | v1.2.1 | 2025-01-XX | AI Assistant | 国际化修正：<br/>1. 所有显示名称字段改为双语（display_name_zh/display_name_en）<br/>2. 所有描述字段改为双语（description_zh/description_en）<br/>3. 避免 SQLite 关键字冲突（order_index → sort_order） |
 | v1.2.2 | 2025-01-XX | AI Assistant | 界面位置优化：<br/>1. 拓扑字段配置增加 display_position（header/card/footer）<br/>2. 明确固定字段初始化方式<br/>3. 创建完整的 CSV demo 示例 |
 | v1.2.3 | 2025-01-XX | AI Assistant | 层级结构配置：<br/>1. 新增 bms_hierarchy_nodes 表，配置堆/簇/包节点<br/>2. 支持配置堆下簇数量、簇下包数量<br/>3. 支持配置每个包的串并数<br/>4. 拓扑图和BMU页面从层级节点获取数据 |
+| v1.3.0 | 2025-01-XX | AI Assistant | 重大重构：<br/>1. 所有配置表关联到 bms_instances（每个实例独立配置）<br/>2. 字段配置表直接包含数据来源信息（外键关联，不使用名称依赖）<br/>3. 删除独立的绑定表，绑定信息集成到配置表<br/>4. 明确 BAU、BCU、BMU 页面的配置方式 |
 
 ---
 
@@ -911,7 +821,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 - [ ] 创建数据库迁移脚本
 - [ ] 实现后端模型和 API
 - [ ] 实现前端配置管理页面
-- [ ] 实现前端绑定管理页面
+- [ ] 实现前端实例配置管理页面
 - [ ] 改造现有 BMS 测试面板
 - [ ] 编写测试用例
 - [ ] 编写用户文档
