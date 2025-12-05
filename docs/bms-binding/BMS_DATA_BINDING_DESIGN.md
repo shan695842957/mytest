@@ -1,6 +1,6 @@
 # BMS 数据绑定功能设计文档
 
-> **版本**: v1.2.2  
+> **版本**: v1.2.3  
 > **创建时间**: 2025-01-XX  
 > **最后更新**: 2025-01-XX  
 > **作者**: AI Assistant  
@@ -233,13 +233,11 @@ CREATE TABLE IF NOT EXISTS bms_topology_field_configs (
     CHECK (display_position IN ('header', 'card', 'footer'))
 );
 
--- BMS BMU 配置表（BMU 页面的串并数和字段配置）
+-- BMS BMU 配置表（BMU 页面的字段配置）
+-- 注意：串并数（series_count、parallel_count）现在从 bms_hierarchy_nodes 表获取，不再在此表配置
 CREATE TABLE IF NOT EXISTS bms_bmu_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     page_config_id INTEGER NOT NULL,              -- 页面配置ID（BMU 页面）
-    series_count INTEGER NOT NULL DEFAULT 0,       -- 串联数（如 15）
-    parallel_count INTEGER NOT NULL DEFAULT 0,      -- 并联数（如 2）
-    has_temperature_points BOOLEAN NOT NULL DEFAULT 0, -- 是否有温度测点
     description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
     description_en TEXT NOT NULL DEFAULT '',        -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -292,6 +290,47 @@ CREATE TABLE IF NOT EXISTS bms_instances (
     FOREIGN KEY(asset_id) REFERENCES assets(id) ON DELETE CASCADE,
     FOREIGN KEY(architecture_id) REFERENCES bms_architectures(id) ON DELETE RESTRICT,
     UNIQUE(asset_id, architecture_id, instance_name)
+);
+
+-- BMS 层级节点表（配置 BMS 的层级结构）
+-- 三级架构：堆 → 簇 → 包 → 单体
+-- 二级架构：簇 → 包 → 单体
+-- 说明：记录每个层级的节点信息，包括数量、串并数等
+CREATE TABLE IF NOT EXISTS bms_hierarchy_nodes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID（外键关联 bms_instances.id）
+    node_type TEXT NOT NULL,                        -- 节点类型：'stack' | 'cluster' | 'pack' | 'cell'
+    parent_node_id INTEGER,                          -- 父节点ID（外键关联 bms_hierarchy_nodes.id，根节点为 NULL）
+    node_number INTEGER NOT NULL,                    -- 节点编号（如：1号簇、2号包）
+    display_name_zh TEXT NOT NULL,                   -- 中文显示名（如 '1号电池簇', '2号电池包'）
+    display_name_en TEXT NOT NULL,                   -- 英文显示名（如 'Cluster 1', 'Pack 2'）
+    -- 包节点特有字段（仅当 node_type='pack' 时使用）
+    series_count INTEGER,                            -- 串联数（如 15，仅 pack 节点）
+    parallel_count INTEGER,                          -- 并联数（如 2，仅 pack 节点）
+    has_temperature_points BOOLEAN NOT NULL DEFAULT 0, -- 是否有温度测点（仅 pack 节点）
+    -- 节点关联（可选，某些节点可能关联到独立的资产）
+    associated_asset_id INTEGER,                     -- 关联的资产ID（外键关联 assets.id，可选）
+    enabled BOOLEAN NOT NULL DEFAULT 1,              -- 是否启用
+    metadata_json TEXT NOT NULL DEFAULT '{}',       -- 自定义元数据JSON
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
+    FOREIGN KEY(parent_node_id) REFERENCES bms_hierarchy_nodes(id) ON DELETE CASCADE,
+    FOREIGN KEY(associated_asset_id) REFERENCES assets(id) ON DELETE SET NULL,
+    -- 检查约束：节点类型验证
+    CHECK (node_type IN ('stack', 'cluster', 'pack', 'cell')),
+    -- 检查约束：包节点必须有串并数
+    CHECK (
+        (node_type != 'pack') OR 
+        (node_type = 'pack' AND series_count IS NOT NULL AND parallel_count IS NOT NULL)
+    ),
+    -- 检查约束：根节点类型验证（三级架构根节点为 stack，二级架构根节点为 cluster）
+    CHECK (
+        (parent_node_id IS NULL AND node_type IN ('stack', 'cluster')) OR
+        (parent_node_id IS NOT NULL)
+    ),
+    -- 唯一约束：同一实例下，同一父节点下，节点编号唯一
+    UNIQUE(bms_instance_id, parent_node_id, node_number)
 );
 
 -- BMS 字段绑定表（将 BMS 字段与数据来源关联）
@@ -479,7 +518,23 @@ PATCH  /api/bms/bmu-configs/{id}           # 更新 BMU 配置
 DELETE /api/bms/bmu-configs/{id}           # 删除 BMU 配置
 ```
 
-#### 3.2.2 BMS 实例和绑定管理 API
+#### 3.2.2 BMS 实例和层级管理 API
+
+# BMS 实例管理
+GET    /api/bms/instances                  # 获取 BMS 实例列表
+GET    /api/bms/instances/{id}             # 获取 BMS 实例详情
+POST   /api/bms/instances                  # 创建 BMS 实例
+PATCH  /api/bms/instances/{id}             # 更新 BMS 实例
+DELETE /api/bms/instances/{id}             # 删除 BMS 实例
+
+# BMS 层级节点管理
+GET    /api/bms/instances/{id}/hierarchy-nodes        # 获取层级节点树（树形结构）
+GET    /api/bms/instances/{id}/hierarchy-nodes/{node_id}  # 获取节点详情
+POST   /api/bms/instances/{id}/hierarchy-nodes        # 创建层级节点
+PATCH  /api/bms/hierarchy-nodes/{id}                  # 更新层级节点
+DELETE /api/bms/hierarchy-nodes/{id}                  # 删除层级节点
+
+#### 3.2.3 BMS 绑定管理 API
 
 ```
 # BMS 实例管理
@@ -517,7 +572,7 @@ PATCH  /api/bms/bmu-bindings/{id}                   # 更新 BMU 绑定
 DELETE /api/bms/bmu-bindings/{id}                    # 删除 BMU 绑定
 ```
 
-#### 3.2.3 BMS 数据查询 API（用于前端展示）
+#### 3.2.4 BMS 数据查询 API（用于前端展示）
 
 ```
 # 获取 BMS 实例的实时数据
@@ -527,8 +582,9 @@ GET    /api/bms/instances/{id}/data/bau              # 获取 BAU 页面数据�
 GET    /api/bms/instances/{id}/data/bmu              # 获取 BMU 页面数据
 
 # 获取拓扑数据
-GET    /api/bms/instances/{id}/topology/packs        # 获取包列表（二级架构）
-GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级架构）
+GET    /api/bms/instances/{id}/topology/packs        # 获取包列表（二级架构，从层级节点获取）
+GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级架构，从层级节点获取）
+GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（用于拓扑图渲染）
 ```
 
 ### 3.3 前端页面设计
@@ -543,7 +599,8 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 3. 配置字段列表（固定字段 + 可配置字段）
 4. 配置遥信量列表（布尔/枚举/位域）
 5. 配置拓扑图（SYS 页面）
-6. 配置 BMU（串并数、单体字段、温度测点）
+6. 配置层级结构（堆/簇/包节点，包括数量、串并数等）
+7. 配置 BMU（单体字段、温度测点）
 
 #### 3.3.2 BMS 绑定管理页面
 
@@ -553,6 +610,7 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 1. 选择资产（下拉选择，只显示已配置的资产）
 2. 选择架构类型（二级/三级）
 3. 创建 BMS 实例（关联资产和架构，一旦关联，资产即被识别为 BMS）
+4. 配置层级结构（堆/簇/包节点，包括数量、串并数等）
 4. 配置字段绑定（将 BMS 字段与数据来源关联）：
    - 资产字段（主要来源）
    - DI 点（某些 BMS 的 DO 量）
@@ -652,7 +710,8 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
   ↓
 4. 配置拓扑图（SYS 页面）
   ↓
-5. 配置 BMU（串并数、单体字段）
+5. 配置层级结构（堆/簇/包节点，包括数量、串并数等）
+6. 配置 BMU（单体字段）
 ```
 
 ### 5.2 绑定阶段
@@ -665,7 +724,11 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 2. 创建 BMS 实例（关联资产和架构）
    → 一旦关联，资产即被识别为 BMS
   ↓
-3. 配置字段绑定（BMS 字段 → 数据来源）
+3. 配置层级结构（堆/簇/包节点）
+   → 三级架构：创建堆节点 → 创建簇节点（指定数量）→ 创建包节点（指定数量、串并数）
+   → 二级架构：创建簇节点 → 创建包节点（指定数量、串并数）
+  ↓
+4. 配置字段绑定（BMS 字段 → 数据来源）
    → 资产字段（主要）
    → DI 点（某些 BMS 的 DO 量）
    → 二次变量计算（将来实现）
@@ -675,8 +738,10 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
    → DI 点（某些 BMS 的 DO 量）
   ↓
 5. 配置拓扑绑定（拓扑节点字段 → 数据来源）
+   → 拓扑图的节点从层级节点中获取
   ↓
 6. 配置 BMU 绑定（单体字段 → 数据来源）
+   → 包的串并数从层级节点中获取
 ```
 
 ### 5.3 运行阶段
@@ -743,8 +808,11 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 
 ### 6.4 拓扑图处理
 
-- 拓扑图中的节点数量（包数量、簇数量）从资产字段中获取
-- 拓扑图中的节点字段（如包的电压、电流）需要绑定到数据来源（读）
+- **节点数量**：从 `bms_hierarchy_nodes` 表中获取
+  - 三级架构：查询 `node_type='cluster'` 且 `parent_node_id` 指向 stack 节点的所有节点
+  - 二级架构：查询 `node_type='pack'` 且 `parent_node_id` 指向 cluster 节点的所有节点
+- **节点信息**：每个节点的编号、显示名称从 `bms_hierarchy_nodes` 表获取
+- **节点字段**：拓扑图中的节点字段（如簇的电压、电流、SOC）需要绑定到数据来源（读）
 - **簇的分合闸**（三级架构）：
   - 分合闸状态（读）：通过 `read_source_type` 绑定到数据来源
   - 分合闸指令（写）：通过 `write_source_type` 绑定到数据来源（资产字段必须是 COMMAND 类型）
@@ -752,7 +820,7 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 
 ### 6.5 BMU 处理
 
-- 串并数（如 15串2并）在 BMU 配置中设置
+- 串并数（如 15串2并）在层级节点中设置（`bms_hierarchy_nodes` 表的 `series_count` 和 `parallel_count` 字段）
 - 单体字段（电压、温度、SOC、SOH）需要绑定到资产字段
 - 温度测点需要绑定到资产字段（如果资产有温度测点字段）
 
@@ -833,6 +901,7 @@ GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级�
 | v1.2.0 | 2025-01-XX | AI Assistant | 功能增强：<br/>1. 固定字段单独配置（告警状态、电压、电流、功率、断路器状态、断路器指令）<br/>2. 支持写入功能（读写分离，支持 COMMAND/SETPOINT/PARAM_SET）<br/>3. 支持簇分合闸指令绑定（三级架构拓扑图） |
 | v1.2.1 | 2025-01-XX | AI Assistant | 国际化修正：<br/>1. 所有显示名称字段改为双语（display_name_zh/display_name_en）<br/>2. 所有描述字段改为双语（description_zh/description_en）<br/>3. 避免 SQLite 关键字冲突（order_index → sort_order） |
 | v1.2.2 | 2025-01-XX | AI Assistant | 界面位置优化：<br/>1. 拓扑字段配置增加 display_position（header/card/footer）<br/>2. 明确固定字段初始化方式<br/>3. 创建完整的 CSV demo 示例 |
+| v1.2.3 | 2025-01-XX | AI Assistant | 层级结构配置：<br/>1. 新增 bms_hierarchy_nodes 表，配置堆/簇/包节点<br/>2. 支持配置堆下簇数量、簇下包数量<br/>3. 支持配置每个包的串并数<br/>4. 拓扑图和BMU页面从层级节点获取数据 |
 
 ---
 

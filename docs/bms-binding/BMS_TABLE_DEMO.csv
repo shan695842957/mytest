@@ -65,7 +65,42 @@ id,asset_id,architecture_id,instance_name,display_name_zh,display_name_en,enable
 1,100,2,1号电池堆,1号电池堆,Battery Stack 1,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
 
 # ============================================
-# 7. bms_field_bindings（字段绑定表）
+# 7. bms_hierarchy_nodes（BMS 层级节点表）
+# ============================================
+# 说明：配置三级架构的层级结构
+# 示例：1个堆 → 3个簇 → 每个簇10个包 → 每个包15串2并
+# 注意：cell节点通常不需要显式创建，由系统根据串并数自动计算
+id,bms_instance_id,node_type,parent_node_id,node_number,display_name_zh,display_name_en,series_count,parallel_count,has_temperature_points,associated_asset_id,enabled,metadata_json,created_at,updated_at
+# 堆节点（根节点）
+1,1,stack,NULL,1,1号电池堆,Battery Stack 1,NULL,NULL,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+# 簇节点（3个簇，父节点为堆）
+2,1,cluster,1,1,1号电池簇,Cluster 1,NULL,NULL,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+3,1,cluster,1,2,2号电池簇,Cluster 2,NULL,NULL,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+4,1,cluster,1,3,3号电池簇,Cluster 3,NULL,NULL,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+# 包节点（每个簇10个包，15串2并）
+# 簇1的包（1-10号包）
+5,1,pack,2,1,1号电池包,Pack 1,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+6,1,pack,2,2,2号电池包,Pack 2,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+7,1,pack,2,3,3号电池包,Pack 3,15,2,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+8,1,pack,2,4,4号电池包,Pack 4,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+9,1,pack,2,5,5号电池包,Pack 5,15,2,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+10,1,pack,2,6,6号电池包,Pack 6,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+11,1,pack,2,7,7号电池包,Pack 7,15,2,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+12,1,pack,2,8,8号电池包,Pack 8,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+13,1,pack,2,9,9号电池包,Pack 9,15,2,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+14,1,pack,2,10,10号电池包,Pack 10,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+# 簇2的包（1-10号包）
+15,1,pack,3,1,1号电池包,Pack 1,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+16,1,pack,3,2,2号电池包,Pack 2,15,2,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+# ... 簇2的其他包（3-10号）省略，实际应该有10个包
+# 簇3的包（1-10号包）
+25,1,pack,4,1,1号电池包,Pack 1,15,2,1,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+26,1,pack,4,2,2号电池包,Pack 2,15,2,0,NULL,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+# ... 簇3的其他包（3-10号）省略，实际应该有10个包
+# 注意：cell节点通常不需要显式创建，系统根据包的串并数自动计算（15串2并 = 30个单体）
+
+# ============================================
+# 8. bms_field_bindings（字段绑定表）
 # ============================================
 # 说明：SYS 页面字段的数据来源绑定
 # 固定字段绑定示例（堆的电压、电流、功率等）
@@ -82,7 +117,7 @@ id,bms_instance_id,page_config_id,field_config_id,read_source_type,read_asset_ta
 9,1,1,9,asset_field,STACK_SOS,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
 
 # ============================================
-# 8. bms_topology_bindings（拓扑绑定表）
+# 9. bms_topology_bindings（拓扑绑定表）
 # ============================================
 # 说明：拓扑图中簇字段的数据来源绑定
 # 注意：簇编号（cluster_number, topology_field_config_id=1）通常不需要绑定，由系统自动生成
@@ -116,6 +151,7 @@ id,bms_instance_id,topology_config_id,topology_field_config_id,read_source_type,
 # - SOS (sos, sort_order=9)
 #
 # 【下方区域 - 拓扑图】
+# 拓扑图的簇节点从 bms_hierarchy_nodes 表获取（node_type='cluster', parent_node_id=堆节点ID）
 # 每个簇节点卡片显示：
 # - Header（头部）：簇编号 (cluster_number, display_position='header', sort_order=1)
 # - Card（主体）：
@@ -133,3 +169,10 @@ id,bms_instance_id,topology_config_id,topology_field_config_id,read_source_type,
 # 4. sort_order 控制同一位置内的显示顺序
 # 5. 拓扑图字段的 field_key 独立定义，不一定与主页面字段相同（如主页面是 stack_voltage，拓扑图是 cluster_voltage）
 # 6. 拓扑图字段通过 bms_topology_bindings 绑定数据来源，每个簇节点使用相同的字段配置
+# 7. 层级结构通过 bms_hierarchy_nodes 表配置：
+#    - 三级架构：堆节点（根）→ 簇节点（子节点）→ 包节点（子节点）
+#    - 二级架构：簇节点（根）→ 包节点（子节点）
+#    - 堆下簇数量：查询 node_type='cluster' 且 parent_node_id=堆节点ID 的节点数量
+#    - 簇下包数量：查询 node_type='pack' 且 parent_node_id=簇节点ID 的节点数量
+#    - 包的串并数：从 node_type='pack' 的节点的 series_count 和 parallel_count 字段获取
+#    - 单体数量：系统自动计算（series_count * parallel_count，如 15串2并 = 30个单体）
