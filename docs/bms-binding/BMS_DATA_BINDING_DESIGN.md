@@ -1,6 +1,6 @@
 # BMS 数据绑定功能设计文档
 
-> **版本**: v1.3.0  
+> **版本**: v1.4.0  
 > **创建时间**: 2025-01-XX  
 > **最后更新**: 2025-01-XX  
 > **作者**: AI Assistant  
@@ -315,6 +315,16 @@ CREATE TABLE IF NOT EXISTS bms_topology_field_configs (
 CREATE TABLE IF NOT EXISTS bms_bmu_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID（外键关联 bms_instances.id）
+    -- 阈值配置（用于判断单体电压和温度测点的颜色状态）
+    -- 这些阈值对每个BMS实例是一致的
+    voltage_upper_limit REAL,                       -- 电压上限（用于判断过压，超过此值为 alarm）
+    voltage_lower_limit REAL,                       -- 电压下限（用于判断欠压，低于此值为 alarm）
+    voltage_warning_upper_limit REAL,               -- 电压警告上限（超过此值为 warning）
+    voltage_warning_lower_limit REAL,                -- 电压警告下限（低于此值为 warning）
+    temperature_upper_limit REAL,                    -- 温度上限（用于判断过温，超过此值为 alarm）
+    temperature_lower_limit REAL,                    -- 温度下限（用于判断欠温，低于此值为 alarm）
+    temperature_warning_upper_limit REAL,            -- 温度警告上限（超过此值为 warning）
+    temperature_warning_lower_limit REAL,            -- 温度警告下限（低于此值为 warning）
     description_zh TEXT NOT NULL DEFAULT '',        -- 中文描述
     description_en TEXT NOT NULL DEFAULT '',         -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -325,10 +335,11 @@ CREATE TABLE IF NOT EXISTS bms_bmu_configs (
 
 -- BMS BMU 单体字段配置表
 -- 说明：每个 BMS 实例有自己独立的单体字段配置
+-- 注意：温度字段不在此表配置，温度测点单独在 bms_bmu_temperature_points 表中配置
 CREATE TABLE IF NOT EXISTS bms_bmu_cell_field_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bmu_config_id INTEGER NOT NULL,                 -- BMU 配置ID
-    field_key TEXT NOT NULL,                         -- 字段键（如 'voltage', 'temperature', 'soc', 'soh'）
+    field_key TEXT NOT NULL,                         -- 字段键（如 'voltage', 'soc', 'soh'，注意：不包含 'temperature'）
     display_name_zh TEXT NOT NULL,                   -- 中文显示名
     display_name_en TEXT NOT NULL,                   -- 英文显示名
     data_type TEXT NOT NULL,                         -- 数据类型：'number'
@@ -342,6 +353,82 @@ CREATE TABLE IF NOT EXISTS bms_bmu_cell_field_configs (
     comm_instance_id INTEGER,                         -- 通信实例ID（外键关联 comm_instances.id）
     point_id INTEGER,                                 -- 点表点ID（外键关联 point_table_points.id，支持子点）
     sort_order INTEGER NOT NULL DEFAULT 0,           -- 排序索引（避免使用 index 关键字）
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(bmu_config_id) REFERENCES bms_bmu_configs(id) ON DELETE CASCADE,
+    FOREIGN KEY(device_type_tag_id) REFERENCES device_type_tags(id) ON DELETE RESTRICT,
+    FOREIGN KEY(comm_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(point_id) REFERENCES point_table_points(id) ON DELETE RESTRICT,
+    -- 检查约束：字段来源类型验证
+    CHECK (source_type IN ('asset_field', 'di_point')),
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (
+        (source_type = 'asset_field' AND device_type_tag_id IS NOT NULL) OR
+        (source_type = 'di_point' AND comm_instance_id IS NOT NULL AND point_id IS NOT NULL)
+    ),
+    -- 检查约束：field_key 不能是 'temperature'（温度测点单独配置）
+    CHECK (field_key != 'temperature'),
+    UNIQUE(bmu_config_id, field_key)
+);
+
+-- BMS BMU 温度测点配置表
+-- 说明：温度测点不是每个单体都有，需要单独配置
+-- 注意：温度测点的数量从 bms_hierarchy_nodes.has_temperature_points 判断，但具体测点配置在此表
+CREATE TABLE IF NOT EXISTS bms_bmu_temperature_points (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bmu_config_id INTEGER NOT NULL,                 -- BMU 配置ID
+    point_number INTEGER NOT NULL,                    -- 测点编号（如 1, 2, 3...）
+    display_name_zh TEXT NOT NULL,                   -- 中文显示名（如 '测点1', '测点2'）
+    display_name_en TEXT NOT NULL,                   -- 英文显示名（如 'Point 1', 'Point 2'）
+    unit_zh TEXT NOT NULL DEFAULT '℃',              -- 中文单位
+    unit_en TEXT NOT NULL DEFAULT '°C',              -- 英文单位
+    -- 字段来源类型（明确温度测点的数据来源）
+    source_type TEXT NOT NULL,                       -- 字段来源类型：'asset_field'（资产字段）| 'di_point'（DI点）
+    -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
+    device_type_tag_id INTEGER,                      -- 资产字段ID（外键关联 device_type_tags.id）
+    -- 当 source_type='di_point' 时使用
+    comm_instance_id INTEGER,                         -- 通信实例ID（外键关联 comm_instances.id）
+    point_id INTEGER,                                 -- 点表点ID（外键关联 point_table_points.id，支持子点）
+    sort_order INTEGER NOT NULL DEFAULT 0,           -- 排序索引（避免使用 index 关键字）
+    description_zh TEXT NOT NULL DEFAULT '',         -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',         -- 英文描述
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(bmu_config_id) REFERENCES bms_bmu_configs(id) ON DELETE CASCADE,
+    FOREIGN KEY(device_type_tag_id) REFERENCES device_type_tags(id) ON DELETE RESTRICT,
+    FOREIGN KEY(comm_instance_id) REFERENCES comm_instances(id) ON DELETE RESTRICT,
+    FOREIGN KEY(point_id) REFERENCES point_table_points(id) ON DELETE RESTRICT,
+    -- 检查约束：字段来源类型验证
+    CHECK (source_type IN ('asset_field', 'di_point')),
+    -- 检查约束：根据 source_type 验证必填字段
+    CHECK (
+        (source_type = 'asset_field' AND device_type_tag_id IS NOT NULL) OR
+        (source_type = 'di_point' AND comm_instance_id IS NOT NULL AND point_id IS NOT NULL)
+    ),
+    UNIQUE(bmu_config_id, point_number)
+);
+
+-- BMS BMU 其它数据配置表
+-- 说明：某些BMS供应商提供的与单体、温度无关的数据（如均衡器状态等）
+CREATE TABLE IF NOT EXISTS bms_bmu_other_data_configs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bmu_config_id INTEGER NOT NULL,                 -- BMU 配置ID
+    field_key TEXT NOT NULL,                         -- 字段键（如 'balancer_status', 'balancer_current'）
+    display_name_zh TEXT NOT NULL,                   -- 中文显示名
+    display_name_en TEXT NOT NULL,                   -- 英文显示名
+    data_type TEXT NOT NULL,                         -- 数据类型：'number' | 'boolean' | 'enum'
+    unit_zh TEXT NOT NULL DEFAULT '',                -- 中文单位
+    unit_en TEXT NOT NULL DEFAULT '',                -- 英文单位
+    -- 字段来源类型（明确字段的数据来源）
+    source_type TEXT NOT NULL,                       -- 字段来源类型：'asset_field'（资产字段）| 'di_point'（DI点）
+    -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
+    device_type_tag_id INTEGER,                      -- 资产字段ID（外键关联 device_type_tags.id）
+    -- 当 source_type='di_point' 时使用
+    comm_instance_id INTEGER,                         -- 通信实例ID（外键关联 comm_instances.id）
+    point_id INTEGER,                                 -- 点表点ID（外键关联 point_table_points.id，支持子点）
+    sort_order INTEGER NOT NULL DEFAULT 0,           -- 排序索引（避免使用 index 关键字）
+    description_zh TEXT NOT NULL DEFAULT '',         -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',         -- 英文描述
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(bmu_config_id) REFERENCES bms_bmu_configs(id) ON DELETE CASCADE,
@@ -433,7 +520,9 @@ CREATE TABLE IF NOT EXISTS bms_hierarchy_nodes (
 -- bms_field_configs 表已经包含了字段来源信息（source_type、device_type_tag_id、comm_instance_id、point_id）
 -- bms_teleindication_configs 表已经包含了遥信量来源信息
 -- bms_topology_field_configs 表已经包含了拓扑字段来源信息
--- bms_bmu_cell_field_configs 表已经包含了单体字段来源信息
+-- bms_bmu_cell_field_configs 表已经包含了单体字段来源信息（不包含温度）
+-- bms_bmu_temperature_points 表已经包含了温度测点来源信息
+-- bms_bmu_other_data_configs 表已经包含了其它数据来源信息
 ```
 
 ### 3.2 后端 API 设计
@@ -506,7 +595,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 4. 配置遥信量列表（布尔/枚举/位域）
 5. 配置拓扑图（SYS 页面）
 6. 配置层级结构（堆/簇/包节点，包括数量、串并数等）
-7. 配置 BMU（单体字段、温度测点）
+7. 配置 BMU（阈值配置、单体字段、温度测点、其它数据）
 
 #### 3.3.2 BMS 配置管理页面（实例级别）
 
@@ -568,7 +657,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
    - 字段配置对话框
    - 遥信量配置对话框（支持三种类型）
    - 拓扑配置对话框
-   - BMU 配置对话框
+   - BMU 配置对话框（阈值配置、单体字段、温度测点、其它数据）
 
 ### 4.3 第三阶段：实例配置管理前端
 
@@ -581,7 +670,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
    - 字段配置对话框（直接选择数据来源：asset_field / custom / di_point）
    - 遥信量配置对话框
    - 拓扑字段配置对话框
-   - BMU 字段配置对话框
+   - BMU 配置对话框（阈值配置、单体字段、温度测点、其它数据）
 
 ### 4.4 第四阶段：测试面板改造
 
@@ -612,7 +701,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 4. 配置拓扑图（SYS 页面）
   ↓
 5. 配置层级结构（堆/簇/包节点，包括数量、串并数等）
-6. 配置 BMU（单体字段）
+6. 配置 BMU（阈值配置、单体字段、温度测点、其它数据）
 ```
 
 ### 5.2 绑定阶段
@@ -642,8 +731,11 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
    → 在 bms_topology_field_configs 表中配置
    → 拓扑图的节点从 bms_hierarchy_nodes 表中获取
   ↓
-7. 配置 BMU 页面字段（单体字段，每个字段配置数据来源）
-   → 在 bms_bmu_cell_field_configs 表中配置
+7. 配置 BMU 页面
+   → 配置阈值（电压上限/下限、温度上限/下限，在 bms_bmu_configs 表中）
+   → 配置单体字段（电压、SOC、SOH等，在 bms_bmu_cell_field_configs 表中，不包含温度）
+   → 配置温度测点（在 bms_bmu_temperature_points 表中单独配置）
+   → 配置其它数据（均衡器等，在 bms_bmu_other_data_configs 表中配置）
    → 包的串并数从 bms_hierarchy_nodes 表中获取
 ```
 
@@ -726,12 +818,22 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 ### 6.5 BMU 处理
 
 - **串并数**：在层级节点中设置（`bms_hierarchy_nodes` 表的 `series_count` 和 `parallel_count` 字段）
-- **单体字段**（电压、温度、SOC、SOH）：在 `bms_bmu_cell_field_configs` 表中配置
+- **阈值配置**：在 `bms_bmu_configs` 表中配置
+  - 电压阈值：`voltage_upper_limit`（过压报警）、`voltage_lower_limit`（欠压报警）、`voltage_warning_upper_limit`（过压警告）、`voltage_warning_lower_limit`（欠压警告）
+  - 温度阈值：`temperature_upper_limit`（过温报警）、`temperature_lower_limit`（欠温报警）、`temperature_warning_upper_limit`（过温警告）、`temperature_warning_lower_limit`（欠温警告）
+  - 这些阈值用于判断单体和温度测点的颜色状态（normal/warning/alarm）
+- **单体字段**（电压、SOC、SOH等，**不包含温度**）：在 `bms_bmu_cell_field_configs` 表中配置
+  - 不同供应商提供的字段不同（某些供应商提供电压、SOC、SOH、温度，我们公司只提供电压）
   - 每个字段的数据来源在配置表中直接定义（`source_type`、`device_type_tag_id`、`comm_instance_id`、`point_id`）
-- **温度测点**：
-  - 从 `bms_hierarchy_nodes.has_temperature_points` 判断是否有温度测点
-  - 如果有温度测点，从 `bms_bmu_cell_field_configs` 表中查询 `field_key='temperature'` 的字段配置
-  - 温度字段的数据来源在配置表中直接定义（`source_type`、`device_type_tag_id`、`comm_instance_id`、`point_id`）
+  - **注意**：温度字段不在此表配置，温度测点单独配置
+- **温度测点**：在 `bms_bmu_temperature_points` 表中单独配置
+  - 温度测点不是每个单体都有，需要单独配置（如电池箱内部署约5个温度测点）
+  - 从 `bms_hierarchy_nodes.has_temperature_points` 判断包是否有温度测点
+  - 如果有温度测点，从 `bms_bmu_temperature_points` 表查询该包的测点配置
+  - 每个温度测点的数据来源在配置表中直接定义（`source_type`、`device_type_tag_id`、`comm_instance_id`、`point_id`）
+- **其它数据**（均衡器等）：在 `bms_bmu_other_data_configs` 表中配置
+  - 某些BMS供应商提供的与单体、温度无关的数据（如均衡器状态、均衡电流等）
+  - 每个字段的数据来源在配置表中直接定义（`source_type`、`device_type_tag_id`、`comm_instance_id`、`point_id`）
 
 ---
 
@@ -814,6 +916,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 | v1.2.2 | 2025-01-XX | AI Assistant | 界面位置优化：<br/>1. 拓扑字段配置增加 display_position（header/card/footer）<br/>2. 明确固定字段初始化方式<br/>3. 创建完整的 CSV demo 示例 |
 | v1.2.3 | 2025-01-XX | AI Assistant | 层级结构配置：<br/>1. 新增 bms_hierarchy_nodes 表，配置堆/簇/包节点<br/>2. 支持配置堆下簇数量、簇下包数量<br/>3. 支持配置每个包的串并数<br/>4. 拓扑图和BMU页面从层级节点获取数据 |
 | v1.3.0 | 2025-01-XX | AI Assistant | 重大重构：<br/>1. 所有配置表关联到 bms_instances（每个实例独立配置）<br/>2. 字段配置表直接包含数据来源信息（外键关联，不使用名称依赖）<br/>3. 删除独立的绑定表，绑定信息集成到配置表<br/>4. 明确 BAU、BCU、BMU 页面的配置方式 |
+| v1.4.0 | 2025-01-XX | AI Assistant | BMU 功能增强：<br/>1. BMU 配置表添加阈值字段（电压/温度上下限，用于判断颜色状态）<br/>2. 温度测点单独配置（bms_bmu_temperature_points 表）<br/>3. 添加其它数据配置（bms_bmu_other_data_configs 表，如均衡器等）<br/>4. 单体字段配置移除温度字段（温度单独配置） |
 
 ---
 
