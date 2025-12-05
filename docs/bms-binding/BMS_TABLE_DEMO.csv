@@ -1,0 +1,135 @@
+# BMS 数据绑定表设计 Demo（CSV 格式）
+# 说明：本文件展示所有 BMS 相关表的示例数据
+# 场景：三级架构 BMS，SYS 页面包含固定字段和可配置字段，拓扑图显示簇信息
+
+# ============================================
+# 1. bms_architectures（BMS 架构类型表）
+# ============================================
+id,name,display_name_zh,display_name_en,description_zh,description_en,created_at,updated_at
+1,level2,二级架构,Level 2 Architecture,电池簇 → 电池包 → 电池单体,Battery Cluster → Battery Pack → Battery Cell,2025-01-01 00:00:00,2025-01-01 00:00:00
+2,level3,三级架构,Level 3 Architecture,电池堆 → 电池簇 → 电池包 → 电池单体,Battery Stack → Battery Cluster → Battery Pack → Battery Cell,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 2. bms_page_configs（BMS 页面配置表）
+# ============================================
+# 说明：三级架构的页面配置
+id,architecture_id,page_type,display_name_zh,display_name_en,description_zh,description_en,created_at,updated_at
+1,2,SYS,系统监控,System Monitoring,三级架构系统监控页面,Level 3 System Monitoring Page,2025-01-01 00:00:00,2025-01-01 00:00:00
+2,2,BAU,堆控制单元,Stack Control Unit,三级架构堆控制单元页面,Level 3 Stack Control Unit Page,2025-01-01 00:00:00,2025-01-01 00:00:00
+3,2,BCU,簇控制单元,Cluster Control Unit,三级架构簇控制单元页面,Level 3 Cluster Control Unit Page,2025-01-01 00:00:00,2025-01-01 00:00:00
+4,2,BMU,包管理单元,Pack Management Unit,三级架构包管理单元页面,Level 3 Pack Management Unit Page,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 3. bms_field_configs（BMS 字段配置表）
+# ============================================
+# 说明：SYS 页面的字段配置（固定字段 + 可配置字段）
+# 固定字段：fault, voltage, current, power, breaker_status, breaker_command
+# 可配置字段：soc, soh, sos（根据供应商配置）
+id,page_config_id,field_key,display_name_zh,display_name_en,field_type,data_type,unit_zh,unit_en,is_required,is_readable,is_writable,sort_order,description_zh,description_en,created_at,updated_at
+1,1,fault,告警状态,Fault Status,fixed,boolean,,,1,1,0,1,告警状态（所有BMS厂家都能提供）,Fault Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+2,1,voltage,电压,Voltage,fixed,number,V,V,1,1,0,2,电压（所有BMS厂家都能提供）,Voltage (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+3,1,current,电流,Current,fixed,number,A,A,1,1,0,3,电流（所有BMS厂家都能提供）,Current (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+4,1,power,功率,Power,fixed,number,kW,kW,1,1,0,4,功率（所有BMS厂家都能提供，可能通过计算）,Power (available from all BMS vendors, may be calculated),2025-01-01 00:00:00,2025-01-01 00:00:00
+5,1,breaker_status,断路器状态,Breaker Status,fixed,boolean,,,1,1,0,5,断路器状态（所有BMS厂家都能提供）,Breaker Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+6,1,breaker_command,断路器指令,Breaker Command,fixed,boolean,,,1,1,1,6,断路器指令（所有BMS厂家都能提供）,Breaker Command (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+7,1,soc,荷电状态,State of Charge,dynamic,number,%,%,0,1,0,7,SOC（取决于供应商）,SOC (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+8,1,soh,健康状态,State of Health,dynamic,number,%,%,0,1,0,8,SOH（取决于供应商）,SOH (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+9,1,sos,安全状态,State of Safety,dynamic,number,%,%,0,1,0,9,SOS（取决于供应商）,SOS (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 4. bms_topology_configs（BMS 拓扑配置表）
+# ============================================
+# 说明：三级架构 SYS 页面的拓扑图配置（显示簇）
+id,page_config_id,topology_type,display_name_zh,display_name_en,description_zh,description_en,created_at,updated_at
+1,1,cluster,电池簇,Battery Cluster,三级架构拓扑图中的簇节点,Cluster nodes in Level 3 topology diagram,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 5. bms_topology_field_configs（拓扑字段配置表）
+# ============================================
+# 说明：拓扑图中每个簇节点显示的字段
+# display_position: 'header'（卡片头部，如簇编号）、'card'（卡片主体，如电压、电流、SOC）、'footer'（卡片底部，如分合闸按钮）
+# 注意：拓扑图的字段键独立定义，不一定与主页面字段相同
+id,topology_config_id,field_key,display_name_zh,display_name_en,display_position,sort_order,created_at,updated_at
+1,1,cluster_number,簇编号,Cluster Number,header,1,2025-01-01 00:00:00,2025-01-01 00:00:00
+2,1,cluster_voltage,簇电压,Cluster Voltage,card,1,2025-01-01 00:00:00,2025-01-01 00:00:00
+3,1,cluster_current,簇电流,Cluster Current,card,2,2025-01-01 00:00:00,2025-01-01 00:00:00
+4,1,cluster_soc,簇SOC,Cluster SOC,card,3,2025-01-01 00:00:00,2025-01-01 00:00:00
+5,1,cluster_breaker_status,分合闸状态,Breaker Status,footer,1,2025-01-01 00:00:00,2025-01-01 00:00:00
+6,1,cluster_breaker_command,分合闸指令,Breaker Command,footer,2,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 6. bms_instances（BMS 实例表）
+# ============================================
+# 说明：创建一个三级架构的 BMS 实例
+id,asset_id,architecture_id,instance_name,display_name_zh,display_name_en,enabled,metadata_json,created_at,updated_at
+1,100,2,1号电池堆,1号电池堆,Battery Stack 1,1,{},2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 7. bms_field_bindings（字段绑定表）
+# ============================================
+# 说明：SYS 页面字段的数据来源绑定
+# 固定字段绑定示例（堆的电压、电流、功率等）
+id,bms_instance_id,page_config_id,field_config_id,read_source_type,read_asset_tag_name,read_instance_id,read_point_name,write_source_type,write_asset_tag_name,write_instance_id,write_point_name,created_at,updated_at
+1,1,1,1,asset_field,STACK_FAULT_STATUS,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+2,1,1,2,asset_field,STACK_VOLTAGE,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+3,1,1,3,asset_field,STACK_CURRENT,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+4,1,1,4,asset_field,STACK_POWER,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+5,1,1,5,asset_field,STACK_BREAKER_STATUS,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+6,1,1,6,asset_field,STACK_BREAKER_STATUS,,,asset_field,STACK_BREAKER_COMMAND,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+# 可配置字段绑定示例（SOC、SOH、SOS）
+7,1,1,7,asset_field,STACK_SOC,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+8,1,1,8,asset_field,STACK_SOH,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+9,1,1,9,asset_field,STACK_SOS,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 8. bms_topology_bindings（拓扑绑定表）
+# ============================================
+# 说明：拓扑图中簇字段的数据来源绑定
+# 注意：簇编号（cluster_number, topology_field_config_id=1）通常不需要绑定，由系统自动生成
+id,bms_instance_id,topology_config_id,topology_field_config_id,read_source_type,read_asset_tag_name,read_instance_id,read_point_name,write_source_type,write_asset_tag_name,write_instance_id,write_point_name,created_at,updated_at
+# 簇电压（从资产字段读取，对应 topology_field_config_id=2）
+1,1,1,2,asset_field,CLUSTER_VOLTAGE,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+# 簇电流（从资产字段读取，对应 topology_field_config_id=3）
+2,1,1,3,asset_field,CLUSTER_CURRENT,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+# 簇SOC（从资产字段读取，可配置，对应 topology_field_config_id=4）
+3,1,1,4,asset_field,CLUSTER_SOC,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+# 簇分合闸状态（读）和指令（写），对应 topology_field_config_id=5（状态）和6（指令）
+4,1,1,5,asset_field,CLUSTER_BREAKER_STATUS,,,,,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+5,1,1,6,asset_field,CLUSTER_BREAKER_STATUS,,,asset_field,CLUSTER_BREAKER_COMMAND,,,2025-01-01 00:00:00,2025-01-01 00:00:00
+
+# ============================================
+# 界面显示说明
+# ============================================
+# SYS 页面布局：
+# 
+# 【上方区域 - 固定字段】
+# - 告警状态 (fault, sort_order=1)
+# - 电压 (voltage, sort_order=2)
+# - 电流 (current, sort_order=3)
+# - 功率 (power, sort_order=4)
+# - 断路器状态 (breaker_status, sort_order=5)
+# - 断路器指令按钮 (breaker_command, sort_order=6)
+#
+# 【中间区域 - 可配置字段】
+# - SOC (soc, sort_order=7)
+# - SOH (soh, sort_order=8)
+# - SOS (sos, sort_order=9)
+#
+# 【下方区域 - 拓扑图】
+# 每个簇节点卡片显示：
+# - Header（头部）：簇编号 (cluster_number, display_position='header', sort_order=1)
+# - Card（主体）：
+#   - 簇电压 (cluster_voltage, display_position='card', sort_order=1)
+#   - 簇电流 (cluster_current, display_position='card', sort_order=2)
+#   - 簇SOC (cluster_soc, display_position='card', sort_order=3)
+# - Footer（底部）：
+#   - 分合闸状态 (cluster_breaker_status, display_position='footer', sort_order=1)
+#   - 分合闸指令按钮 (cluster_breaker_command, display_position='footer', sort_order=2)
+#
+# 说明：
+# 1. 固定字段通过 field_type='fixed' 标识，is_required=1，系统初始化时自动创建
+# 2. 可配置字段通过 field_type='dynamic' 标识，is_required=0，用户可配置
+# 3. 拓扑图字段通过 bms_topology_field_configs 配置，display_position 控制显示位置（header/card/footer）
+# 4. sort_order 控制同一位置内的显示顺序
+# 5. 拓扑图字段的 field_key 独立定义，不一定与主页面字段相同（如主页面是 stack_voltage，拓扑图是 cluster_voltage）
+# 6. 拓扑图字段通过 bms_topology_bindings 绑定数据来源，每个簇节点使用相同的字段配置
