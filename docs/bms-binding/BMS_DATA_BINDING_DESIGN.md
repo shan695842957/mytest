@@ -215,14 +215,15 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
 -- BMS 遥信量配置表
 -- 注意：位域拆分已在 point_table_points.parse_rules_json 中配置，此处仅配置业务显示信息
 -- 说明：每个 BMS 实例有自己独立的遥信量配置
-CREATE TABLE IF NOT EXISTS bms_telecontrol_configs (
+-- 术语说明：遥信（Teleindication/Tele-signal）指状态信号，不是遥控（Telecontrol）
+CREATE TABLE IF NOT EXISTS bms_teleindication_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID（外键关联 bms_instances.id）
     page_type TEXT NOT NULL,                        -- 页面类型：'BCU' | 'BAU'
-    telecontrol_key TEXT NOT NULL,                  -- 遥信量键（如 'total_overvoltage'）
+    teleindication_key TEXT NOT NULL,                -- 遥信量键（如 'total_overvoltage'）
     display_name_zh TEXT NOT NULL,                  -- 中文显示名
     display_name_en TEXT NOT NULL,                  -- 英文显示名
-    telecontrol_type TEXT NOT NULL,                 -- 遥信类型：'boolean' | 'enum' | 'bitfield'
+    teleindication_type TEXT NOT NULL,               -- 遥信类型：'boolean' | 'enum' | 'bitfield'
     -- 字段来源类型（明确遥信量的数据来源）
     source_type TEXT NOT NULL,                      -- 字段来源类型：'asset_field'（资产字段）| 'di_point'（DI点）
     -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
@@ -247,7 +248,7 @@ CREATE TABLE IF NOT EXISTS bms_telecontrol_configs (
         (source_type = 'asset_field' AND device_type_tag_id IS NOT NULL) OR
         (source_type = 'di_point' AND comm_instance_id IS NOT NULL AND point_id IS NOT NULL)
     ),
-    UNIQUE(bms_instance_id, page_type, telecontrol_key)
+    UNIQUE(bms_instance_id, page_type, teleindication_key)
 );
 
 -- BMS 拓扑配置表（SYS 页面的拓扑图配置）
@@ -430,7 +431,7 @@ CREATE TABLE IF NOT EXISTS bms_hierarchy_nodes (
 
 -- 注意：字段绑定信息现在直接存储在字段配置表中，不再需要单独的绑定表
 -- bms_field_configs 表已经包含了字段来源信息（source_type、device_type_tag_id、comm_instance_id、point_id）
--- bms_telecontrol_configs 表已经包含了遥信量来源信息
+-- bms_teleindication_configs 表已经包含了遥信量来源信息
 -- bms_topology_field_configs 表已经包含了拓扑字段来源信息
 -- bms_bmu_cell_field_configs 表已经包含了单体字段来源信息
 ```
@@ -700,7 +701,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 
 ### 6.3 遥信量处理（BCU/BAU 页面）
 
-- **数据来源**：在 `bms_telecontrol_configs` 表中直接定义
+- **数据来源**：在 `bms_teleindication_configs` 表中直接定义
   - **资产字段**（主要）：通过外键 `device_type_tag_id` 关联到 `device_type_tags.id`
     - 故障等级和枚举值使用资产字段的配置（`device_type_tags.severity` 和 `enum_json`）
   - **DI 点**（某些 BMS 的 DO 量）：通过外键 `comm_instance_id` 和 `point_id` 关联

@@ -52,12 +52,13 @@ id,bms_instance_id,page_type,field_key,display_name_zh,display_name_en,field_typ
 9,1,SYS,sos,安全状态,State of Safety,dynamic,number,%,%,0,1,0,asset_field,1009,NULL,NULL,NULL,NULL,NULL,9,SOS（取决于供应商）,SOS (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
 
 # ============================================
-# 5. bms_telecontrol_configs（BMS 遥信量配置表 - 实例级别）
+# 5. bms_teleindication_configs（BMS 遥信量配置表 - 实例级别）
 # ============================================
 # 说明：BCU/BAU 页面的遥信量配置
 # 注意：每个 BMS 实例有自己独立的遥信量配置，数据来源直接在配置表中定义
+# 术语说明：遥信（Teleindication/Tele-signal）指状态信号，不是遥控（Telecontrol）
 # 示例：BCU 页面的遥信量配置
-id,bms_instance_id,page_type,telecontrol_key,display_name_zh,display_name_en,telecontrol_type,source_type,device_type_tag_id,comm_instance_id,point_id,sort_order,description_zh,description_en,created_at,updated_at
+id,bms_instance_id,page_type,teleindication_key,display_name_zh,display_name_en,teleindication_type,source_type,device_type_tag_id,comm_instance_id,point_id,sort_order,description_zh,description_en,created_at,updated_at
 1,1,BCU,total_overvoltage,总过压,Total Overvoltage,boolean,asset_field,2001,NULL,NULL,1,总过压报警,Total Overvoltage Alarm,2025-01-01 00:00:00,2025-01-01 00:00:00
 2,1,BCU,run_mode,运行模式,Run Mode,enum,asset_field,2002,NULL,NULL,2,运行模式（0=待机,1=故障,2=开机）,Run Mode (0=Standby,1=Fault,2=Running),2025-01-01 00:00:00,2025-01-01 00:00:00
 3,1,BCU,status_word,状态字,Status Word,bitfield,di_point,NULL,3001,4001,3,状态字（位域，通过子点映射）,Status Word (bitfield, mapped via sub-points),2025-01-01 00:00:00,2025-01-01 00:00:00
@@ -176,8 +177,8 @@ id,bms_instance_id,node_type,parent_node_id,node_number,display_name_zh,display_
 #
 # 【遥信量区域】
 # - 总过压 (total_overvoltage, telecontrol_type='boolean', source_type='asset_field', device_type_tag_id=2001)
-# - 运行模式 (run_mode, telecontrol_type='enum', source_type='asset_field', device_type_tag_id=2002)
-# - 状态字 (status_word, telecontrol_type='bitfield', source_type='di_point', comm_instance_id=3001, point_id=4001)
+# - 运行模式 (run_mode, teleindication_type='enum', source_type='asset_field', device_type_tag_id=2002)
+# - 状态字 (status_word, teleindication_type='bitfield', source_type='di_point', comm_instance_id=3001, point_id=4001)
 #
 # BMU 页面布局：
 # 【包选择】
