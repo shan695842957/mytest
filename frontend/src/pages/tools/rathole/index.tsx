@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
+import { Globe2 } from 'lucide-react'
 
 import type { RatholeService, RatholeServiceCreate, RatholeServiceUpdate } from '@/types'
 import {
@@ -173,12 +174,15 @@ export default function RatholePage() {
   const backups = backupsData?.data || []
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 md:space-y-6">
       {/* 头部 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('rathole.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('rathole.description')}</p>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Globe2 className="h-5 w-5" />
+            {t('rathole.title')}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('rathole.description')}</p>
         </div>
       </div>
 
@@ -196,12 +200,27 @@ export default function RatholePage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="services">📋 {t('rathole.serviceList')}</TabsTrigger>
-          <TabsTrigger value="config">⚙️ {t('rathole.globalConfig')}</TabsTrigger>
-          <TabsTrigger value="preview">📄 {t('rathole.tomlPreview')}</TabsTrigger>
-          <TabsTrigger value="backups">💾 {t('rathole.backupManagement')}</TabsTrigger>
-        </TabsList>
+        {/* 移动端：横向滚动容器，桌面端：网格布局 */}
+        <div className="w-full overflow-x-auto md:overflow-x-visible scrollbar-hide">
+          <TabsList className="inline-flex w-fit md:grid md:w-full md:grid-cols-4">
+            <TabsTrigger value="services" className="flex-shrink-0 whitespace-nowrap px-3 md:px-2">
+              <span className="hidden md:inline">📋 </span>
+              {t('rathole.serviceList')}
+            </TabsTrigger>
+            <TabsTrigger value="config" className="flex-shrink-0 whitespace-nowrap px-3 md:px-2">
+              <span className="hidden md:inline">⚙️ </span>
+              {t('rathole.globalConfig')}
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="flex-shrink-0 whitespace-nowrap px-3 md:px-2">
+              <span className="hidden md:inline">📄 </span>
+              {t('rathole.tomlPreview')}
+            </TabsTrigger>
+            <TabsTrigger value="backups" className="flex-shrink-0 whitespace-nowrap px-3 md:px-2">
+              <span className="hidden md:inline">💾 </span>
+              {t('rathole.backupManagement')}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Tab 1: 服务列表 */}
         <TabsContent value="services">

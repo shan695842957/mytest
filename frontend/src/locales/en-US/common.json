@@ -107,7 +107,8 @@
     "view": "View",
     "download": "Download",
     "upload": "Upload",
-    "restore": "Restore"
+    "restore": "Restore",
+    "close": "Close"
   },
   "field": {
     "createdAt": "Created At",
@@ -123,5 +124,6 @@
   "table": {
     "noData": "No data",
     "loading": "Loading..."
-  }
+  },
+  "detail": "Detail"
 }

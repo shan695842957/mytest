@@ -1,0 +1,94 @@
+{
+  "sidebar": {
+    "title": "Data Point Selection",
+    "description": "Select device data points to query"
+  },
+  "selected": {
+    "title": "Step 1: Selected Data Points & Time Range",
+    "empty": "No data points selected",
+    "hint": "Please select data points from the device tree on the left",
+    "remove": "Remove"
+  },
+  "timeRange": {
+    "label": "Time Range",
+    "start": "Start Time",
+    "end": "End Time",
+    "select": "Select time range"
+  },
+  "analyze": {
+    "button": "Start Analysis",
+    "loading": "Analyzing..."
+  },
+  "result": {
+    "title": "Step 2: Analysis Results",
+    "description": "View historical data trends and detailed data",
+    "tab": {
+      "chart": "Trend Chart",
+      "table": "Detailed Data"
+    }
+  },
+  "chart": {
+    "empty": "No data available. Please select data points and click 'Start Analysis'"
+  },
+  "table": {
+    "empty": "No data available. Please select data points and click 'Start Analysis'",
+    "column": {
+      "time": "Time"
+    }
+  },
+  "tree": {
+    "empty": "No device data available",
+    "error": "Failed to load device tree, please refresh and try again",
+    "search": {
+      "placeholder": "Search data points...",
+      "results": "Found {{count}} results",
+      "noResults": "No matching data points found"
+    },
+    "filter": {
+      "all": "All"
+    },
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All"
+  },
+  "query": {
+    "success": "Query successful",
+    "error": "Query failed"
+  },
+  "export": {
+    "button": "Export Data",
+    "success": "Export successful",
+    "error": {
+      "no_data": "No data to export",
+      "failed": "Export failed"
+    }
+  },
+  "error": {
+    "no_points_selected": "Please select at least one data point",
+    "too_many_points": "Maximum 20 data points allowed",
+    "invalid_time_range": "End time must be later than start time"
+  },
+  "dialog": {
+    "selectDataPoints": "Select Data Points",
+    "description": "Total {{total}} data points, {{selected}} selected (max {{max}})",
+    "search": {
+      "placeholder": "Search data point name...",
+      "results": "Found {{count}} / {{total}} results",
+      "noResults": "No matching data points found"
+    },
+    "selectedCount": "{{count}} / {{max}} selected",
+    "confirm": "Confirm"
+  },
+  "mobile": {
+    "clearAll": "Clear All",
+    "selectDataPoints": "Select Data Points",
+    "empty": {
+      "title": "Select Data Points",
+      "description": "Tap the menu button in the top left to select device data points to query"
+    },
+    "ready": {
+      "title": "Ready to Analyze",
+      "description": "Data points selected. Tap the button below to start analysis"
+    }
+  }
+}
+

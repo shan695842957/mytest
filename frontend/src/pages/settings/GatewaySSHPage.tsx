@@ -30,8 +30,11 @@ export default function GatewaySSHPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('gateway:ssh.title')}</h1>
-          <p className="text-muted-foreground mt-2">{t('gateway:ssh.description')}</p>
+          <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            {t('gateway:ssh.title')}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('gateway:ssh.description')}</p>
         </div>
         <Skeleton className="h-64 w-full" />
       </div>
@@ -41,8 +44,11 @@ export default function GatewaySSHPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('gateway:ssh.title')}</h1>
-        <p className="text-muted-foreground mt-2">{t('gateway:ssh.description')}</p>
+        <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+          <Shield className="h-5 w-5" />
+          {t('gateway:ssh.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">{t('gateway:ssh.description')}</p>
       </div>
 
       <Card>

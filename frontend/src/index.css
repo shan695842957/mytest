@@ -67,6 +67,9 @@
     --chart-3: oklch(0.398 0.07 227.392);
     --chart-4: oklch(0.828 0.189 84.429);
     --chart-5: oklch(0.769 0.188 70.08);
+
+    /* 历史趋势图缩放选区背景（亮色模式） */
+    --history-zoom-bg: oklch(0.9 0 0 / 0.55); /* 浅灰，亮背景上清晰可见 */
   }
 
   .dark,
@@ -95,6 +98,9 @@
     --chart-3: oklch(0.769 0.188 70.08);
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
+
+    /* 历史趋势图缩放选区背景（暗色模式） - 使用明亮蓝灰，增强对比度 */
+    --history-zoom-bg: oklch(0.55 0.04 255 / 0.6);
   }
 
   /* ========== 2. 蓝色专业 (blue) ========== */
@@ -440,26 +446,6 @@
     background-image: linear-gradient(to right, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
                       linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
   }
-
-  /* 能量流动动画 - 从左向右（充电：网侧→电池） */
-  @keyframes flow {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
-  }
-
-  /* 能量流动动画 - 从右向左（放电：电池→网侧） */
-  @keyframes flow-reverse {
-    0% {
-      transform: translateX(100%);
-    }
-    100% {
-      transform: translateX(-100%);
-    }
-  }
 }
 
 /**
@@ -510,5 +496,84 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* ========== 移动端 Safe Area 适配 ========== */
+/* 参考 Android Material Design 安全区域规范 */
+/* https://developer.android.com/design/ui/mobile/guides/layout-and-content/layout-basics */
+
+@layer utilities {
+  /* Safe Area 变量 - 使用 CSS env() 函数 */
+  /* iOS 11+ 和现代 Android 浏览器支持 */
+  :root {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+  }
+
+  /* Safe Area 占位元素 */
+  .safe-area-top {
+    height: var(--safe-area-top);
+    min-height: var(--safe-area-top);
+  }
+
+  .safe-area-bottom {
+    height: var(--safe-area-bottom);
+    min-height: var(--safe-area-bottom);
+  }
+
+  .safe-area-left {
+    width: var(--safe-area-left);
+    min-width: var(--safe-area-left);
+  }
+
+  .safe-area-right {
+    width: var(--safe-area-right);
+    min-width: var(--safe-area-right);
+  }
+
+  /* 移动端页面内容区域 - 自动适配底部导航栏 */
+  .mobile-content-area {
+    padding-bottom: calc(56px + var(--safe-area-bottom)); /* 底部导航栏高度 + Safe Area */
+  }
+
+  /* 移动端主内容区 - 适配顶部和底部 */
+  .mobile-main-content {
+    padding-bottom: calc(56px + var(--safe-area-bottom)); /* Bottom Nav 高度 + Safe Area */
+  }
+
+  @media (max-width: 767px) {
+    .mobile-main-content {
+      padding-top: calc(56px + var(--safe-area-top) + 12px); /* Top App Bar + Safe Area + 额外间距 */
+      min-height: 100vh;
+    }
+  }
+
+  /* 移动端 Toast 偏移 - 避免被底部导航栏遮挡 */
+  /* Sonner Toast 组件在移动端需要向上偏移 */
+  @media (max-width: 767px) {
+    [data-sonner-toaster] {
+      bottom: calc(56px + var(--safe-area-bottom) + 16px) !important;
+      /* 56px (导航栏) + Safe Area + 16px (间距) */
+    }
+  }
+
+  /* 桌面端 Toast 保持默认位置 */
+  @media (min-width: 768px) {
+    [data-sonner-toaster] {
+      bottom: 24px !important;
+      /* 桌面端默认底部间距 */
+    }
+  }
+
+  /* 隐藏滚动条但保持滚动功能 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
   }
 }

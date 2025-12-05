@@ -1,7 +1,12 @@
 /**
- * 主布局组件 - 响应式设计
- * 桌面端：侧边栏 + 顶部栏
- * 移动端：抽屉式侧边栏
+ * 主布局组件 - 移动端优先设计
+ * 
+ * 桌面端（md+）：侧边栏 + 顶部栏 + 主内容区
+ * 移动端（<md）：Top App Bar + 主内容区 + Bottom Navigation
+ * 
+ * 参考 Android Material Design 规范：
+ * - https://developer.android.com/design/ui/mobile/guides/layout-and-content/layout-basics
+ * - https://developer.android.com/design/ui/mobile/guides/layout-and-content/layout-and-nav-patterns
  */
 
 import { Suspense } from 'react'
@@ -9,14 +14,16 @@ import { Outlet } from 'react-router-dom'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
-import { MobileHeader } from './MobileHeader'
 import { Breadcrumb } from './Breadcrumb'
+import { MobileTopBar } from './MobileTopBar'
+import { MobileBottomNav } from './MobileBottomNav'
+import { cn } from '@/lib/utils'
 
 export default function MainLayout() {
   return (
     <>
-      {/* 移动端导航 */}
-      <MobileHeader />
+      {/* 移动端顶部应用栏 */}
+      <MobileTopBar />
       
       {/* 桌面端布局 */}
       <SidebarProvider>
@@ -35,7 +42,13 @@ export default function MainLayout() {
           </header>
           
           {/* 主内容区 */}
-          <main className="flex-1 p-4 md:p-6">
+          <main className={cn(
+            "flex-1",
+            // 移动端：适配顶部和底部导航栏
+            "mobile-main-content md:mobile-content-area",
+            // 桌面端：常规内边距
+            "p-4"
+          )}>
             <Suspense fallback={
               <div className="flex items-center justify-center h-64">
                 <div className="text-muted-foreground">加载中...</div>
@@ -46,8 +59,9 @@ export default function MainLayout() {
           </main>
         </SidebarInset>
       </SidebarProvider>
+      
+      {/* 移动端底部导航栏 */}
+      <MobileBottomNav />
     </>
   )
 }
-
-

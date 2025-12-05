@@ -19,4 +19,6 @@ export * from './dict'
 export * from './lightPanel'
 export * from './protocolType'
 export * from './peripheral'
+export * from './history'
+export * from './topology'
 

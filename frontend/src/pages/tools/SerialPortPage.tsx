@@ -407,17 +407,29 @@ export default function SerialPortPage() {
   const availablePorts = ports.filter((p) => !p.is_opened)
 
   return (
-    <div className="p-6 space-y-6">
-      {/* 页面头部 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Usb className="h-8 w-8" />
-            {t('serial.title')}
-          </h1>
-          <p className="text-muted-foreground mt-2">{t('serial.description')}</p>
-        </div>
-        <div className="flex gap-2">
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <Usb className="h-5 w-5" />
+          {t('serial.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">{t('serial.description')}</p>
+      </div>
+
+      {/* 串口选择和配置 */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>{t('serial.portConfig')}</CardTitle>
+              <CardDescription>
+                {availablePorts.length > 0
+                  ? t('serial.selectPort')
+                  : t('serial.noPorts')}
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -438,18 +450,8 @@ export default function SerialPortPage() {
               {t('serial.closeAll')}
             </Button>
           )}
-        </div>
-      </div>
-
-      {/* 串口选择和配置 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('serial.portConfig')}</CardTitle>
-          <CardDescription>
-            {availablePorts.length > 0
-              ? t('serial.selectPort')
-              : t('serial.noPorts')}
-          </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {availablePorts.length === 0 ? (
@@ -623,7 +625,7 @@ export default function SerialPortPage() {
       {/* 已打开的串口列表 */}
       {openedPorts.size > 0 && (
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
+          <h2 className="text-xl font-bold flex items-center gap-2">
             {t('serial.openedPorts')} ({openedPorts.size})
           </h2>
 

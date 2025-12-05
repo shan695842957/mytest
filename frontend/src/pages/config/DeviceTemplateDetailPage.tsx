@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Plus, Edit, Trash2, MoreHorizontal, Copy } from 'lucide-react'
+import { ArrowLeft, Plus, Edit, Trash2, MoreHorizontal, Copy, Cpu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -98,7 +98,7 @@ export default function DeviceTemplateDetailPage() {
   
   if (isLoadingDetail) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-64 w-full" />
       </div>
@@ -107,7 +107,7 @@ export default function DeviceTemplateDetailPage() {
   
   if (!deviceType) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="space-y-4">
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">{t('deviceType.error.notFound')}</p>
@@ -125,26 +125,22 @@ export default function DeviceTemplateDetailPage() {
   const tagList = (tags?.data as DeviceTypeTag[] | null | undefined) || []
   
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* 顶部信息 */}
-      <Card>
-        <CardHeader className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/config/device-templates')}>
-              <ArrowLeft className="size-4" />
-            </Button>
-            <div>
-              <CardTitle className="text-lg">{deviceType.display_name}</CardTitle>
-              <CardDescription className="font-mono text-xs text-muted-foreground">
-                {deviceType.name}
-              </CardDescription>
-            </div>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {t('deviceType.detail.tags')} · {tagList.length}
-          </div>
-        </CardHeader>
-      </Card>
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/config/device-templates')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Cpu className="h-5 w-5" />
+            {deviceType.display_name}
+          </h1>
+        </div>
+        <p className="text-sm text-muted-foreground mt-1 ml-10">
+          {deviceType.name} · {t('deviceType.detail.tags')} {tagList.length}
+        </p>
+      </div>
       
       {/* Tabs */}
       <Tabs defaultValue="tags" className="space-y-4">

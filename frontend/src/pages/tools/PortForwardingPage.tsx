@@ -14,6 +14,7 @@ import {
   Edit,
   Trash2,
   ChevronDown,
+  ArrowRightLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -356,8 +357,11 @@ export default function PortForwardingPage() {
       {/* 头部 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('portForwarding.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('portForwarding.description')}</p>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <ArrowRightLeft className="h-5 w-5" />
+            {t('portForwarding.title')}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('portForwarding.description')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => setCreateDialogOpen(true)}>

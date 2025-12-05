@@ -434,6 +434,18 @@
   "light_panel.success.status_loaded": "Light panel status loaded successfully",
   "light_panel.error.permission_denied": "Permission denied",
   "light_panel.error.asset_not_found": "Asset not found",
-  "light_panel.error.device_type_not_found": "Device type not found"
+  "light_panel.error.device_type_not_found": "Device type not found",
+  
+  "history.success.tree_loaded": "Device tree loaded successfully",
+  "history.success.tree_empty": "Device tree is empty",
+  "history.success.query_completed": "History data query completed",
+  "history.success.export_completed": "Data export completed",
+  "history.error.invalid_time_range": "Invalid time range",
+  "history.error.time_range_too_large": "Time range too large (max 30 days)",
+  "history.error.no_data_points": "No data points selected",
+  "history.error.too_many_data_points": "Too many data points (max 20)",
+  "history.error.no_data_to_export": "No data to export",
+  "history.error.xlsx_not_implemented": "XLSX format not implemented yet",
+  "history.station.uncategorized": "Uncategorized"
   
 }

@@ -1,15 +1,19 @@
 /**
  * 仪表盘页面
+ * 移动端优化：卡片式单列布局，大按钮易于点击
  */
 
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Users, Shield, Activity, Clock } from 'lucide-react'
+import { Users, Shield, Activity, Clock, UserCog, Settings, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
+import { UserRole } from '@/types'
+import { cn } from '@/lib/utils'
 
 export default function DashboardPage() {
-  const { t } = useTranslation()
-  const { user } = useAuth()
+  const { t } = useTranslation(['common', 'auth', 'menu', 'dashboard'])
+  const { user, hasAnyRole } = useAuth()
   
   const stats = [
     {
@@ -26,8 +30,8 @@ export default function DashboardPage() {
     },
     {
       title: '账号状态',
-      value: user?.is_active ? '正常' : '已禁用',
-      description: user?.is_builtin ? '内置账号' : '普通账号',
+      value: user?.is_active ? t('common:common.enabled') : t('common:common.disabled'),
+      description: user?.is_builtin ? t('auth:user.is_builtin') : t('auth:user.status'),
       icon: Activity,
     },
     {
@@ -38,23 +42,53 @@ export default function DashboardPage() {
     },
   ]
   
+  // 快速访问链接（根据权限过滤）
+  const quickLinks = [
+    {
+      title: t('menu:users'),
+      description: t('dashboard:quickAccess.users'),
+      path: '/users',
+      icon: UserCog,
+      roles: [UserRole.DEVELOPER, UserRole.OPERATOR],
+    },
+    {
+      title: t('menu:profile'),
+      description: t('dashboard:quickAccess.profile'),
+      path: '/profile',
+      icon: Users,
+      roles: [] as UserRole[], // 所有角色
+    },
+    {
+      title: t('menu:settings'),
+      description: t('dashboard:quickAccess.settings'),
+      path: '/settings/frontend',
+      icon: Settings,
+      roles: [] as UserRole[], // 所有角色
+    },
+  ].filter(link => link.roles.length === 0 || hasAnyRole(link.roles))
+  
   return (
-    <div className="space-y-6">
-      {/* 统计卡片 */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-4 md:space-y-6">
+      {/* 统计卡片 - 移动端单列，桌面端多列 */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon
           return (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
+            <Card key={index} className="relative overflow-hidden">
+              <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3 md:pb-2">
+                <CardTitle className="text-sm md:text-sm font-medium">
                   {stat.title}
                 </CardTitle>
-                <Icon className="size-4 text-muted-foreground" />
+                {/* 移动端图标更大 */}
+                <Icon className={cn(
+                  "text-muted-foreground shrink-0",
+                  "size-5 md:size-4" // 移动端 20px，桌面端 16px
+                )} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">
+                {/* 移动端文字更大 */}
+                <div className="text-2xl md:text-2xl font-bold leading-tight">{stat.value}</div>
+                <p className="text-xs md:text-xs text-muted-foreground mt-2 md:mt-1">
                   {stat.description}
                 </p>
               </CardContent>
@@ -63,46 +97,65 @@ export default function DashboardPage() {
         })}
       </div>
       
-      {/* 功能区域 */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* 功能区域 - 移动端单列，桌面端双列 */}
+      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
+        {/* 快速访问 - 移动端大按钮 */}
         <Card>
           <CardHeader>
-            <CardTitle>快速访问</CardTitle>
-            <CardDescription>常用功能入口</CardDescription>
+            <CardTitle className="text-base md:text-lg">{t('dashboard:quickAccess.title', { defaultValue: '快速访问' })}</CardTitle>
+            <CardDescription className="text-sm">{t('dashboard:quickAccess.description', { defaultValue: '常用功能入口' })}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="rounded-lg border p-3 hover:bg-accent transition-colors cursor-pointer">
-              <h4 className="font-medium">用户管理</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                管理系统用户和权限
+          <CardContent className="space-y-2 md:space-y-2">
+            {quickLinks.map((link) => {
+              const Icon = link.icon
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg border p-4 md:p-3",
+                    "hover:bg-accent active:bg-accent/80 transition-colors",
+                    "min-h-[64px] md:min-h-[auto]", // 移动端最小 64px 高度
+                    "touch-manipulation" // 优化触摸响应
+                  )}
+                >
+                  <div className={cn(
+                    "flex items-center justify-center rounded-lg bg-primary/10 p-2",
+                    "size-11 md:size-10 shrink-0" // 移动端图标容器更大
+                  )}>
+                    <Icon className="size-5 md:size-4 text-primary" />
+            </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-base md:text-sm leading-tight">{link.title}</h4>
+                    <p className="text-sm md:text-sm text-muted-foreground mt-1 line-clamp-1">
+                      {link.description}
               </p>
             </div>
-            <div className="rounded-lg border p-3 hover:bg-accent transition-colors cursor-pointer">
-              <h4 className="font-medium">个人中心</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                查看和编辑个人信息
-              </p>
-            </div>
+                  <ChevronRight className="size-5 md:size-4 text-muted-foreground shrink-0" />
+                </Link>
+              )
+            })}
           </CardContent>
         </Card>
         
+        {/* 系统信息 */}
         <Card>
           <CardHeader>
-            <CardTitle>系统信息</CardTitle>
-            <CardDescription>当前系统状态</CardDescription>
+            <CardTitle className="text-base md:text-lg">{t('dashboard:systemInfo.title', { defaultValue: '系统信息' })}</CardTitle>
+            <CardDescription className="text-sm">{t('dashboard:systemInfo.description', { defaultValue: '当前系统状态' })}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between py-2">
-              <span className="text-sm text-muted-foreground">前端版本</span>
-              <span className="font-mono text-sm">v0.2.0</span>
+          <CardContent className="space-y-3 md:space-y-2">
+            <div className="flex justify-between items-center py-2 md:py-2">
+              <span className="text-sm md:text-sm text-muted-foreground">{t('dashboard:systemInfo.version', { defaultValue: '前端版本' })}</span>
+              <span className="font-mono text-sm md:text-sm">v0.3.0</span>
             </div>
-            <div className="flex justify-between py-2">
-              <span className="text-sm text-muted-foreground">主题</span>
-              <span className="font-mono text-sm">科技蓝</span>
+            <div className="flex justify-between items-center py-2 md:py-2">
+              <span className="text-sm md:text-sm text-muted-foreground">{t('dashboard:systemInfo.theme', { defaultValue: '主题' })}</span>
+              <span className="font-mono text-sm md:text-sm">中性经典</span>
             </div>
-            <div className="flex justify-between py-2">
-              <span className="text-sm text-muted-foreground">语言</span>
-              <span className="font-mono text-sm">简体中文</span>
+            <div className="flex justify-between items-center py-2 md:py-2">
+              <span className="text-sm md:text-sm text-muted-foreground">{t('dashboard:systemInfo.language', { defaultValue: '语言' })}</span>
+              <span className="font-mono text-sm md:text-sm">简体中文</span>
             </div>
           </CardContent>
         </Card>

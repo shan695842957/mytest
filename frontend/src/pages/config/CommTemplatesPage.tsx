@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, RefreshCw, Edit, Trash2, Eye, Copy } from 'lucide-react'
+import { Plus, Search, RefreshCw, Edit, Trash2, Eye, Copy, Radio } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -105,61 +105,62 @@ export default function CommTemplatesPage() {
   const items = (data?.data as PointTableTemplate[] | null | undefined) || []
   
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <Card>
-        <CardHeader className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl font-semibold">{t('pointTable.list.title')}</CardTitle>
-            <CardDescription>{t('pointTable.list.description')}</CardDescription>
-          </div>
-          <AuthGuard roles={[UserRole.DEVELOPER, UserRole.OPERATOR]}>
-            <Button
-              onClick={() => {
-                setSelectedTemplate(null)
-                setFormDialogOpen(true)
-              }}
-            >
-              <Plus className="mr-2 size-4" />
-              {t('pointTable.form.create')}
-            </Button>
-          </AuthGuard>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 lg:flex-row">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder={t('pointTable.list.searchPlaceholder')}
-                  className="pl-10"
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Select onValueChange={handleProtocolFilter} defaultValue="all">
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="协议类型" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部协议</SelectItem>
-                  {protocolTypes?.data?.map((pt) => (
-                    <SelectItem key={pt.value} value={pt.value}>
-                      {pt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="icon" onClick={() => refetch()}>
-                <RefreshCw className="size-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <Radio className="h-5 w-5" />
+          {t('pointTable.list.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('pointTable.list.description')}
+        </p>
+      </div>
+
       {/* 点表模板表格 */}
       <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>{t('pointTable.list.title')}</CardTitle>
+          <div className="flex gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('pointTable.list.searchPlaceholder')}
+                className="pl-10 w-[200px]"
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+            <Select onValueChange={handleProtocolFilter} defaultValue="all">
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="协议类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部协议</SelectItem>
+                {protocolTypes?.data?.map((pt) => (
+                  <SelectItem key={pt.value} value={pt.value}>
+                    {pt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t('common:common.refresh')}
+            </Button>
+            <AuthGuard roles={[UserRole.DEVELOPER, UserRole.OPERATOR]}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setSelectedTemplate(null)
+                  setFormDialogOpen(true)
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {t('pointTable.form.create')}
+              </Button>
+            </AuthGuard>
+          </div>
+        </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>

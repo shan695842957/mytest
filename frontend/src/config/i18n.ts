@@ -19,6 +19,9 @@ import zhCN_tools from '@/locales/zh-CN/tools.json'
 import zhCN_config from '@/locales/zh-CN/config.json'
 import zhCN_soe from '@/locales/zh-CN/soe.json'
 import zhCN_lightPanel from '@/locales/zh-CN/lightPanel.json'
+import zhCN_dashboard from '@/locales/zh-CN/dashboard.json'
+import zhCN_history from '@/locales/zh-CN/history.json'
+import zhCN_topology from '@/locales/zh-CN/topology.json'
 import zhCN_testPanel from '@/locales/zh-CN/testPanel.json'
 import enUS_common from '@/locales/en-US/common.json'
 import enUS_auth from '@/locales/en-US/auth.json'
@@ -32,6 +35,9 @@ import enUS_tools from '@/locales/en-US/tools.json'
 import enUS_config from '@/locales/en-US/config.json'
 import enUS_soe from '@/locales/en-US/soe.json'
 import enUS_lightPanel from '@/locales/en-US/lightPanel.json'
+import enUS_dashboard from '@/locales/en-US/dashboard.json'
+import enUS_history from '@/locales/en-US/history.json'
+import enUS_topology from '@/locales/en-US/topology.json'
 import enUS_testPanel from '@/locales/en-US/testPanel.json'
 
 // 支持的语言
@@ -60,6 +66,9 @@ const resources = {
     config: zhCN_config,
     soe: zhCN_soe,
     lightPanel: zhCN_lightPanel,
+    dashboard: zhCN_dashboard,
+    history: zhCN_history,
+    topology: zhCN_topology,
     testPanel: zhCN_testPanel,
   },
   'en-US': {
@@ -75,6 +84,9 @@ const resources = {
     config: enUS_config,
     soe: enUS_soe,
     lightPanel: enUS_lightPanel,
+    dashboard: enUS_dashboard,
+    history: enUS_history,
+    topology: enUS_topology,
     testPanel: enUS_testPanel,
   },
 }
@@ -87,7 +99,7 @@ i18n
     resources,
     fallbackLng: DEFAULT_LOCALE,
     defaultNS: 'common',
-    ns: ['common', 'auth', 'menu', 'audit', 'settings', 'user', 'gateway', 'software', 'tools', 'config', 'soe', 'lightPanel', 'testPanel'],
+    ns: ['common', 'auth', 'menu', 'audit', 'settings', 'user', 'gateway', 'software', 'tools', 'config', 'soe', 'lightPanel', 'dashboard', 'history', 'topology', 'testPanel'],
     
     interpolation: {
       escapeValue: false, // React 已经处理了 XSS

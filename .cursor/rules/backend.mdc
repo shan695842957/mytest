@@ -1,0 +1,1208 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+
+# LCCU-V Backend AI 开发规范
+
+> **核心原则：保持一致性，优先使用现有机制，除非绝对必要，否则不要引入新技术**
+
+---
+
+## 📋 目录
+
+1. [核心原则](#核心原则)
+2. [技术栈清单](#技术栈清单)
+3. [目录结构规范](#目录结构规范)
+4. [开发场景标准步骤](#开发场景标准步骤)
+5. [引入新机制的条件](#引入新机制的条件)
+6. [代码风格规范](#代码风格规范)
+7. [提交前检查清单](#提交前检查清单)
+8. [常见错误示例](#常见错误示例)
+
+---
+
+## 🎯 核心原则
+
+### 1. 一致性优先
+
+```python
+# ❌ 错误：引入新的响应格式
+@router.get("/new-api")
+async def new_api():
+    return {"status": "ok", "result": data}  # 不一致的响应格式
+
+# ✅ 正确：使用统一响应
+@router.get("/new-api")
+async def new_api(locale: str = Depends(get_locale)):
+    return success_response(
+        data=data,
+        message=t("module.success.xxx", locale)
+    )
+```
+
+### 2. 优先参考现有实现
+
+在开发新功能前，**必须**先查看：
+1. **同类功能的实现** - 如开发新的 CRUD API，参考 `app/api/auth.py`
+2. **相关的 CRUD 操作** - 参考 `app/crud/user.py`
+3. **数据库模型定义** - 参考 `app/models/user.py`
+4. **Pydantic Schema** - 参考 `app/schemas/user.py`
+5. **审计装饰器用法** - 参考 `@audit_route` 使用方式
+
+### 3. 不要重复造轮子
+
+如果现有机制已经解决问题，**不要**创建新的：
+- ❌ 创建新的响应格式 → ✅ 使用 `ApiResponse`
+- ❌ 手动记录审计日志 → ✅ 使用 `@audit_route` 装饰器
+- ❌ 手动验证权限 → ✅ 使用 `check_role_permission`（角色检查）或 `check_permission`（用户操作）
+- ❌ 创建新的依赖注入 → ✅ 使用 `app/api/deps.py` 中的现有依赖
+
+---
+
+## 🛠 技术栈清单
+
+### ✅ 必须使用的技术栈
+
+| 分类 | 技术 | 版本 | 用途 |
+|------|------|------|------|
+| **Web 框架** | FastAPI | 0.109+ | API 开发 |
+| **ASGI 服务器** | Uvicorn | 0.27+ | 异步服务器 |
+| **ORM** | SQLAlchemy | 2.0+ | 数据库 ORM（异步） |
+| **数据库驱动** | aiosqlite | 0.20+ | 异步 SQLite |
+| **数据验证** | Pydantic | 2.5+ | Schema 定义和验证 |
+| **密码哈希** | passlib[bcrypt] | 1.7.2 | 密码加密 |
+| **JWT** | python-jose | 3.3+ | Token 认证 |
+| **国际化** | Babel | 2.14+ | i18n 支持 |
+| **环境变量** | python-dotenv | 1.0+ | 配置管理 |
+| **测试** | pytest + httpx | - | 单元测试和集成测试 |
+
+### ❌ 禁止引入的技术
+
+| 禁止技术 | 原因 | 使用什么替代 |
+|----------|------|--------------|
+| Django ORM | 已使用 SQLAlchemy | SQLAlchemy 2.0 |
+| Flask | 已使用 FastAPI | FastAPI |
+| Requests | 不支持异步 | httpx（测试）/ aiohttp |
+| marshmallow | 已使用 Pydantic | Pydantic |
+| Alembic | 项目使用 SQL 脚本 | 直接编写 SQL 迁移脚本 |
+| Redis | 未引入缓存层 | SQLAlchemy 查询缓存 |
+| Celery | 未引入任务队列 | FastAPI BackgroundTasks |
+| PyJWT | 已使用 python-jose | python-jose |
+
+---
+
+## 📁 目录结构规范
+
+```
+backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py              # 应用入口（中间件注册在这里）
+│   ├── config.py            # 配置管理（Settings）
+│   ├── database.py          # 数据库连接
+│   ├── i18n.py              # 国际化工具
+│   │
+│   ├── api/                 # API 路由层
+│   │   ├── __init__.py
+│   │   ├── deps.py          # 依赖注入（get_db, get_current_user 等）
+│   │   ├── health.py        # 健康检查
+│   │   ├── auth.py          # 认证和用户管理 ⭐ 参考这个
+│   │   └── audit.py         # 审计日志查询
+│   │
+│   ├── models/              # SQLAlchemy 模型（数据库表）
+│   │   ├── __init__.py
+│   │   ├── user.py          # User 模型 ⭐ 参考这个
+│   │   └── audit_log.py     # AuditLog 模型
+│   │
+│   ├── schemas/             # Pydantic Schema（请求/响应）
+│   │   ├── __init__.py
+│   │   ├── response.py      # 统一响应 ⭐ 必须使用
+│   │   ├── user.py          # 用户相关 Schema ⭐ 参考这个
+│   │   └── audit.py         # 审计日志 Schema
+│   │
+│   ├── crud/                # CRUD 操作层（数据库操作）
+│   │   ├── __init__.py
+│   │   └── user.py          # User CRUD ⭐ 参考这个
+│   │
+│   ├── core/                # 核心工具模块
+│   │   ├── __init__.py
+│   │   ├── security.py      # JWT、密码哈希 ⭐ 必须使用
+│   │   ├── permissions.py   # 权限检查 ⭐ 必须使用
+│   │   ├── dependencies.py  # 审计辅助函数 ⭐ 必须使用
+│   │   └── audit.py         # AuditLogger（已废弃，用中间件）
+│   │
+│   ├── middleware/          # 中间件
+│   │   ├── __init__.py
+│   │   ├── auth.py          # 认证中间件 ⭐ 自动提取用户
+│   │   └── audit.py         # 审计中间件 ⭐ 自动记录日志
+│   │
+│   ├── scripts/             # 脚本工具
+│   │   ├── __init__.py
+│   │   └── init_builtin_users.py  # 初始化内置账号
+│   │
+│   └── locales/             # 国际化翻译文件
+│       ├── zh_CN.json       # 简体中文 ⭐ 必须添加
+│       └── en_US.json       # 英文 ⭐ 必须添加
+│
+├── database/                # 数据库脚本
+│   ├── init_schema.sql      # 建表脚本
+│   └── migration_*.sql      # 迁移脚本
+│
+├── requirements.txt         # Python 依赖
+├── .env                     # 环境变量配置
+├── run.py                   # 开发服务器启动脚本
+└── README.md                # 项目文档
+```
+
+### 🚫 禁止创建的目录
+
+- ❌ `services/` - 使用 `crud/` 替代
+- ❌ `repositories/` - 使用 `crud/` 替代
+- ❌ `utils/` - 使用 `core/` 替代
+- ❌ `helpers/` - 使用 `core/` 替代
+- ❌ `constants/` - 在 `config.py` 中定义
+- ❌ `exceptions/` - 使用 FastAPI 的 HTTPException
+
+---
+
+## 🎬 开发场景标准步骤
+
+### 场景 1：添加新的 API 模块（如添加设备管理）
+
+**参考文件**: `app/api/auth.py`, `app/models/user.py`, `app/crud/user.py`, `app/schemas/user.py`
+
+#### 步骤：
+
+1. **创建数据库表**（`database/migration_xxx.sql`）
+```sql
+-- 参考 init_schema.sql
+CREATE TABLE IF NOT EXISTS devices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    type VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'offline',
+    created_by INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE INDEX idx_devices_type ON devices(type);
+CREATE INDEX idx_devices_status ON devices(status);
+
+-- 自动更新 updated_at 触发器
+CREATE TRIGGER IF NOT EXISTS update_devices_timestamp 
+AFTER UPDATE ON devices
+FOR EACH ROW
+BEGIN
+    UPDATE devices SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+```
+
+2. **创建 SQLAlchemy 模型**（`app/models/device.py`）
+```python
+# ⭐ 参考 app/models/user.py
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.sql import func
+from app.database import Base
+
+class Device(Base):
+    """设备模型"""
+    __tablename__ = "devices"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False, index=True)
+    type = Column(String(50), nullable=False, index=True)
+    status = Column(String(20), nullable=False, default="offline")
+    created_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+```
+
+3. **创建 Pydantic Schema**（`app/schemas/device.py`）
+```python
+# ⭐ 参考 app/schemas/user.py
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional
+
+class DeviceBase(BaseModel):
+    """设备基础 Schema"""
+    name: str = Field(..., min_length=1, max_length=100, description="设备名称")
+    type: str = Field(..., description="设备类型")
+    status: str = Field(default="offline", description="设备状态")
+
+class DeviceCreate(DeviceBase):
+    """创建设备 Schema"""
+    pass
+
+class DeviceUpdate(BaseModel):
+    """更新设备 Schema"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    type: Optional[str] = None
+    status: Optional[str] = None
+
+class DeviceResponse(DeviceBase):
+    """设备响应 Schema"""
+    id: int
+    created_by: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+    
+    model_config = {"from_attributes": True}
+```
+
+4. **创建 CRUD 操作**（`app/crud/device.py`）
+```python
+# ⭐ 参考 app/crud/user.py
+from typing import Optional, List
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
+from app.models.device import Device
+from app.schemas.device import DeviceCreate, DeviceUpdate
+
+class DeviceCRUD:
+    """设备 CRUD 操作"""
+    
+    async def get_by_id(self, db: AsyncSession, device_id: int) -> Optional[Device]:
+        """根据 ID 获取设备"""
+        result = await db.execute(select(Device).where(Device.id == device_id))
+        return result.scalar_one_or_none()
+    
+    async def get_by_name(self, db: AsyncSession, name: str) -> Optional[Device]:
+        """根据名称获取设备"""
+        result = await db.execute(select(Device).where(Device.name == name))
+        return result.scalar_one_or_none()
+    
+    async def get_multi(
+        self,
+        db: AsyncSession,
+        skip: int = 0,
+        limit: int = 100,
+        device_type: Optional[str] = None
+    ) -> tuple[List[Device], int]:
+        """获取设备列表"""
+        query = select(Device)
+        count_query = select(func.count(Device.id))
+        
+        if device_type:
+            query = query.where(Device.type == device_type)
+            count_query = count_query.where(Device.type == device_type)
+        
+        # 获取总数
+        total_result = await db.execute(count_query)
+        total = total_result.scalar()
+        
+        # 获取列表
+        query = query.offset(skip).limit(limit).order_by(Device.created_at.desc())
+        result = await db.execute(query)
+        devices = result.scalars().all()
+        
+        return list(devices), total
+    
+    async def create(
+        self,
+        db: AsyncSession,
+        device_in: DeviceCreate,
+        creator_id: int
+    ) -> Device:
+        """创建设备"""
+        device = Device(
+            **device_in.model_dump(),
+            created_by=creator_id
+        )
+        db.add(device)
+        await db.commit()
+        await db.refresh(device)
+        return device
+    
+    async def update(
+        self,
+        db: AsyncSession,
+        device: Device,
+        device_in: DeviceUpdate
+    ) -> Device:
+        """更新设备"""
+        update_data = device_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(device, field, value)
+        await db.commit()
+        await db.refresh(device)
+        return device
+    
+    async def delete(self, db: AsyncSession, device: Device) -> None:
+        """删除设备"""
+        await db.delete(device)
+        await db.commit()
+
+# 全局实例
+device_crud = DeviceCRUD()
+```
+
+5. **创建 API 路由**（`app/api/device.py`）
+```python
+# ⭐ 参考 app/api/auth.py
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.schemas.device import DeviceCreate, DeviceUpdate, DeviceResponse
+from app.schemas.response import ApiResponse, success_response, paginated_response
+from app.models.device import Device
+from app.models.user import User
+from app.crud.device import device_crud
+from app.core.dependencies import set_audit_target, set_audit_changes
+from app.middleware.audit import audit_route
+from app.api.deps import get_current_user, get_locale, get_request_id
+from app.i18n import t
+
+router = APIRouter(tags=["设备管理"])
+
+# ⭐ 创建设备
+@router.post(
+    "",
+    response_model=ApiResponse[DeviceResponse],
+    summary="创建设备",
+    description="创建新设备"
+)
+@audit_route(
+    module="device",
+    action="create_device",
+    action_key="audit.action.device_created"
+)
+async def create_device(
+    device_in: DeviceCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale),
+    request_id: str = Depends(get_request_id)
+) -> ApiResponse[DeviceResponse]:
+    """创建设备"""
+    
+    # 检查名称是否已存在
+    existing = await device_crud.get_by_name(db, device_in.name)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=t("device.error.name_exists", locale)
+        )
+    
+    # 创建设备
+    device = await device_crud.create(db, device_in, current_user.id)
+    
+    # ⭐ 设置审计目标（中间件会自动记录）
+    set_audit_target(request, "device", str(device.id), device.name)
+    
+    return success_response(
+        data=DeviceResponse.model_validate(device),
+        message=t("device.success.created", locale),
+        locale=locale,
+        request_id=request_id
+    )
+
+# ⭐ 获取设备列表
+@router.get(
+    "",
+    response_model=ApiResponse[List[DeviceResponse]],
+    summary="获取设备列表",
+    description="分页获取设备列表"
+)
+async def list_devices(
+    skip: int = Query(0, ge=0, description="跳过记录数"),
+    limit: int = Query(20, ge=1, le=100, description="每页记录数"),
+    device_type: Optional[str] = Query(None, description="设备类型筛选"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale),
+    request_id: str = Depends(get_request_id)
+) -> ApiResponse[List[DeviceResponse]]:
+    """获取设备列表"""
+    
+    devices, total = await device_crud.get_multi(db, skip, limit, device_type)
+    
+    # ⭐ 使用分页响应
+    return paginated_response(
+        items=[DeviceResponse.model_validate(d) for d in devices],
+        skip=skip,
+        limit=limit,
+        total=total,
+        message=t("device.success.list", locale),
+        locale=locale,
+        request_id=request_id
+    )
+
+# ⭐ 更新设备
+@router.patch(
+    "/{device_id}",
+    response_model=ApiResponse[DeviceResponse],
+    summary="更新设备",
+    description="更新设备信息"
+)
+@audit_route(
+    module="device",
+    action="update_device",
+    action_key="audit.action.device_updated"
+)
+async def update_device(
+    device_id: int,
+    device_in: DeviceUpdate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale),
+    request_id: str = Depends(get_request_id)
+) -> ApiResponse[DeviceResponse]:
+    """更新设备"""
+    
+    # 获取设备
+    device = await device_crud.get_by_id(db, device_id)
+    if not device:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=t("device.error.not_found", locale)
+        )
+    
+    # ⭐ 记录变更（before）
+    device_before = DeviceResponse.model_validate(device)
+    
+    # 更新设备
+    device = await device_crud.update(db, device, device_in)
+    
+    # ⭐ 设置审计目标和变更
+    set_audit_target(request, "device", str(device.id), device.name)
+    set_audit_changes(
+        request,
+        device_before.model_dump(),
+        DeviceResponse.model_validate(device).model_dump()
+    )
+    
+    return success_response(
+        data=DeviceResponse.model_validate(device),
+        message=t("device.success.updated", locale),
+        locale=locale,
+        request_id=request_id
+    )
+
+# ⭐ 删除设备
+@router.delete(
+    "/{device_id}",
+    response_model=ApiResponse[None],
+    summary="删除设备",
+    description="删除设备"
+)
+@audit_route(
+    module="device",
+    action="delete_device",
+    action_key="audit.action.device_deleted"
+)
+async def delete_device(
+    device_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale),
+    request_id: str = Depends(get_request_id)
+) -> ApiResponse[None]:
+    """删除设备"""
+    
+    # 获取设备
+    device = await device_crud.get_by_id(db, device_id)
+    if not device:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=t("device.error.not_found", locale)
+        )
+    
+    # ⭐ 设置审计目标
+    set_audit_target(request, "device", str(device.id), device.name)
+    
+    # 删除设备
+    await device_crud.delete(db, device)
+    
+    return success_response(
+        data=None,
+        message=t("device.success.deleted", locale),
+        locale=locale,
+        request_id=request_id
+    )
+```
+
+6. **添加国际化翻译**（`app/locales/zh_CN.json` 和 `en_US.json`）
+```json
+// zh_CN.json
+{
+  "device": {
+    "success": {
+      "created": "设备创建成功",
+      "updated": "设备更新成功",
+      "deleted": "设备删除成功",
+      "list": "获取设备列表成功"
+    },
+    "error": {
+      "not_found": "设备不存在",
+      "name_exists": "设备名称已存在"
+    }
+  },
+  "audit": {
+    "action": {
+      "device_created": "创建设备",
+      "device_updated": "更新设备",
+      "device_deleted": "删除设备"
+    },
+    "module": {
+      "device": "设备管理"
+    },
+    "target": {
+      "device": "设备"
+    }
+  }
+}
+```
+
+7. **注册路由**（`app/main.py`）
+```python
+from app.api import health, auth, audit, device  # 导入新的路由
+
+# 注册路由
+app.include_router(
+    device.router,
+    prefix=f"{settings.api_prefix}/devices",
+    tags=["设备管理"]
+)
+```
+
+8. **更新模型导入**（`app/models/__init__.py`）
+```python
+from app.models.user import User, UserRole
+from app.models.audit_log import AuditLog
+from app.models.device import Device  # 添加新模型
+```
+
+---
+
+### 场景 2：添加权限检查
+
+**参考文件**: `app/core/permissions.py`, `app/api/auth.py`
+
+#### 权限检查函数说明
+
+**重要**：项目有两个权限检查函数，使用场景不同：
+
+1. **`check_role_permission`** - 简单的角色权限检查（推荐）
+   - 用途：检查用户是否拥有指定角色或更高权限
+   - 场景：大多数 API 的权限控制（如工具类 API）
+   
+2. **`check_permission`** - 复杂的用户操作权限检查
+   - 用途：检查用户对其他用户的操作权限
+   - 场景：仅用于用户管理 API（create/view/update/delete 用户）
+
+#### 示例 1：角色权限检查（推荐用法）
+
+```python
+# ⭐ 使用 check_role_permission 函数（大多数场景）
+from app.core.permissions import check_role_permission
+from app.models.user import UserRole
+
+@router.post("/devices")
+async def create_device(
+    device_in: DeviceCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale)
+):
+    # ⭐ 检查角色权限（只有 Developer 和 Operator 可以创建设备）
+    check_role_permission(
+        current_user=current_user,
+        required_role=UserRole.OPERATOR,  # Operator 及以上（包括 Developer）
+        error_message=t("device.error.permission_denied", locale)
+    )
+    
+    # 业务逻辑...
+```
+
+**权限级别**：
+- `UserRole.DEVELOPER` (3) - 最高权限
+- `UserRole.OPERATOR` (2) - 中等权限
+- `UserRole.USER` (1) - 基础权限
+
+**规则**：`required_role=UserRole.OPERATOR` 表示 Operator 和 Developer 都可以访问。
+
+#### 示例 2：用户操作权限检查（仅用户管理）
+
+```python
+# ⭐ 仅在用户管理 API 中使用
+from app.core.permissions import check_permission
+
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    target_user: User = Depends(get_user_by_id)
+):
+    # ⭐ 复杂权限检查（高角色删除低角色、内置账号删除同级等）
+    check_permission(
+        operator=current_user,
+        target=target_user,
+        action="delete"  # create/view/update/delete/change_password
+    )
+    
+    # 业务逻辑...
+```
+
+---
+
+### 场景 3：添加自定义依赖注入
+
+**参考文件**: `app/api/deps.py`
+
+如果需要添加新的依赖注入，在 `app/api/deps.py` 中添加：
+
+```python
+# ⭐ 参考现有的 get_current_user
+async def get_device_by_id(
+    device_id: int,
+    db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale)
+) -> Device:
+    """获取设备（依赖注入）"""
+    from app.crud.device import device_crud
+    
+    device = await device_crud.get_by_id(db, device_id)
+    if not device:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=t("device.error.not_found", locale)
+        )
+    return device
+
+# 使用
+@router.patch("/{device_id}")
+async def update_device(
+    device_in: DeviceUpdate,
+    device: Device = Depends(get_device_by_id),  # ⭐ 注入设备对象
+    db: AsyncSession = Depends(get_db)
+):
+    # device 已经自动获取并验证
+    ...
+```
+
+---
+
+### 场景 4：处理数据库迁移
+
+**参考文件**: `database/migration_001_audit_logs.sql`
+
+```sql
+-- database/migration_002_add_devices.sql
+
+-- ⭐ 统一的迁移脚本格式
+
+-- 1. 添加注释说明
+-- 迁移版本: v1.2.0
+-- 创建时间: 2024-01-15
+-- 说明: 添加设备管理表
+
+-- 2. 创建表
+CREATE TABLE IF NOT EXISTS devices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    type VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'offline',
+    created_by INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- 3. 创建索引
+CREATE INDEX idx_devices_type ON devices(type);
+CREATE INDEX idx_devices_status ON devices(status);
+CREATE INDEX idx_devices_created_by ON devices(created_by);
+
+-- 4. 创建触发器
+CREATE TRIGGER IF NOT EXISTS update_devices_timestamp 
+AFTER UPDATE ON devices
+FOR EACH ROW
+BEGIN
+    UPDATE devices SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+
+-- 5. 插入初始数据（如果需要）
+INSERT INTO devices (name, type, status, created_by) 
+VALUES ('默认设备', 'default', 'online', 1);
+```
+
+执行迁移：
+```bash
+sqlite3 data/app.db < database/migration_002_add_devices.sql
+```
+
+---
+
+### 场景 5：添加后台任务
+
+**参考文件**: `app/api/auth.py` 中的异步操作
+
+```python
+from fastapi import BackgroundTasks
+
+# ⭐ 不要引入 Celery，使用 FastAPI 的 BackgroundTasks
+
+def send_notification(device_name: str, status: str):
+    """发送通知（后台任务）"""
+    # 执行耗时操作
+    print(f"设备 {device_name} 状态变更为 {status}")
+
+@router.post("/devices/{device_id}/notify")
+async def notify_device_status(
+    device_id: int,
+    background_tasks: BackgroundTasks,  # ⭐ 注入后台任务
+    device: Device = Depends(get_device_by_id)
+):
+    """触发设备状态通知"""
+    
+    # ⭐ 添加后台任务
+    background_tasks.add_task(send_notification, device.name, device.status)
+    
+    return success_response(
+        data=None,
+        message="通知任务已添加到队列"
+    )
+```
+
+---
+
+## ✅ 引入新机制的条件
+
+只有**同时满足**以下所有条件时，才允许引入新技术或机制：
+
+1. ✅ **现有机制无法实现** - 证明当前技术栈确实无法解决问题
+2. ✅ **经过充分调研** - 对比至少 3 种可选方案，说明选择理由
+3. ✅ **获得批准** - 在项目文档中记录决策过程
+4. ✅ **更新文档** - 更新本规范文档，说明新机制的使用场景
+5. ✅ **团队培训** - 确保所有开发者理解新机制
+
+### 示例：引入 Redis 缓存
+
+**场景**: 数据库查询性能不足，需要引入缓存
+
+**评估**:
+1. ❌ 现有机制无法实现？- **否**，SQLAlchemy 有查询缓存
+2. ❌ 经过充分调研？- **否**，未对比其他方案
+3. ❌ 获得批准？- **否**
+
+**结论**: **不应该引入 Redis**，先优化 SQL 查询和使用 SQLAlchemy 的缓存机制
+
+---
+
+## 🎨 代码风格规范
+
+### 1. 命名规范
+
+```python
+# ⭐ 文件名：小写 + 下划线
+# app/api/device_management.py  ❌ 不要用驼峰
+# app/api/device.py             ✅ 简洁明了
+
+# ⭐ 类名：PascalCase
+class DeviceManager:  # ✅
+class device_manager:  # ❌
+
+# ⭐ 函数名：snake_case
+def get_device_by_id():  # ✅
+def getDeviceById():     # ❌
+
+# ⭐ 常量：UPPER_CASE
+MAX_DEVICES = 100  # ✅
+maxDevices = 100   # ❌
+
+# ⭐ 变量：snake_case
+device_count = 10  # ✅
+deviceCount = 10   # ❌
+```
+
+### 2. 类型注解
+
+```python
+# ⭐ 必须添加类型注解
+from typing import Optional, List
+
+# ✅ 正确
+async def get_device(device_id: int) -> Optional[Device]:
+    ...
+
+async def list_devices(skip: int = 0, limit: int = 100) -> tuple[List[Device], int]:
+    ...
+
+# ❌ 错误：没有类型注解
+async def get_device(device_id):
+    ...
+```
+
+### 3. Docstring 规范
+
+```python
+# ⭐ 所有函数必须有 Docstring
+
+def create_device(db: AsyncSession, device_in: DeviceCreate, creator_id: int) -> Device:
+    """
+    创建设备
+    
+    Args:
+        db: 数据库会话
+        device_in: 设备创建数据
+        creator_id: 创建者 ID
+    
+    Returns:
+        Device: 创建的设备对象
+    
+    Raises:
+        HTTPException: 设备名称已存在
+    """
+    ...
+```
+
+### 4. 导入顺序
+
+```python
+# ⭐ 标准库
+from datetime import datetime
+from typing import List, Optional
+
+# ⭐ 第三方库
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, Field
+
+# ⭐ 项目内部模块
+from app.database import get_db
+from app.models.device import Device
+from app.schemas.device import DeviceCreate
+from app.crud.device import device_crud
+```
+
+---
+
+## ✅ 提交前检查清单
+
+在提交代码前，**必须**确认以下所有项：
+
+### 1. 架构一致性
+- [ ] 没有引入新的技术栈（除非满足引入条件）
+- [ ] 使用了 `ApiResponse` 统一响应格式
+- [ ] 修改操作使用了 `@audit_route` 装饰器
+- [ ] 权限检查使用了正确的函数（`check_role_permission` 或 `check_permission`）
+- [ ] 依赖注入使用了 `app/api/deps.py` 中的现有依赖
+
+### 2. 代码质量
+- [ ] 所有函数都有类型注解
+- [ ] 所有函数都有 Docstring
+- [ ] 代码符合命名规范（snake_case/PascalCase/UPPER_CASE）
+- [ ] 导入语句按标准库、第三方库、项目内部模块顺序排列
+
+### 3. 国际化
+- [ ] 所有用户可见的文本都使用 `t()` 函数
+- [ ] `app/locales/zh_CN.json` 中添加了中文翻译
+- [ ] `app/locales/en_US.json` 中添加了英文翻译
+- [ ] 审计日志的 `action_key` 有对应的翻译
+
+### 4. 数据库
+- [ ] 创建了数据库迁移脚本（`database/migration_*.sql`）
+- [ ] 添加了必要的索引
+- [ ] 添加了 `updated_at` 触发器
+- [ ] 外键关系正确
+
+### 5. 测试和文档
+- [ ] 代码可以正常编译运行
+- [ ] API 可以在 `/docs` 中看到
+- [ ] 更新了相关文档（如果需要）
+- [ ] 代码可读性良好，逻辑清晰
+
+### 6. 审计和权限
+- [ ] POST/PUT/PATCH/DELETE 操作都有审计记录
+- [ ] 敏感操作有权限检查
+- [ ] `set_audit_target` 正确设置了审计目标
+- [ ] `set_audit_changes` 正确记录了数据变更
+
+---
+
+## ❌ 常见错误示例
+
+### 错误 1：不使用统一响应格式
+
+```python
+# ❌ 错误
+@router.get("/devices")
+async def list_devices():
+    return {"status": "ok", "devices": devices}  # 自定义响应格式
+
+# ✅ 正确
+@router.get("/devices")
+async def list_devices(
+    locale: str = Depends(get_locale),
+    request_id: str = Depends(get_request_id)
+):
+    return success_response(
+        data=devices,
+        message=t("device.success.list", locale),
+        locale=locale,
+        request_id=request_id
+    )
+```
+
+### 错误 2：手动记录审计日志
+
+```python
+# ❌ 错误：手动调用 AuditLogger
+@router.post("/devices")
+async def create_device(device_in: DeviceCreate, db: AsyncSession):
+    device = await device_crud.create(db, device_in)
+    
+    # 手动记录审计日志（已废弃）
+    await AuditLogger.log(
+        db=db, 
+        module="device",
+        action="create",
+        ...
+    )
+    
+    return success_response(data=device)
+
+# ✅ 正确：使用装饰器
+@router.post("/devices")
+@audit_route(
+    module="device",
+    action="create_device",
+    action_key="audit.action.device_created"
+)
+async def create_device(
+    device_in: DeviceCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    device = await device_crud.create(db, device_in)
+    
+    # ⭐ 只需设置目标，中间件自动记录
+    set_audit_target(request, "device", str(device.id), device.name)
+    
+    return success_response(data=device)
+```
+
+### 错误 3：不使用依赖注入
+
+```python
+# ❌ 错误：手动获取数据库会话
+@router.get("/devices/{device_id}")
+async def get_device(device_id: int):
+    from app.database import AsyncSessionLocal
+    
+    async with AsyncSessionLocal() as db:  # 不要手动创建会话
+        device = await device_crud.get_by_id(db, device_id)
+        return device
+
+# ✅ 正确：使用依赖注入
+@router.get("/devices/{device_id}")
+async def get_device(
+    device_id: int,
+    db: AsyncSession = Depends(get_db)  # ⭐ 使用依赖注入
+):
+    device = await device_crud.get_by_id(db, device_id)
+    return success_response(data=device)
+```
+
+### 错误 4：硬编码文本
+
+```python
+# ❌ 错误：硬编码文本
+@router.post("/devices")
+async def create_device(device_in: DeviceCreate):
+    ...
+    return success_response(
+        data=device,
+        message="设备创建成功"  # ❌ 硬编码中文
+    )
+
+# ✅ 正确：使用国际化
+@router.post("/devices")
+async def create_device(
+    device_in: DeviceCreate,
+    locale: str = Depends(get_locale)
+):
+    ...
+    return success_response(
+        data=device,
+        message=t("device.success.created", locale)  # ⭐ 使用 t() 函数
+    )
+```
+
+### 错误 5：不使用类型注解
+
+```python
+# ❌ 错误：没有类型注解
+async def get_device(device_id):  # 没有参数类型
+    ...  # 没有返回类型
+
+# ✅ 正确：完整的类型注解
+async def get_device(device_id: int) -> Optional[Device]:
+    ...
+```
+
+### 错误 6：权限检查函数使用错误
+
+```python
+# ❌ 错误：在工具类 API 中使用了错误的权限检查函数
+from app.core.permissions import check_permission  # ❌ 用错了函数
+
+@router.post("/tools/port-forwarding")
+async def create_rule(
+    rule_in: PortForwardingCreate,
+    current_user: User = Depends(get_current_user)
+):
+    # ❌ check_permission 需要 operator/target/action 参数
+    check_permission(
+        current_user=current_user,  # ❌ 参数名错误
+        required_role=UserRole.OPERATOR,
+        error_message="..."
+    )
+    # TypeError: check_permission() got an unexpected keyword argument 'current_user'
+
+# ✅ 正确：使用 check_role_permission
+from app.core.permissions import check_role_permission  # ✅ 正确的函数
+
+@router.post("/tools/port-forwarding")
+async def create_rule(
+    rule_in: PortForwardingCreate,
+    current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale)
+):
+    # ✅ 使用 check_role_permission 检查角色权限
+    check_role_permission(
+        current_user=current_user,
+        required_role=UserRole.OPERATOR,
+        error_message=t("port_forwarding.error.permission_denied", locale)
+    )
+    
+    # 业务逻辑...
+```
+
+### 错误 7：paginated_response 参数错误
+
+```python
+# ❌ 错误：使用了错误的参数名
+from app.schemas.response import paginated_response
+
+@router.get("/rules")
+async def list_rules(skip: int = 0, limit: int = 20):
+    rules, total = await crud.get_multi(db, skip, limit)
+    
+    return paginated_response(
+        data=rules,           # ❌ 应该是 items
+        page=skip // limit + 1,  # ❌ 应该是 skip
+        page_size=limit,      # ❌ 应该是 limit
+        total=total,
+        message="...",
+        locale=locale,
+        request_id=request_id
+    )
+    # TypeError: paginated_response() got an unexpected keyword argument 'data'
+
+# ✅ 正确：使用正确的参数名
+@router.get("/rules")
+async def list_rules(
+    skip: int = 0, 
+    limit: int = 20,
+    db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
+    request_id: str = Depends(get_request_id)
+):
+    rules, total = await crud.get_multi(db, skip, limit)
+    
+    # ⭐ 正确参数：items, skip, limit, total
+    return paginated_response(
+        items=rules,          # ✅ 使用 items
+        skip=skip,            # ✅ 使用 skip
+        limit=limit,          # ✅ 使用 limit
+        total=total,
+        message=t("xxx.success.list", locale),
+        locale=locale,
+        request_id=request_id
+    )
+```
+
+**正确参数列表**：
+- `items` - 数据列表（不是 data）
+- `skip` - 跳过记录数（不是 page）
+- `limit` - 每页数量（不是 page_size）
+- `total` - 总记录数
+- `message` - 响应消息
+- `locale` - 语言
+- `request_id` - 请求ID
+
+### 错误 8：引入不必要的依赖
+
+```python
+# ❌ 错误：引入新的时间处理库
+import arrow  # 不要引入 arrow
+
+created_at = arrow.now()  # 使用新库
+
+# ✅ 正确：使用标准库
+from datetime import datetime
+
+created_at = datetime.now()  # 使用标准库
+```
+
+---
+
+## 📚 配套文档
+
+| 文档 | 说明 |
+|------|------|
+| `AI_DEVELOPMENT_RULES.md` | **本文档**，AI 开发规范 |
+| `README.md` | 项目概述和快速开始 |
+| `UNIFIED_SYSTEMS.md` | 统一响应、审计、国际化系统详细文档 |
+| `AUDIT_BEST_PRACTICES.md` | 审计系统三种方案对比 |
+| `MIGRATION_COMPLETE.md` | 审计系统迁移完成报告 |
+| `AUTH_MODULE.md` | 认证模块完整文档 |
+| `QUICK_START.md` | 快速开始指南 |
+
+---
+
+## 🎯 总结
+
+### 核心原则（必须记住）：
+
+1. **✅ 一致性优先** - 先参考现有实现，后开发新功能
+2. **✅ 不要重复造轮子** - 能用现有机制就不创建新的
+3. **✅ 统一响应格式** - 所有 API 使用 `ApiResponse`
+4. **✅ 自动审计** - 使用 `@audit_route` 装饰器
+5. **✅ 权限检查** - 使用 `check_role_permission`（角色检查）或 `check_permission`（用户操作）
+6. **✅ 国际化支持** - 使用 `t()` 函数，不硬编码文本
+7. **✅ 类型安全** - 所有函数都有类型注解
+8. **✅ 依赖注入** - 使用 `Depends()`，不手动创建对象
+
+### 开发流程：
+
+```
+1. 查看现有实现（app/api/auth.py）
+   ↓
+2. 参考目录结构规范
+   ↓
+3. 按标准步骤开发
+   ↓
+4. 添加国际化翻译
+   ↓
+5. 提交前检查清单
+   ↓
+6. 完成 ✅
+```
+
+---
+
+**记住**：如果你不确定某个功能怎么实现，**先查看 `app/api/auth.py` 和 `app/crud/user.py`**！
+

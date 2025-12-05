@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Link2, Save, X, ChevronsUpDown, Check } from 'lucide-react'
+import { ArrowLeft, Link2, Save, X, ChevronsUpDown, Check, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -302,7 +302,8 @@ export default function MappingsPage() {
   
   if (isLoadingAsset) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-64" />
         <Skeleton className="h-64 w-full" />
       </div>
     )
@@ -310,7 +311,7 @@ export default function MappingsPage() {
   
   if (!asset) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="space-y-4">
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">资产不存在</p>
@@ -423,12 +424,21 @@ export default function MappingsPage() {
   )
   
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/config/assets')}>
-          <ArrowLeft className="size-4" />
-        </Button>
-        <h1 className="text-xl font-semibold">{t('mapping.title')}</h1>
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/config/assets')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            {t('mapping.title')}
+          </h1>
+        </div>
+        <p className="text-sm text-muted-foreground mt-1 ml-10">
+          {asset.display_name}
+        </p>
       </div>
       
       {renderBoundInstances()}

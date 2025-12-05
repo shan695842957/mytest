@@ -331,293 +331,278 @@ export default function NetworkCapturePage() {
   const interfaces = interfacesData?.data || []
 
   return (
-    <div className="p-6 space-y-6">
-      {/* 页面头部 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Network className="h-8 w-8" />
-            {t('capture.title')}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {t('capture.description')}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            {tCommon('common.refresh')}
-          </Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                {t('capture.createTask')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{t('capture.createTask')}</DialogTitle>
-                <DialogDescription>
-                  {t('capture.createDescription')}
-                </DialogDescription>
-              </DialogHeader>
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <Network className="h-5 w-5" />
+          {t('capture.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('capture.description')}
+        </p>
+      </div>
 
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('capture.form.name')}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t('capture.form.namePlaceholder')}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+      {/* 创建任务对话框 */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('capture.createTask')}</DialogTitle>
+            <DialogDescription>
+              {t('capture.createDescription')}
+            </DialogDescription>
+          </DialogHeader>
 
-                  <FormField
-                    control={form.control}
-                    name="interface"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('capture.form.interface')}</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('capture.form.name')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t('capture.form.namePlaceholder')}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="interface"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('capture.form.interface')}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('capture.form.interfacePlaceholder')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {interfaces.map((iface) => (
+                          <SelectItem key={iface.name} value={iface.name}>
+                            {iface.display_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {t('capture.form.interfaceDesc')}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* 过滤规则配置器 */}
+              <div className="space-y-4 border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <FormLabel>{t('capture.form.filter')}</FormLabel>
+                  <Select
+                    value={filterMode}
+                    onValueChange={(value: 'simple' | 'advanced') => setFilterMode(value)}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="simple">{t('capture.form.simpleMode')}</SelectItem>
+                      <SelectItem value="advanced">{t('capture.form.advancedMode')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {filterMode === 'simple' ? (
+                  <div className="space-y-4">
+                    {/* 场景选择 */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">{t('capture.scenario.label')}</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant={captureScenario === 'server' ? 'default' : 'outline'}
+                          className="justify-start"
+                          onClick={() => setCaptureScenario('server')}
                         >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t('capture.form.interfacePlaceholder')} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {interfaces.map((iface) => (
-                              <SelectItem key={iface.name} value={iface.name}>
-                                {iface.display_name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          {t('capture.form.interfaceDesc')}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <Server className="h-4 w-4 mr-2" />
+                          {t('capture.scenario.server')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={captureScenario === 'client' ? 'default' : 'outline'}
+                          className="justify-start"
+                          onClick={() => setCaptureScenario('client')}
+                        >
+                          <Wifi className="h-4 w-4 mr-2" />
+                          {t('capture.scenario.client')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={captureScenario === 'multi-device' ? 'default' : 'outline'}
+                          className="justify-start"
+                          onClick={() => setCaptureScenario('multi-device')}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          {t('capture.scenario.multiDevice')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={captureScenario === 'custom' ? 'default' : 'outline'}
+                          className="justify-start"
+                          onClick={() => setCaptureScenario('custom')}
+                        >
+                          <Network className="h-4 w-4 mr-2" />
+                          {t('capture.scenario.custom')}
+                        </Button>
+                      </div>
+                    </div>
 
-                  {/* 过滤规则配置器 */}
-                  <div className="space-y-4 border rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <FormLabel>{t('capture.form.filter')}</FormLabel>
+                    {/* 协议选择 */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">{t('capture.filter.protocol')}</label>
                       <Select
-                        value={filterMode}
-                        onValueChange={(value: 'simple' | 'advanced') => setFilterMode(value)}
+                        value={simpleFilter.protocol}
+                        onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, protocol: value })}
                       >
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="simple">{t('capture.form.simpleMode')}</SelectItem>
-                          <SelectItem value="advanced">{t('capture.form.advancedMode')}</SelectItem>
+                          <SelectItem value="all">{t('capture.filter.allProtocols')}</SelectItem>
+                          <SelectItem value="tcp">TCP</SelectItem>
+                          <SelectItem value="udp">UDP</SelectItem>
+                          <SelectItem value="both">TCP + UDP</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    {filterMode === 'simple' ? (
-                      <div className="space-y-4">
-                        {/* 场景选择 */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">{t('capture.scenario.label')}</label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button
-                              type="button"
-                              variant={captureScenario === 'server' ? 'default' : 'outline'}
-                              className="justify-start"
-                              onClick={() => setCaptureScenario('server')}
-                          >
-                              <Server className="h-4 w-4 mr-2" />
-                              {t('capture.scenario.server')}
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={captureScenario === 'client' ? 'default' : 'outline'}
-                              className="justify-start"
-                              onClick={() => setCaptureScenario('client')}
-                            >
-                              <Wifi className="h-4 w-4 mr-2" />
-                              {t('capture.scenario.client')}
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={captureScenario === 'multi-device' ? 'default' : 'outline'}
-                              className="justify-start"
-                              onClick={() => setCaptureScenario('multi-device')}
-                            >
-                              <Users className="h-4 w-4 mr-2" />
-                              {t('capture.scenario.multiDevice')}
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={captureScenario === 'custom' ? 'default' : 'outline'}
-                              className="justify-start"
-                              onClick={() => setCaptureScenario('custom')}
-                            >
-                              <Network className="h-4 w-4 mr-2" />
-                              {t('capture.scenario.custom')}
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* 协议选择 */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">{t('capture.filter.protocol')}</label>
-                          <Select
-                            value={simpleFilter.protocol}
-                            onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, protocol: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">{t('capture.filter.allProtocols')}</SelectItem>
-                              <SelectItem value="tcp">TCP</SelectItem>
-                              <SelectItem value="udp">UDP</SelectItem>
-                              <SelectItem value="both">TCP + UDP</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* 端口配置 */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">{t('capture.filter.port')}</label>
-                          <div className="flex gap-2">
-                            <Select
-                              value={simpleFilter.portType}
-                              onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, portType: value })}
-                            >
-                              <SelectTrigger className="flex-1 min-w-[140px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="single">{t('capture.portType.single')}</SelectItem>
-                                <SelectItem value="multiple">{t('capture.portType.multiple')}</SelectItem>
-                                <SelectItem value="range">{t('capture.portType.range')}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Select
-                              value={simpleFilter.portDirection}
-                              onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, portDirection: value })}
-                            >
-                              <SelectTrigger className="flex-1 min-w-[130px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="any">{t('capture.direction.any')}</SelectItem>
-                                <SelectItem value="src">{t('capture.direction.src')}</SelectItem>
-                                <SelectItem value="dst">{t('capture.direction.dst')}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          {simpleFilter.portType === 'single' && (
+                    {/* 端口配置 */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">{t('capture.filter.port')}</label>
+                      <div className="flex gap-2">
+                        <Select
+                          value={simpleFilter.portType}
+                          onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, portType: value })}
+                        >
+                          <SelectTrigger className="flex-1 min-w-[140px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="single">{t('capture.portType.single')}</SelectItem>
+                            <SelectItem value="multiple">{t('capture.portType.multiple')}</SelectItem>
+                            <SelectItem value="range">{t('capture.portType.range')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={simpleFilter.portDirection}
+                          onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, portDirection: value })}
+                        >
+                          <SelectTrigger className="flex-1 min-w-[130px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="any">{t('capture.direction.any')}</SelectItem>
+                            <SelectItem value="src">{t('capture.direction.src')}</SelectItem>
+                            <SelectItem value="dst">{t('capture.direction.dst')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {simpleFilter.portType === 'single' && (
+                        <Input
+                          type="number"
+                          placeholder={t('capture.portPlaceholder.single')}
+                          value={simpleFilter.port}
+                          onChange={(e) => setSimpleFilter({ ...simpleFilter, port: e.target.value })}
+                        />
+                      )}
+                      {simpleFilter.portType === 'multiple' && (
+                        <Input
+                          placeholder={t('capture.portPlaceholder.multiple')}
+                          value={simpleFilter.ports}
+                          onChange={(e) => setSimpleFilter({ ...simpleFilter, ports: e.target.value })}
+                        />
+                      )}
+                      {simpleFilter.portType === 'range' && (
+                        <div className="flex gap-2">
                           <Input
                             type="number"
-                              placeholder={t('capture.portPlaceholder.single')}
-                            value={simpleFilter.port}
-                            onChange={(e) => setSimpleFilter({ ...simpleFilter, port: e.target.value })}
+                            placeholder={t('capture.portPlaceholder.rangeStart')}
+                            value={simpleFilter.portStart}
+                            onChange={(e) => setSimpleFilter({ ...simpleFilter, portStart: e.target.value })}
                           />
-                          )}
-                          {simpleFilter.portType === 'multiple' && (
-                            <Input
-                              placeholder={t('capture.portPlaceholder.multiple')}
-                              value={simpleFilter.ports}
-                              onChange={(e) => setSimpleFilter({ ...simpleFilter, ports: e.target.value })}
-                            />
-                          )}
-                          {simpleFilter.portType === 'range' && (
-                            <div className="flex gap-2">
-                              <Input
-                                type="number"
-                                placeholder={t('capture.portPlaceholder.rangeStart')}
-                                value={simpleFilter.portStart}
-                                onChange={(e) => setSimpleFilter({ ...simpleFilter, portStart: e.target.value })}
-                              />
-                              <span className="flex items-center">-</span>
-                              <Input
-                                type="number"
-                                placeholder={t('capture.portPlaceholder.rangeEnd')}
-                                value={simpleFilter.portEnd}
-                                onChange={(e) => setSimpleFilter({ ...simpleFilter, portEnd: e.target.value })}
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* IP地址配置 */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">{t('capture.filter.host')}</label>
-                          <div className="flex gap-2">
-                            <Select
-                              value={simpleFilter.ipType}
-                              onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, ipType: value })}
-                            >
-                              <SelectTrigger className="flex-1 min-w-[140px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="single">{t('capture.ipType.single')}</SelectItem>
-                                <SelectItem value="multiple">{t('capture.ipType.multiple')}</SelectItem>
-                                <SelectItem value="subnet">{t('capture.ipType.subnet')}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Select
-                              value={simpleFilter.ipDirection}
-                              onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, ipDirection: value })}
-                            >
-                              <SelectTrigger className="flex-1 min-w-[130px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="any">{t('capture.direction.any')}</SelectItem>
-                                <SelectItem value="src">{t('capture.direction.src')}</SelectItem>
-                                <SelectItem value="dst">{t('capture.direction.dst')}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          {simpleFilter.ipType === 'single' && (
+                          <span className="flex items-center">-</span>
                           <Input
-                              placeholder={t('capture.ipPlaceholder.single')}
-                            value={simpleFilter.host}
-                            onChange={(e) => setSimpleFilter({ ...simpleFilter, host: e.target.value })}
+                            type="number"
+                            placeholder={t('capture.portPlaceholder.rangeEnd')}
+                            value={simpleFilter.portEnd}
+                            onChange={(e) => setSimpleFilter({ ...simpleFilter, portEnd: e.target.value })}
                           />
-                          )}
-                          {simpleFilter.ipType === 'multiple' && (
-                            <Input
-                              placeholder={t('capture.ipPlaceholder.multiple')}
-                              value={simpleFilter.hosts}
-                              onChange={(e) => setSimpleFilter({ ...simpleFilter, hosts: e.target.value })}
-                            />
-                          )}
-                          {simpleFilter.ipType === 'subnet' && (
-                            <Input
-                              placeholder={t('capture.ipPlaceholder.subnet')}
-                              value={simpleFilter.subnet}
-                              onChange={(e) => setSimpleFilter({ ...simpleFilter, subnet: e.target.value })}
-                            />
-                          )}
                         </div>
+                      )}
+                    </div>
+
+                    {/* IP地址配置 */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">{t('capture.filter.host')}</label>
+                      <div className="flex gap-2">
+                        <Select
+                          value={simpleFilter.ipType}
+                          onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, ipType: value })}
+                        >
+                          <SelectTrigger className="flex-1 min-w-[140px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="single">{t('capture.ipType.single')}</SelectItem>
+                            <SelectItem value="multiple">{t('capture.ipType.multiple')}</SelectItem>
+                            <SelectItem value="subnet">{t('capture.ipType.subnet')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={simpleFilter.ipDirection}
+                          onValueChange={(value: any) => setSimpleFilter({ ...simpleFilter, ipDirection: value })}
+                        >
+                          <SelectTrigger className="flex-1 min-w-[130px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="any">{t('capture.direction.any')}</SelectItem>
+                            <SelectItem value="src">{t('capture.direction.src')}</SelectItem>
+                            <SelectItem value="dst">{t('capture.direction.dst')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {simpleFilter.ipType === 'single' && (
+                        <Input
+                          placeholder={t('capture.ipPlaceholder.single')}
+                          value={simpleFilter.host}
+                          onChange={(e) => setSimpleFilter({ ...simpleFilter, host: e.target.value })}
+                        />
+                      )}
+                      {simpleFilter.ipType === 'multiple' && (
+                        <Input
+                          placeholder={t('capture.ipPlaceholder.multiple')}
+                          value={simpleFilter.hosts}
+                          onChange={(e) => setSimpleFilter({ ...simpleFilter, hosts: e.target.value })}
+                        />
+                      )}
+                      {simpleFilter.ipType === 'subnet' && (
+                        <Input
+                          placeholder={t('capture.ipPlaceholder.subnet')}
+                          value={simpleFilter.subnet}
+                          onChange={(e) => setSimpleFilter({ ...simpleFilter, subnet: e.target.value })}
+                        />
+                      )}
+                    </div>
                       </div>
                     ) : (
                       <FormField
@@ -640,75 +625,73 @@ export default function NetworkCapturePage() {
                       />
                     )}
 
-                    {/* 预览生成的规则 */}
-                    {filterMode === 'simple' && buildFilterExpression() && (
-                      <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
-                        <span className="font-medium">{t('capture.filter.preview')}: </span>
-                        <code className="text-xs">{buildFilterExpression()}</code>
-                      </div>
-                    )}
+                {/* 预览生成的规则 */}
+                {filterMode === 'simple' && buildFilterExpression() && (
+                  <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
+                    <span className="font-medium">{t('capture.filter.preview')}: </span>
+                    <code className="text-xs">{buildFilterExpression()}</code>
                   </div>
+                )}
+              </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="duration"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t('capture.form.duration')}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min={10}
-                              max={3600}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>10-3600s</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('capture.form.duration')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={10}
+                          max={3600}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>10-3600s</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    <FormField
-                      control={form.control}
-                      name="packet_count"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t('capture.form.packetCount')}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min={1}
-                              placeholder={t('capture.form.unlimited')}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>{t('capture.form.optional')}</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                <FormField
+                  control={form.control}
+                  name="packet_count"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('capture.form.packetCount')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          placeholder={t('capture.form.unlimited')}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>{t('capture.form.optional')}</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setDialogOpen(false)}
-                    >
-                      {tCommon('common.cancel')}
-                    </Button>
-                    <Button type="submit" disabled={createMutation.isPending}>
-                      {createMutation.isPending ? tCommon('action.creating') : tCommon('common.create')}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                >
+                  {tCommon('common.cancel')}
+                </Button>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? tCommon('action.creating') : tCommon('common.create')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       {/* 数据保留策略提示 */}
       <Alert>
@@ -735,10 +718,33 @@ export default function NetworkCapturePage() {
       {/* 任务列表 */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('capture.taskList')}</CardTitle>
-          <CardDescription>
-            {t('capture.totalTasks', { total: listData?.data?.total || 0 })}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>{t('capture.taskList')}</CardTitle>
+              <CardDescription>
+                {t('capture.totalTasks', { total: listData?.data?.total || 0 })}
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                {tCommon('common.refresh')}
+              </Button>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('capture.createTask')}
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (

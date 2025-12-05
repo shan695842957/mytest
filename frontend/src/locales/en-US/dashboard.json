@@ -1,0 +1,16 @@
+{
+  "quickAccess": {
+    "title": "Quick Access",
+    "description": "Common features",
+    "users": "Manage system users and permissions",
+    "profile": "View and edit personal information",
+    "settings": "Configure appearance and language"
+  },
+  "systemInfo": {
+    "title": "System Information",
+    "description": "Current system status",
+    "version": "Frontend Version",
+    "theme": "Theme",
+    "language": "Language"
+  }
+}

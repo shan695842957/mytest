@@ -18,8 +18,11 @@ export default function GatewayNetworkPage() {
     <div className="space-y-6">
       {/* 页面标题 */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('gateway:network.title')}</h1>
-        <p className="text-muted-foreground mt-2">{t('gateway:network.description')}</p>
+        <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+          <Network className="h-5 w-5" />
+          {t('gateway:network.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">{t('gateway:network.description')}</p>
       </div>
 
       {/* Tabs */}

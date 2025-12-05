@@ -435,6 +435,18 @@
   "light_panel.success.status_loaded": "光字牌状态加载成功",
   "light_panel.error.permission_denied": "没有权限执行此操作",
   "light_panel.error.asset_not_found": "资产不存在",
-  "light_panel.error.device_type_not_found": "设备类型不存在"
+  "light_panel.error.device_type_not_found": "设备类型不存在",
+  
+  "history.success.tree_loaded": "设备树加载成功",
+  "history.success.tree_empty": "设备树为空",
+  "history.success.query_completed": "历史数据查询完成",
+  "history.success.export_completed": "数据导出完成",
+  "history.error.invalid_time_range": "无效的时间范围",
+  "history.error.time_range_too_large": "时间范围过大（最多30天）",
+  "history.error.no_data_points": "未选择数据点",
+  "history.error.too_many_data_points": "数据点过多（最多20个）",
+  "history.error.no_data_to_export": "没有可导出的数据",
+  "history.error.xlsx_not_implemented": "XLSX格式暂未实现",
+  "history.station.uncategorized": "未分类"
   
 }

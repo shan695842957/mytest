@@ -1,0 +1,61 @@
+{
+  "toolbar": {
+    "title": "Topology Modeling",
+    "undo": "Undo (Ctrl+Z)",
+    "redo": "Redo (Ctrl+Y)",
+    "select": "Select",
+    "pan": "Pan",
+    "connect": "Connect",
+    "copy": "Copy (Ctrl+C)",
+    "paste": "Paste (Ctrl+V)",
+    "toggleGrid": "Toggle Grid",
+    "loadDemo": "Load Demo",
+    "export": "Export (Ctrl+S)",
+    "import": "Import (Ctrl+O)",
+    "alignHorizontal": "Align Horizontal",
+    "alignVertical": "Align Vertical",
+    "flipHorizontal": "Flip Horizontal",
+    "flipVertical": "Flip Vertical",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "delete": "Delete"
+  },
+  "sidebar": {
+    "components": "Components",
+    "tips": {
+      "title": "Tips",
+      "drag": "Drag to canvas",
+      "copyPaste": "Ctrl+C/V: Copy/Paste",
+      "shiftDrag": "Shift+Drag: Quick Connect",
+      "exportImport": "Ctrl+S/O: Export/Import",
+      "arrows": "Arrows: Move Selection"
+    }
+  },
+  "properties": {
+    "nodeTitle": "Node Properties",
+    "connectionTitle": "Connection Properties",
+    "nameLabel": "Name / Label",
+    "labelStyles": "Label Styles",
+    "fontSize": "Font Size",
+    "color": "Color",
+    "dataRows": "Data Rows",
+    "xPosition": "X Position",
+    "yPosition": "Y Position",
+    "rotation": "Rotation (deg)",
+    "scaleX": "Scale X",
+    "scaleY": "Scale Y",
+    "type": "Type",
+    "connectionLabel": "Label (Optional)",
+    "connectionLabelPlaceholder": "Connection Name",
+    "strokeWidth": "Stroke Width",
+    "reset": "Reset",
+    "labelPlaceholder": "Label",
+    "valuePlaceholder": "Value",
+    "unitPlaceholder": "Unit"
+  },
+  "canvas": {
+    "connectSource": "Select source node (Esc to cancel)",
+    "connectTarget": "Select target node (Esc to cancel)"
+  }
+}
+

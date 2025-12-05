@@ -38,8 +38,8 @@ import {
   Building2,
   GitBranch,
   AlertCircle,
-  Zap,
   Battery,
+  BarChart3,
 } from 'lucide-react'
 import type { MenuItem } from '@/types'
 import { UserRole } from '@/types'
@@ -302,6 +302,20 @@ export const MENU_CONFIG: MenuItem[] = [
     icon: <Activity className="size-4" />,
     path: '/light-panel',
     roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
+  },
+  {
+    key: 'history',
+    label: 'history_data',
+    icon: <BarChart3 className="size-4" />,
+    path: '/history',
+    roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
+  },
+  {
+    key: 'topology',
+    label: 'topology',
+    icon: <GitBranch className="size-4" />,
+    path: '/topology',
+    roles: [UserRole.DEVELOPER, UserRole.OPERATOR],
   },
   {
     key: 'test-panel',

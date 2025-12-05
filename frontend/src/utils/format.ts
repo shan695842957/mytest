@@ -16,7 +16,7 @@ import { zhCN } from 'date-fns/locale'
  * @param dateString - 日期时间字符串或 Date 对象
  * @returns 格式化后的时间字符串（YYYY-MM-DD HH:mm:ss）
  */
-export function formatDateTime(dateString: string | Date): string {
+export function formatDateTime(dateString: string | Date, formatStr: string = 'yyyy-MM-dd HH:mm:ss'): string {
   let date: Date
   
   if (typeof dateString === 'string') {
@@ -41,7 +41,9 @@ export function formatDateTime(dateString: string | Date): string {
   }
   
   // 使用 date-fns 格式化，自动转换为本地时间
-  return format(date, 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })
+  // 将 YYYY 转换为 yyyy（date-fns 使用小写）
+  const normalizedFormat = formatStr.replace(/YYYY/g, 'yyyy').replace(/MM/g, 'MM').replace(/DD/g, 'dd').replace(/HH/g, 'HH').replace(/mm/g, 'mm')
+  return format(date, normalizedFormat, { locale: zhCN })
 }
 
 /**

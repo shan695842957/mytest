@@ -153,7 +153,8 @@
     "system_status": "系统状态",
     "fault": "故障",
     "alarm": "告警",
-    "status": "状态"
+    "status": "状态",
+    "loading": "加载中...",
+    "bmu_placeholder": "BMU 页面内容待实现..."
   }
 }
-

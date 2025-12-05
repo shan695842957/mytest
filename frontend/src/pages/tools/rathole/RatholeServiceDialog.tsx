@@ -116,7 +116,7 @@ export function RatholeServiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl w-[95vw] md:w-full max-h-[90vh] md:max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {editingService ? t('rathole.editService') : t('rathole.createService')}
@@ -167,17 +167,18 @@ export function RatholeServiceDialog({
             {/* 目标地址 */}
             <FormItem>
               <FormLabel>{t('rathole.targetAddr')}</FormLabel>
-              <div className="flex items-center gap-2">
+              {/* 移动端：纵向布局，桌面端：横向布局 */}
+              <div className="flex flex-col md:flex-row md:items-center gap-2">
                 <FormField
                   control={form.control}
                   name="target_host"
                   render={({ field }) => (
                     <FormControl>
-                      <Input {...field} placeholder="127.0.0.1" className="w-48 font-mono" />
+                      <Input {...field} placeholder="127.0.0.1" className="w-full md:w-48 font-mono" />
                     </FormControl>
                   )}
                 />
-                <span className="text-muted-foreground">:</span>
+                <span className="text-muted-foreground hidden md:inline">:</span>
                 <FormField
                   control={form.control}
                   name="target_port"
@@ -186,7 +187,7 @@ export function RatholeServiceDialog({
                       <Input
                         {...field}
                         placeholder="22"
-                        className="w-24 font-mono"
+                        className="w-full md:w-24 font-mono"
                       />
                     </FormControl>
                   )}
@@ -210,11 +211,20 @@ export function RatholeServiceDialog({
               )}
             />
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                className="w-full sm:w-auto"
+              >
                 {t('common:action.cancel')}
               </Button>
-              <Button type="submit" disabled={isCreating || isUpdating}>
+              <Button 
+                type="submit" 
+                disabled={isCreating || isUpdating}
+                className="w-full sm:w-auto"
+              >
                 {editingService ? t('common:action.save') : t('common:action.create')}
               </Button>
             </DialogFooter>

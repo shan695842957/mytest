@@ -1,4 +1,9 @@
 {
+  "tools": {
+    "description": "系统工具和网络诊断",
+    "total_count": "{{count}} 个工具可用",
+    "no_access": "您没有访问任何工具的权限"
+  },
   "ping": {
     "title": "Ping 网络测试",
     "description": "测试到目标主机的网络连通性",

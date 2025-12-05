@@ -34,25 +34,31 @@ export function RatholeTomlPreview({ tomlContent, onRefreshToml }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <span>{t('rathole.tomlContent')}</span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleCopyToml}>
+          {/* 移动端：按钮纵向排列，桌面端：横向排列 */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleCopyToml} className="w-full sm:w-auto">
               <Copy className="mr-2 h-4 w-4" />
               {t('rathole.copy')}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => downloadToml()}>
+            <Button variant="outline" size="sm" onClick={() => downloadToml()} className="w-full sm:w-auto">
               <Download className="mr-2 h-4 w-4" />
               {t('rathole.download')}
             </Button>
-            <Button variant="outline" size="sm" onClick={onRefreshToml}>
-              <RefreshCw className="h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={onRefreshToml} className="w-full sm:w-auto">
+              <RefreshCw className="h-4 w-4 md:mr-0" />
+              <span className="ml-2 sm:hidden">{t('common:action.refresh')}</span>
             </Button>
           </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Textarea value={tomlContent} readOnly className="font-mono text-sm min-h-[500px]" />
+        <Textarea 
+          value={tomlContent} 
+          readOnly 
+          className="font-mono text-sm min-h-[300px] md:min-h-[500px]" 
+        />
       </CardContent>
     </Card>
   )

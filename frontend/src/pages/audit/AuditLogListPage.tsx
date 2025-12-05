@@ -4,7 +4,7 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { RefreshCw, FileText, CheckCircle2, XCircle, Clock, Calendar, Box, Settings, ChevronsUpDown, Eye } from 'lucide-react'
+import { RefreshCw, FileText, CheckCircle2, XCircle, Clock, Calendar, Box, Settings, ChevronsUpDown, Eye, Activity } from 'lucide-react'
 import { subDays, subHours, startOfMonth } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { DateRangePicker } from '@/components/common/DateRangePicker'
@@ -34,6 +34,7 @@ import { AuditLogDetailDialog } from '@/components/audit/AuditLogDetailDialog'
 import { useAuditLogs } from '@/hooks/useAuditQueries'
 import { formatDateTime } from '@/utils/format'
 import type { AuditLogQueryParams, AuditLog } from '@/types'
+import { MaterialListItem } from '@/components/common/MaterialListItem'
 
 type StatusFilter = 'all' | 'success' | 'failed'
 
@@ -47,8 +48,16 @@ interface FilterState {
 export default function AuditLogListPage() {
   const { t } = useTranslation('audit')
   
-  // 筛选面板折叠状态
-  const [filterPanelOpen, setFilterPanelOpen] = useState(true)
+  // 筛选面板折叠状态 - 移动端默认折叠，桌面端默认展开
+  // 使用 useEffect 来设置初始状态，避免 SSR 问题
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false)
+  
+  // 组件挂载时根据屏幕大小设置初始折叠状态
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setFilterPanelOpen(window.innerWidth >= 768)
+    }
+  }, [])
   
   // 详情对话框
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
@@ -225,13 +234,24 @@ export default function AuditLogListPage() {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          {t('audit.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('audit.filter.description')}
+        </p>
+      </div>
+      
       {/* 筛选面板 - 可折叠 */}
       <Collapsible open={filterPanelOpen} onOpenChange={setFilterPanelOpen}>
         <Card>
           <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">
-              <CardTitle className="text-2xl">{t('audit.filter.title')}</CardTitle>
+              <CardTitle>{t('audit.filter.title')}</CardTitle>
               <CardDescription>{t('audit.filter.description')}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -399,10 +419,11 @@ export default function AuditLogListPage() {
         </Card>
       </Collapsible>
       
-      {/* 审计日志表格 */}
+      {/* 审计日志列表 */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* 桌面端表格视图 */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -514,18 +535,129 @@ export default function AuditLogListPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* 移动端卡片列表视图 */}
+          <div className="md:hidden">
+            {isLoading ? (
+              // 移动端加载骨架屏
+              <div className="divide-y divide-border">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="size-10 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : data?.data && Array.isArray(data.data) && data.data.length > 0 ? (
+              // 移动端审计日志卡片列表
+              <div className="divide-y divide-border">
+                {data.data.map((log) => (
+                  <MaterialListItem
+                    key={log.id}
+                    icon={
+                      <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-primary/10">
+                        <Activity className="size-5 text-primary" />
+                      </div>
+                    }
+                    title={log.action_display || t(`audit.action_type.${log.action}`, log.action)}
+                    description={
+                      <div className="flex flex-col gap-2">
+                        {/* 第一行：操作类型徽章 + HTTP方法 + 状态 */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {getMethodBadge(log.method)}
+                          {getStatusBadge(log)}
+                        </div>
+                        {/* 第二行：时间 + 耗时 */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="size-3" />
+                            <span>{formatDateTime(log.created_at)}</span>
+                          </div>
+                          {log.duration_ms !== null && log.duration_ms !== undefined && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <span className="font-mono">{log.duration_ms}ms</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* 第三行：用户信息 */}
+                        {log.username && (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-medium text-foreground">{log.username}</span>
+                            {log.user_role && (
+                              <Badge variant="outline" className="text-xs">
+                                {t(`auth:role.${log.user_role}`)}
+                              </Badge>
+                            )}
+                            <Badge variant="secondary" className="text-xs">
+                              {log.module_display || t(`audit.module_type.${log.module}`, log.module)}
+                            </Badge>
+                          </div>
+                        )}
+                        {/* 第四行：目标信息 */}
+                        {log.target_type && log.target_id && (
+                          <div className="text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">{log.target_name || log.target_id}</span>
+                            <span className="ml-1">
+                              ({log.target_type_display || log.target_type}:{log.target_id})
+                            </span>
+                          </div>
+                        )}
+                        {/* 第五行：ID */}
+                        <div className="text-xs font-mono text-muted-foreground">
+                          ID: {log.id}
+                        </div>
+                      </div>
+                    }
+                    actions={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        onClick={() => {
+                          setSelectedLog(log)
+                          setDetailDialogOpen(true)
+                        }}
+                      >
+                        <Eye className="size-4" />
+                      </Button>
+                    }
+                    onClick={() => {
+                      setSelectedLog(log)
+                      setDetailDialogOpen(true)
+                    }}
+                    showArrow={false}
+                  />
+                ))}
+              </div>
+            ) : (
+              // 移动端空状态
+              <div className="flex flex-col items-center justify-center h-48 text-center p-4">
+                <FileText className="size-12 text-muted-foreground mb-2" />
+                <p className="text-muted-foreground">{t('audit.empty')}</p>
+              </div>
+            )}
+          </div>
           
           {/* 分页信息 */}
           {data?.pagination && data.pagination.total > 0 && (
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-6 py-4 border-t">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-4 md:px-6 py-4 border-t">
+              <div className="text-sm text-muted-foreground hidden sm:block">
                 {t('audit.pagination.total', { total: data.pagination.total })}，
+                {t('audit.pagination.page', { current: data.pagination.page, total: data.pagination.total_pages })}
+              </div>
+              <div className="flex-1 sm:flex-none text-center text-sm text-muted-foreground">
                 {t('audit.pagination.page', { current: data.pagination.page, total: data.pagination.total_pages })}
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="w-auto px-3"
                   disabled={data.pagination.page === 1}
                   onClick={() => setParams(prev => ({
                     ...prev,
@@ -537,6 +669,7 @@ export default function AuditLogListPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="w-auto px-3"
                   disabled={data.pagination.page >= data.pagination.total_pages}
                   onClick={() => setParams(prev => ({
                     ...prev,

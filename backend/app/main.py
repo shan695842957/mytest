@@ -15,7 +15,7 @@ from app.middleware import AuditMiddleware
 from app.middleware.auth import AuthMiddleware
 from app.api import (
     health, auth, audit, gateway, tools, port_forwarding, rathole,
-    device_types, point_tables, comm_instances, assets, soe, dicts, light_panel, protocol_types, peripherals
+    device_types, point_tables, comm_instances, assets, soe, dicts, light_panel, protocol_types, peripherals, history
 )
 
 
@@ -146,11 +146,12 @@ app = FastAPI(
 )
 
 # ⭐ CORS 中间件（必须在最前面）
-# 注意：使用 allow_origins=["*"] 时不能同时使用 allow_credentials=True
+# 开发模式：允许所有来源（方便局域网访问）
+# 生产模式：应配置具体的 cors_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 允许所有源（用于手机端测试）
-    allow_credentials=False,  # 使用 ["*"] 时不能为 True
+    allow_origins=["*"] if settings.cors_allow_all else settings.cors_origins,  # 开发模式允许所有来源
+    allow_credentials=True,  # 允许携带 Cookie
     allow_methods=["*"],  # 允许所有 HTTP 方法
     allow_headers=["*"],  # 允许所有请求头
     expose_headers=["*"],  # 暴露所有响应头
@@ -277,6 +278,12 @@ app.include_router(
     tags=["光字牌"]
 )
 
+# 历史数据查询路由
+app.include_router(
+    history.router,
+    prefix=f"{settings.api_prefix}/history",
+    tags=["历史数据查询"]
+)
 
 
 # 请求验证错误处理（统一返回 ApiResponse 格式）

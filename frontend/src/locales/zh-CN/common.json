@@ -107,7 +107,8 @@
     "view": "查看",
     "download": "下载",
     "upload": "上传",
-    "restore": "还原"
+    "restore": "还原",
+    "close": "关闭"
   },
   "field": {
     "createdAt": "创建时间",
@@ -124,5 +125,6 @@
   "table": {
     "noData": "暂无数据",
     "loading": "加载中..."
-  }
+  },
+  "detail": "详情"
 }

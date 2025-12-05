@@ -118,8 +118,8 @@ export default function ToolsPingPage() {
     <div className="space-y-4">
       {/* 页面标题 */}
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Network className="h-6 w-6" />
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <Network className="h-5 w-5" />
           {t('tools:ping.title')}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">

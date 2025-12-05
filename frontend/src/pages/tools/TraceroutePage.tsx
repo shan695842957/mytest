@@ -115,8 +115,8 @@ export default function TraceroutePage() {
     <div className="space-y-4">
       {/* 页面标题 */}
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Route className="h-6 w-6" />
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <Route className="h-5 w-5" />
           {t('tools:traceroute.title')}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">

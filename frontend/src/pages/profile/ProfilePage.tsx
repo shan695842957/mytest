@@ -22,7 +22,18 @@ export default function ProfilePage() {
   if (!user) return null
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <UserIcon className="h-5 w-5" />
+          {t('profile.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('profile.basic.description')}
+        </p>
+      </div>
+      
       <div className="grid gap-6 md:grid-cols-2">
         {/* 基本信息卡片 */}
         <Card>

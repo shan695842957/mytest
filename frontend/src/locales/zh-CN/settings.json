@@ -67,6 +67,21 @@
       "description": "配置 API 网关的基本参数和路由规则",
       "comingSoon": "此功能将在后续版本中提供。"
     }
+  },
+  "settings": {
+    "description": "系统设置和配置管理",
+    "no_access": "您没有访问任何设置的权限",
+    "group": {
+      "gateway": {
+        "description": "网关设备相关设置"
+      },
+      "software": {
+        "description": "软件服务相关设置"
+      },
+      "frontend": {
+        "description": "前端界面相关设置"
+      }
+    }
   }
 }
 

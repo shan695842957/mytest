@@ -5,6 +5,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import { Activity } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -135,9 +136,21 @@ export default function LightPanelPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] gap-4 p-4">
-      {/* 左侧设备树 */}
-      <div className="w-64 flex-shrink-0">
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <Activity className="h-5 w-5" />
+          {t('title', { defaultValue: '光字牌' })}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('description', { defaultValue: '查看设备光字牌状态' })}
+        </p>
+      </div>
+      
+      <div className="flex h-[calc(100vh-12rem)] gap-4">
+        {/* 左侧设备树 */}
+        <div className="w-64 flex-shrink-0">
         <Card className="h-full">
           <CardHeader>
             <CardTitle className="text-base">{t('deviceTree')}</CardTitle>
@@ -190,10 +203,10 @@ export default function LightPanelPage() {
             </ScrollArea>
           </CardContent>
         </Card>
-      </div>
-
-      {/* 右侧光字牌展示 */}
-      <div className="flex-1 overflow-hidden">
+        </div>
+        
+        {/* 右侧光字牌展示 */}
+        <div className="flex-1 overflow-hidden">
         {selectedAssetId === null ? (
           <Card className="h-full flex items-center justify-center">
             <CardContent>
@@ -258,6 +271,7 @@ export default function LightPanelPage() {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
     </div>
   )

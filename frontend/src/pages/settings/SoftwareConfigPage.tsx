@@ -450,21 +450,22 @@ export default function SoftwareConfigPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
-      {/* 顶部工具栏 */}
-      <div className="border-b bg-background p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Settings2 className="h-6 w-6" />
-              {t('software:config.title')}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('software:config.description')}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <Settings2 className="h-5 w-5" />
+          {t('software:config.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('software:config.description')}
+        </p>
+      </div>
+
+      <div className="h-[calc(100vh-12rem)] flex flex-col border rounded-lg">
+        {/* 顶部工具栏 */}
+        <div className="border-b bg-background p-4 space-y-3">
+          <div className="flex items-center justify-end">
             {hasChanges && (
               <>
                 <Badge variant="secondary" className="gap-1">
@@ -558,7 +559,7 @@ export default function SoftwareConfigPage() {
                         const Icon = currentCategory.icon
                         return <Icon className="h-6 w-6" />
                       })()}
-                      <h2 className="text-2xl font-bold">{currentCategory.label}</h2>
+                      <h2 className="text-xl font-bold">{currentCategory.label}</h2>
                     </div>
                     <p className="text-muted-foreground">{currentCategory.description}</p>
                   </div>

@@ -15,7 +15,9 @@ export default defineConfig({
     },
   },
   server: {
-    host: '0.0.0.0', // 监听所有网络接口，允许手机访问
-    port: 5173, // 开发服务器端口
+    host: process.env.VITE_SERVER_HOST || '0.0.0.0', // 监听地址，从环境变量读取，默认 0.0.0.0
+    port: parseInt(process.env.VITE_SERVER_PORT || '5173', 10), // 监听端口，从环境变量读取，默认 5173
+    strictPort: false, // 如果端口被占用，自动尝试下一个可用端口
+    open: false, // 不自动打开浏览器
   },
 })

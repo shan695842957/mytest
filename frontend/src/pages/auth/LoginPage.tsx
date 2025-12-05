@@ -201,9 +201,9 @@ export default function LoginPage() {
       </div>
       
       {/* 主内容区 */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-7xl grid lg:grid-cols-[1fr_auto] gap-32 items-center">
-          {/* 左侧 - 品牌展示 */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-6 lg:p-8">
+        <div className="w-full max-w-7xl grid lg:grid-cols-[1fr_auto] gap-8 lg:gap-32 items-center">
+          {/* 左侧 - 品牌展示（移动端隐藏） */}
           <div className="hidden lg:block space-y-8 pr-16">
             {/* 主标题 */}
             <div className="space-y-4">
@@ -266,10 +266,12 @@ export default function LoginPage() {
           </div>
           
           {/* 右侧 - 登录表单（玻璃态卡片）*/}
+          {/* 移动端：全宽，桌面端：固定宽度 */}
           <div className="w-full max-w-md lg:w-[480px] mx-auto lg:mx-0 lg:pl-16">
             <div className="relative">
               {/* 玻璃态卡片 */}
-              <div className="relative p-8 md:p-10 rounded-3xl bg-background/60 dark:bg-background/40 backdrop-blur-xl border border-border/50 shadow-2xl shadow-black/5 dark:shadow-black/20">
+              {/* 移动端：较小的内边距，桌面端：更大的内边距 */}
+              <div className="relative p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl bg-background/60 dark:bg-background/40 backdrop-blur-xl border border-border/50 shadow-2xl shadow-black/5 dark:shadow-black/20">
                 {/* 顶部光晕 */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-primary/20 dark:bg-primary/30 rounded-full blur-3xl" />
                 

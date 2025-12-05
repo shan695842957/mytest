@@ -1,0 +1,61 @@
+{
+  "toolbar": {
+    "title": "拓扑建模",
+    "undo": "撤销 (Ctrl+Z)",
+    "redo": "重做 (Ctrl+Y)",
+    "select": "选择",
+    "pan": "平移",
+    "connect": "连接",
+    "copy": "复制 (Ctrl+C)",
+    "paste": "粘贴 (Ctrl+V)",
+    "toggleGrid": "切换网格",
+    "loadDemo": "加载示例",
+    "export": "导出 (Ctrl+S)",
+    "import": "导入 (Ctrl+O)",
+    "alignHorizontal": "水平对齐",
+    "alignVertical": "垂直对齐",
+    "flipHorizontal": "水平翻转",
+    "flipVertical": "垂直翻转",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "delete": "删除"
+  },
+  "sidebar": {
+    "components": "组件",
+    "tips": {
+      "title": "提示",
+      "drag": "拖拽到画布",
+      "copyPaste": "Ctrl+C/V: 复制/粘贴",
+      "shiftDrag": "Shift+拖拽: 快速连接",
+      "exportImport": "Ctrl+S/O: 导出/导入",
+      "arrows": "方向键: 移动选中项"
+    }
+  },
+  "properties": {
+    "nodeTitle": "节点属性",
+    "connectionTitle": "连接属性",
+    "nameLabel": "名称/标签",
+    "labelStyles": "标签样式",
+    "fontSize": "字体大小",
+    "color": "颜色",
+    "dataRows": "数据行",
+    "xPosition": "X 坐标",
+    "yPosition": "Y 坐标",
+    "rotation": "旋转角度 (度)",
+    "scaleX": "缩放 X",
+    "scaleY": "缩放 Y",
+    "type": "类型",
+    "connectionLabel": "标签 (可选)",
+    "connectionLabelPlaceholder": "连接名称",
+    "strokeWidth": "线宽",
+    "reset": "重置",
+    "labelPlaceholder": "标签",
+    "valuePlaceholder": "值",
+    "unitPlaceholder": "单位"
+  },
+  "canvas": {
+    "connectSource": "选择源节点 (Esc 取消)",
+    "connectTarget": "选择目标节点 (Esc 取消)"
+  }
+}
+

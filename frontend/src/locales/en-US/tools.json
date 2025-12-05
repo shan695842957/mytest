@@ -1,4 +1,9 @@
 {
+  "tools": {
+    "description": "System tools and network diagnostics",
+    "total_count": "{{count}} tools available",
+    "no_access": "You don't have permission to access any tools"
+  },
   "ping": {
     "title": "Ping Network Test",
     "description": "Test network connectivity to target host",

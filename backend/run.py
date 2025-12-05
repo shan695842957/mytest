@@ -3,13 +3,14 @@
 """
 
 import uvicorn
+from app.config import settings
 
 if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",
-        host="0.0.0.0",
-        port=18000,
+        host=settings.server_host,  # 从环境变量读取，默认 0.0.0.0
+        port=settings.server_port,  # 从环境变量读取，默认 18000
         reload=True,  # 开发模式自动重载
-        log_level="info"
+        log_level=settings.log_level
     )
 

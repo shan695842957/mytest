@@ -35,8 +35,11 @@ export default function SoftwareAPIPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('gateway:software.apiTitle')}</h1>
-          <p className="text-muted-foreground mt-2">{t('gateway:software.apiDescription')}</p>
+          <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            {t('gateway:software.apiTitle')}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('gateway:software.apiDescription')}</p>
         </div>
         <Skeleton className="h-64 w-full" />
       </div>
@@ -46,8 +49,11 @@ export default function SoftwareAPIPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('gateway:software.apiTitle')}</h1>
-        <p className="text-muted-foreground mt-2">{t('gateway:software.apiDescription')}</p>
+        <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+          <Shield className="h-5 w-5" />
+          {t('gateway:software.apiTitle')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">{t('gateway:software.apiDescription')}</p>
       </div>
 
       {/* 运维者只读提示 */}

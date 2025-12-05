@@ -32,8 +32,11 @@ export default function FrontendSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">{t('frontend.title')}</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+          <Palette className="h-5 w-5" />
+          {t('frontend.title')}
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
           {t('frontend.description')}
         </p>
       </div>

@@ -1,0 +1,95 @@
+{
+  "sidebar": {
+    "title": "数据点选择",
+    "description": "选择要查询的设备数据点"
+  },
+  "selected": {
+    "title": "步骤 1：已选数据点 & 时间范围",
+    "empty": "未选择数据点",
+    "hint": "请在左侧设备树中选择数据点",
+    "remove": "移除"
+  },
+  "timeRange": {
+    "label": "时间范围",
+    "start": "开始时间",
+    "end": "结束时间",
+    "select": "选择时间范围"
+  },
+  "analyze": {
+    "button": "开始分析",
+    "loading": "分析中..."
+  },
+  "result": {
+    "title": "步骤 2：分析结果",
+    "description": "查看历史数据趋势和详细数据",
+    "tab": {
+      "chart": "趋势曲线",
+      "table": "详细数据"
+    }
+  },
+  "chart": {
+    "empty": "暂无数据，请先选择数据点并点击“开始分析”",
+    "resetZoom": "重置缩放"
+  },
+  "table": {
+    "empty": "暂无数据，请先选择数据点并点击“开始分析”",
+    "column": {
+      "time": "时间"
+    }
+  },
+  "tree": {
+    "empty": "暂无设备数据",
+    "error": "加载设备树失败，请刷新重试",
+    "search": {
+      "placeholder": "搜索数据点...",
+      "results": "找到 {{count}} 个结果",
+      "noResults": "未找到匹配的数据点"
+    },
+    "filter": {
+      "all": "全部"
+    },
+    "expandAll": "展开全部",
+    "collapseAll": "折叠全部"
+  },
+  "query": {
+    "success": "查询成功",
+    "error": "查询失败"
+  },
+  "export": {
+    "button": "导出数据",
+    "success": "导出成功",
+    "error": {
+      "no_data": "没有可导出的数据",
+      "failed": "导出失败"
+    }
+  },
+  "error": {
+    "no_points_selected": "请至少选择一个数据点",
+    "too_many_points": "最多只能选择20个数据点",
+    "invalid_time_range": "结束时间必须晚于开始时间"
+  },
+  "dialog": {
+    "selectDataPoints": "选择数据点",
+    "description": "共 {{total}} 个数据点，已选 {{selected}} 个（最多 {{max}} 个）",
+    "search": {
+      "placeholder": "搜索数据点名称...",
+      "results": "找到 {{count}} / {{total}} 个结果",
+      "noResults": "未找到匹配的数据点"
+    },
+    "selectedCount": "已选 {{count}} / {{max}} 个",
+    "confirm": "确定"
+  },
+  "mobile": {
+    "clearAll": "清空",
+    "selectDataPoints": "选择数据点",
+    "empty": {
+      "title": "选择数据点",
+      "description": "点击左上角菜单按钮，选择要查询的设备数据点"
+    },
+    "ready": {
+      "title": "准备分析",
+      "description": "已选择数据点，点击下方按钮开始分析"
+    }
+  }
+}
+

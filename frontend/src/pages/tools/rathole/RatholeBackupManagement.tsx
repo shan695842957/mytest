@@ -5,9 +5,17 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
-import { RefreshCw, Eye, Trash2, History } from 'lucide-react'
+import { RefreshCw, Eye, Trash2, History, MoreHorizontal, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { MaterialListItem } from '@/components/common/MaterialListItem'
 import {
   Card,
   CardContent,
@@ -108,72 +116,131 @@ export function RatholeBackupManagement({ backups, onRefreshBackups, onRefreshTo
           </CardTitle>
           <CardDescription>{t('rathole.backupDescription')}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {backups.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
+            <div className="text-center text-muted-foreground py-12 px-4">
               <History className="mx-auto h-12 w-12 mb-4 opacity-20" />
               <p>{t('rathole.noBackups')}</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {backups.map((backup) => (
-                <div
-                  key={backup.filename}
-                  className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="font-mono text-sm font-medium">{backup.timestamp}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {(backup.size / 1024).toFixed(2)} KB •{' '}
-                      {formatDateTime(backup.created_at)}
+            <>
+              {/* 桌面端：原有布局 */}
+              <div className="hidden md:block p-4 md:p-6 space-y-2">
+                {backups.map((backup) => (
+                  <div
+                    key={backup.filename}
+                    className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="font-mono text-sm font-medium">{backup.timestamp}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {(backup.size / 1024).toFixed(2)} KB •{' '}
+                        {formatDateTime(backup.created_at)}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewBackup(backup.filename)}
+                        title={t('rathole.viewBackup')}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRestoreBackup(backup.filename)}
+                      >
+                        {t('rathole.restore')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteBackupMutation.mutate(backup.filename)}
+                        title={t('common:action.delete')}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewBackup(backup.filename)}
-                      title={t('rathole.viewBackup')}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRestoreBackup(backup.filename)}
-                    >
-                      {t('rathole.restore')}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteBackupMutation.mutate(backup.filename)}
-                      title={t('common:action.delete')}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
+                ))}
+              </div>
+
+              {/* 移动端：卡片列表 */}
+              <div className="md:hidden">
+                <div className="divide-y divide-border">
+                  {backups.map((backup) => (
+                    <MaterialListItem
+                      key={backup.filename}
+                      icon={
+                        <div className="flex items-center justify-center size-10 rounded-lg bg-primary/10 text-primary">
+                          <History className="size-5" />
+                        </div>
+                      }
+                      title={backup.timestamp}
+                      description={
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-muted-foreground">
+                            {(backup.size / 1024).toFixed(2)} KB
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDateTime(backup.created_at)}
+                          </span>
+                        </div>
+                      }
+                      actions={
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleViewBackup(backup.filename)}>
+                              <Eye className="mr-2 size-4" />
+                              {t('rathole.viewBackup')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleRestoreBackup(backup.filename)}>
+                              <RotateCcw className="mr-2 size-4" />
+                              {t('rathole.restore')}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => deleteBackupMutation.mutate(backup.filename)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 size-4" />
+                              {t('common:action.delete')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      }
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* 查看备份对话框 */}
       <Dialog open={viewBackupDialogOpen} onOpenChange={setViewBackupDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="max-w-4xl max-h-[90vh] md:max-h-[80vh] w-[95vw] md:w-full">
           <DialogHeader>
             <DialogTitle>{t('rathole.viewBackup')}</DialogTitle>
           </DialogHeader>
-          <Textarea
-            value={viewingBackupContent}
-            readOnly
-            className="font-mono text-sm min-h-[500px] resize-none"
-          />
+          <div className="overflow-y-auto max-h-[calc(90vh-180px)] md:max-h-[calc(80vh-180px)]">
+            <Textarea
+              value={viewingBackupContent}
+              readOnly
+              className="font-mono text-sm min-h-[300px] md:min-h-[500px] resize-none"
+            />
+          </div>
           <DialogFooter>
-            <Button onClick={() => setViewBackupDialogOpen(false)}>
-              {t('common:action.close')}
+            <Button onClick={() => setViewBackupDialogOpen(false)} className="w-full md:w-auto">
+              {t('common:common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

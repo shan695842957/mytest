@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Search, RefreshCw, Edit, Trash2 } from 'lucide-react'
+import { Plus, Search, RefreshCw, Edit, Trash2, Cpu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -87,36 +87,30 @@ export default function PeripheralsPage() {
   const items = (data?.data as Peripheral[] | null | undefined) || []
   
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-4">
+      {/* 页面标题 */}
+      <div>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <Cpu className="h-5 w-5" />
+          {t('peripheral.list.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('peripheral.list.description')}
+        </p>
+      </div>
+
+      {/* 外设表格 */}
       <Card>
-        <CardHeader className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl font-semibold">{t('peripheral.list.title')}</CardTitle>
-            <CardDescription>{t('peripheral.list.description')}</CardDescription>
-          </div>
-          <AuthGuard roles={[UserRole.DEVELOPER, UserRole.OPERATOR]}>
-            <Button
-              onClick={() => {
-                setSelectedPeripheral(null)
-                setFormDialogOpen(true)
-              }}
-            >
-              <Plus className="mr-2 size-4" />
-              {t('peripheral.form.create')}
-            </Button>
-          </AuthGuard>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder={t('peripheral.list.searchPlaceholder')}
-                  className="pl-10"
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
-              </div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>{t('peripheral.list.title')}</CardTitle>
+          <div className="flex gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('peripheral.list.searchPlaceholder')}
+                className="pl-10 w-[200px]"
+                onChange={(e) => handleSearch(e.target.value)}
+              />
             </div>
             <Select
               value={peripheralTypeFilter}
@@ -125,7 +119,7 @@ export default function PeripheralsPage() {
                 setParams(prev => ({ ...prev, skip: 0 }))
               }}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -141,15 +135,24 @@ export default function PeripheralsPage() {
                 <SelectItem value="other">{t('peripheral.list.filterOther')}</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon" onClick={() => refetch()}>
-              <RefreshCw className="size-4" />
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t('common:common.refresh')}
             </Button>
+            <AuthGuard roles={[UserRole.DEVELOPER, UserRole.OPERATOR]}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setSelectedPeripheral(null)
+                  setFormDialogOpen(true)
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {t('peripheral.form.create')}
+              </Button>
+            </AuthGuard>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* 外设表格 */}
-      <Card>
+        </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>

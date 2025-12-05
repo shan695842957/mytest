@@ -28,10 +28,12 @@ const SoftwareServicePage = lazy(() => import('@/pages/settings/SoftwareServiceP
 const SoftwareAPIPage = lazy(() => import('@/pages/settings/SoftwareAPIPage'))
 const SoftwareDatabasePage = lazy(() => import('@/pages/settings/SoftwareDatabasePage'))
 const FrontendSettingsPage = lazy(() => import('@/pages/settings/FrontendSettingsPage'))
+const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'))
 const NotFoundPage = lazy(() => import('@/pages/errors/NotFoundPage'))
 const ForbiddenPage = lazy(() => import('@/pages/errors/ForbiddenPage'))
 
 // 系统工具页面
+const ToolsPage = lazy(() => import('@/pages/tools/ToolsPage'))
 const ToolsPingPage = lazy(() => import('@/pages/tools/ToolsPingPage'))
 const PortScanPage = lazy(() => import('@/pages/tools/PortScanPage'))
 const ARPTablePage = lazy(() => import('@/pages/tools/ARPTablePage'))
@@ -58,12 +60,17 @@ const SOEPage = lazy(() => import('@/pages/soe/SOEPage'))
 // 光字牌页面
 const LightPanelPage = lazy(() => import('@/pages/lightPanel/LightPanelPage'))
 
+// 历史数据查询页面
+const HistoryDataPage = lazy(() => import('@/pages/history/HistoryDataPage'))
+
+// 拓扑建模页面
+const TopologyPage = lazy(() => import('@/pages/topology/TopologyPage'))
+
 // 测试页面
 const LightPanelTestPage = lazy(() => import('@/pages/test/LightPanelTestPage'))
 const HistoryTestPage = lazy(() => import('@/pages/test/HistoryTestPage'))
 const BMSLevel2Page = lazy(() => import('@/pages/test/BMSLevel2Page'))
 const BMSLevel3Page = lazy(() => import('@/pages/test/BMSLevel3Page'))
-
 
 // 路由守卫
 import { ProtectedRoute } from '@/components/auth'
@@ -115,6 +122,10 @@ export const routes: RouteObject[] = [
           {
             path: 'settings',
             children: [
+              {
+                index: true,
+                element: <SettingsPage />,
+              },
               {
                 path: 'gateway',
                 children: [
@@ -222,6 +233,10 @@ export const routes: RouteObject[] = [
           {
             path: 'tools',
             children: [
+              {
+                index: true,
+                element: <ToolsPage />,
+              },
               {
                 path: 'ping',
                 element: <ToolsPingPage />, // 所有角色可访问
@@ -363,6 +378,20 @@ export const routes: RouteObject[] = [
           {
             path: 'light-panel',
             element: <LightPanelPage />,
+          },
+          {
+            path: 'history',
+            element: <HistoryDataPage />, // 所有登录用户都可以访问
+          },
+          {
+            path: 'topology',
+            element: <ProtectedRoute roles={[UserRole.DEVELOPER, UserRole.OPERATOR]} />,
+            children: [
+              {
+                index: true,
+                element: <TopologyPage />,
+              },
+            ],
           },
           {
             path: 'test',

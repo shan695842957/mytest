@@ -72,17 +72,22 @@ export function RatholeGlobalConfig({ remoteAddr, onUpdate, isUpdating }: Props)
             {/* 远程服务器地址 */}
             <FormItem>
               <FormLabel>{t('rathole.remoteAddr')}</FormLabel>
-              <div className="flex items-center gap-2">
+              {/* 移动端：纵向布局，桌面端：横向布局 */}
+              <div className="flex flex-col md:flex-row md:items-center gap-2">
                 <FormField
                   control={form.control}
                   name="remote_host"
                   render={({ field }) => (
                     <FormControl>
-                      <Input {...field} placeholder="mg.relectric.cn" className="w-64" />
+                      <Input 
+                        {...field} 
+                        placeholder="mg.relectric.cn" 
+                        className="w-full md:w-64" 
+                      />
                     </FormControl>
                   )}
                 />
-                <span className="text-muted-foreground">:</span>
+                <span className="text-muted-foreground hidden md:inline">:</span>
                 <FormField
                   control={form.control}
                   name="remote_port"
@@ -91,7 +96,7 @@ export function RatholeGlobalConfig({ remoteAddr, onUpdate, isUpdating }: Props)
                       <Input
                         {...field}
                         placeholder="26667"
-                        className="w-24"
+                        className="w-full md:w-24"
                       />
                     </FormControl>
                   )}
@@ -102,7 +107,7 @@ export function RatholeGlobalConfig({ remoteAddr, onUpdate, isUpdating }: Props)
             </FormItem>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={isUpdating}>
+              <Button type="submit" disabled={isUpdating} className="w-full md:w-auto">
                 {t('common:action.save')}
               </Button>
             </div>

@@ -1,0 +1,16 @@
+{
+  "quickAccess": {
+    "title": "快速访问",
+    "description": "常用功能入口",
+    "users": "管理系统用户和权限",
+    "profile": "查看和编辑个人信息",
+    "settings": "配置系统外观和语言"
+  },
+  "systemInfo": {
+    "title": "系统信息",
+    "description": "当前系统状态",
+    "version": "前端版本",
+    "theme": "主题",
+    "language": "语言"
+  }
+}

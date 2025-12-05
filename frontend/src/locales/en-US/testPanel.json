@@ -153,7 +153,8 @@
     "system_status": "System Status",
     "fault": "Fault",
     "alarm": "Alarm",
-    "status": "Status"
+    "status": "Status",
+    "loading": "Loading...",
+    "bmu_placeholder": "BMU page content to be implemented..."
   }
 }
-

@@ -91,39 +91,46 @@ export function RatholeServiceControl({
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-2">
-                {t('rathole.serviceStatus')}
-              </div>
-              <div className="flex items-center gap-2">
-                {serviceStatus && (
-                  <>
-                    {getStatusBadge(serviceStatus.status)}
-                    {serviceStatus.pid && (
-                      <Badge variant="outline" className="font-mono">
-                        PID: {serviceStatus.pid}
-                      </Badge>
-                    )}
-                    {serviceStatus.memory_usage && (
-                      <Badge variant="outline">{serviceStatus.memory_usage}</Badge>
-                    )}
-                    {serviceStatus.uptime && (
-                      <Badge variant="outline">{serviceStatus.uptime}</Badge>
-                    )}
-                  </>
-                )}
-              </div>
+      <CardContent className="pt-4 md:pt-6">
+        {/* 移动端：纵向布局，桌面端：横向布局 */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* 状态信息 */}
+          <div className="flex-1 min-w-0">
+            <div className="text-xs md:text-sm font-medium text-muted-foreground mb-2">
+              {t('rathole.serviceStatus')}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {serviceStatus && (
+                <>
+                  {getStatusBadge(serviceStatus.status)}
+                  {serviceStatus.pid && (
+                    <Badge variant="outline" className="font-mono text-xs">
+                      PID: {serviceStatus.pid}
+                    </Badge>
+                  )}
+                  {serviceStatus.memory_usage && (
+                    <Badge variant="outline" className="text-xs">
+                      {serviceStatus.memory_usage}
+                    </Badge>
+                  )}
+                  {serviceStatus.uptime && (
+                    <Badge variant="outline" className="text-xs">
+                      {serviceStatus.uptime}
+                    </Badge>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* 操作按钮 */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
+            {/* 移动端：按钮全宽，桌面端：自动宽度 */}
             <Button
               onClick={onStart}
               disabled={isStarting || isActive || isTransitioning}
               size="sm"
+              className="w-full md:w-auto"
             >
               <Play className="mr-2 h-4 w-4" />
               {t('rathole.start')}
@@ -133,6 +140,7 @@ export function RatholeServiceControl({
               onClick={onStop}
               disabled={isStopping || !isActive}
               size="sm"
+              className="w-full md:w-auto"
             >
               <Square className="mr-2 h-4 w-4" />
               {t('rathole.stop')}
@@ -142,12 +150,19 @@ export function RatholeServiceControl({
               onClick={onRestart}
               disabled={isRestarting || isTransitioning}
               size="sm"
+              className="w-full md:w-auto"
             >
               <RotateCw className="mr-2 h-4 w-4" />
               {t('rathole.restart')}
             </Button>
-            <Button variant="ghost" size="sm" onClick={onRefresh}>
-              <RefreshCw className="h-4 w-4" />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onRefresh}
+              className="w-full md:w-auto"
+            >
+              <RefreshCw className="h-4 w-4 md:mr-0" />
+              <span className="ml-2 md:hidden">{t('common:action.refresh')}</span>
             </Button>
           </div>
         </div>

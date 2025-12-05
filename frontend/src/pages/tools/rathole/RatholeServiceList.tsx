@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, RefreshCw, Edit, Trash2 } from 'lucide-react'
+import { Plus, RefreshCw, Edit, Trash2, MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -14,6 +14,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { MaterialListItem } from '@/components/common/MaterialListItem'
+import { Badge } from '@/components/ui/badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,18 +68,20 @@ export function RatholeServiceList({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end gap-2">
-        <Button onClick={onCreateClick}>
+      {/* 操作按钮 */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+        <Button onClick={onCreateClick} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           {t('rathole.createService')}
         </Button>
-        <Button variant="outline" onClick={onRefresh} disabled={isLoading}>
+        <Button variant="outline" onClick={onRefresh} disabled={isLoading} className="w-full sm:w-auto">
           <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           {t('common:action.refresh')}
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      {/* 桌面端表格视图 */}
+      <div className="hidden md:block rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -129,6 +139,70 @@ export function RatholeServiceList({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* 移动端卡片列表视图 */}
+      <div className="md:hidden">
+        {services.length === 0 ? (
+          <div className="rounded-md border p-8 text-center text-muted-foreground">
+            {t('rathole.noServices')}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {services.map((service) => (
+              <MaterialListItem
+                key={service.service_name}
+                icon={
+                  <div className="flex items-center justify-center size-10 rounded-lg bg-primary/10 text-primary font-mono text-xs">
+                    {service.service_name.slice(0, 2).toUpperCase()}
+                  </div>
+                }
+                title={service.service_name}
+                description={
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-xs font-mono">
+                        {service.token.length > 12
+                          ? `${service.token.substring(0, 12)}...`
+                          : service.token}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs font-mono">
+                        {service.local_addr}
+                      </Badge>
+                    </div>
+                    {service.description && (
+                      <span className="text-xs text-muted-foreground line-clamp-1">
+                        {service.description}
+                      </span>
+                    )}
+                  </div>
+                }
+                actions={
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="size-8">
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onEditClick(service)}>
+                        <Edit className="mr-2 size-4" />
+                        {t('common:action.edit')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteClick(service.service_name)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="mr-2 size-4" />
+                        {t('common:action.delete')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                }
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 删除确认对话框 */}

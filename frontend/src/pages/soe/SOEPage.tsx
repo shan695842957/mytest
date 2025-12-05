@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Search, RefreshCw, Filter } from 'lucide-react'
+import { Search, RefreshCw, Filter, Activity } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -59,11 +59,14 @@ export default function SOEPage() {
   const items = (data?.data as SOEEvent[] | null | undefined) || []
   
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* 标题 */}
+    <div className="space-y-4">
+      {/* 页面标题 */}
       <div>
-        <h1 className="text-3xl font-bold">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1">查询和查看 SOE 事件</p>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <Activity className="h-5 w-5" />
+          {t('title')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">查询和查看 SOE 事件</p>
       </div>
       
       {/* 筛选区域 */}

@@ -1,479 +1,320 @@
-import type { CSSProperties, ReactNode } from 'react';
-import './pcs-energy-flow.css';
-
 /**
- * 允许的流向状态。
- * - charge: 网侧 -> 直流侧（充电）
- * - discharge: 直流侧 -> 网侧（放电）
- * - idle: 暂无能量流动
+ * PCS 能量流向图组件
+ * 使用 SVG 绘制，展示交流侧、PCS、直流侧的能量流向
  */
-export type FlowDirection = 'charge' | 'discharge' | 'idle';
 
-/**
- * 通用的数值展示结构，调用方可以将任意变量放入 value/unit。
- */
-export interface ValueDatum {
-  /** 左侧的标签说明，例如 "AC Power"。 */
-  label?: string;
-  /** 可以是数字或字符串，数字默认会通过 valueFormatter 统一格式化。 */
-  value?: number | string;
-  /** 数值单位，如 kW、%。 */
-  unit?: string;
-  /** 额外提示，会显示在 value 下方的小字。 */
-  hint?: string;
+import { cn } from '@/lib/utils'
+
+interface PCSEnergyFlowProps {
+  /** 流向：charge=充电（交流→直流），discharge=放电（直流→交流），idle=待机 */
+  direction: 'charge' | 'discharge' | 'idle'
+  /** 交流侧功率 (kW) */
+  acPower: number
+  /** 直流侧功率 (kW) */
+  dcPower: number
+  /** 效率 (%) */
+  efficiency: number
+  /** 主题变体 */
+  variant?: 'light' | 'dark'
+  /** 自定义类名 */
+  className?: string
 }
 
-/**
- * 描述网侧或直流侧的显示信息。
- */
-export interface EndpointSide {
-  /** 主标题，例如 "Grid" 或 "Battery Array"。 */
-  title: string;
-  /** 副标题或状态，例如 "AC Side"。 */
-  subtitle?: string;
-  /** 小徽标文案，用来区分 AC / DC。 */
-  badge?: string;
-  /** 用于大号数字显示的主指标。 */
-  headline?: ValueDatum;
-  /** 其他需要展示的变量，列表形式。 */
-  metrics?: ValueDatum[];
-  /** 卡片底部说明。 */
-  footer?: string;
-  /** 自定义图标，不传时组件会渲染默认图标。 */
-  icon?: ReactNode;
-}
-
-/**
- * 描述 PCS 中央节点的显示信息。
- */
-export interface PcsDescriptor {
-  /** 中央标题，默认 "PCS"。 */
-  title?: string;
-  /** 覆盖默认的充/放电状态说明。 */
-  statusLabel?: string;
-  /** 效率一类的附加信息。 */
-  efficiency?: ValueDatum;
-  /** 转换损耗等主指标。 */
-  metric?: ValueDatum;
-  /** 其他扩展变量。 */
-  metrics?: ValueDatum[];
-  /** 自定义图标。 */
-  icon?: ReactNode;
-}
-
-export interface PcsEnergyFlowProps {
-  /** 模块标题，默认 "Real-time Energy Flow"。 */
-  title?: string;
-  /** 网侧（交流侧）数据。 */
-  grid: EndpointSide;
-  /** 直流侧 / 电池侧数据。 */
-  dc: EndpointSide;
-  /** PCS 中央节点数据。 */
-  pcs?: PcsDescriptor;
-  /** 能量流向。 */
-  flowDirection?: FlowDirection;
-  /** Tailwind className 透传。 */
-  className?: string;
-  /** 预设外观，可结合背景明暗切换。 */
-  variant?: 'dark' | 'light';
-  /** 覆盖默认能量颜色（十六进制或 rgba）。 */
-  energyColor?: string;
-  /** 连接线动画时长（毫秒）。 */
-  lineDurationMs?: number;
-  /** 统一数值格式化函数。 */
-  valueFormatter?: (value?: number | string) => string;
-  /** 点击交互入口，可选。 */
-  onGridClick?: () => void;
-  onDcClick?: () => void;
-  onPcsClick?: () => void;
-  /** 自定义行内样式（例如透明度、背景）。 */
-  style?: CSSProperties;
-}
-
-type VariantTokens = {
-  container: string;
-  card: string;
-  cardInteractive: string;
-  accent: string;
-  muted: string;
-  iconSurface: string;
-  border: string;
-  track: string;
-  flowColor: string;
-};
-
-const variantTokens: Record<NonNullable<PcsEnergyFlowProps['variant']>, VariantTokens> = {
-  dark: {
-    container: 'border-white/10 text-slate-100',
-    card: 'bg-white/5 border-white/10',
-    cardInteractive: 'hover:border-cyan-300/40 focus-visible:border-cyan-300/60',
-    accent: 'text-cyan-300',
-    muted: 'text-slate-400',
-    iconSurface: 'bg-white/10 border-white/20',
-    border: 'border-white/20',
-    track: 'rgba(148, 163, 184, 0.35)',
-    flowColor: '#22d3ee',
-  },
-  light: {
-    container: 'border-slate-200 text-slate-900',
-    card: 'bg-white border-slate-200 shadow-[0_8px_30px_rgba(15,23,42,0.08)]',
-    cardInteractive: 'hover:border-emerald-400/60 focus-visible:border-emerald-500',
-    accent: 'text-emerald-500',
-    muted: 'text-slate-500',
-    iconSurface: 'bg-slate-50 border-slate-200',
-    border: 'border-slate-300/70',
-    track: 'rgba(148, 163, 184, 0.45)',
-    flowColor: '#0ea5e9',
-  },
-};
-
-const flowStateCopy: Record<FlowDirection, string> = {
-  charge: '充电 · AC → DC',
-  discharge: '放电 · DC → AC',
-  idle: '待机',
-};
-
-const flowClassName: Record<FlowDirection, string> = {
-  charge: 'pcs-flow-line--forward',
-  discharge: 'pcs-flow-line--reverse',
-  idle: 'pcs-flow-line--paused',
-};
-
-const cx = (...classes: Array<string | boolean | undefined | null>) =>
-  classes.filter(Boolean).join(' ');
-
-const defaultFormat = (value?: number | string): string => {
-  if (value === undefined || value === null) return '--';
-  if (typeof value === 'number') {
-    const formatter = new Intl.NumberFormat('en-US', {
-      maximumFractionDigits: Math.abs(value) >= 100 ? 0 : 1,
-      minimumFractionDigits: Math.abs(value) >= 100 ? 0 : 1,
-    });
-    return formatter.format(value);
-  }
-  return String(value);
-};
-
-interface EndpointCardProps {
-  data: EndpointSide;
-  align?: 'start' | 'end';
-  tokens: VariantTokens;
-  onClick?: () => void;
-  valueFormatter: (value?: number | string) => string;
-}
-
-const EndpointCard = ({
-  data,
-  align = 'start',
-  tokens,
-  onClick,
-  valueFormatter,
-}: EndpointCardProps) => {
-  const headline = data.headline ?? data.metrics?.[0];
-  const Component = onClick ? 'button' : 'div';
-  return (
-    <Component
-      type={onClick ? 'button' : undefined}
-      onClick={onClick}
-      className={cx(
-        'group flex flex-col gap-3 rounded-2xl border px-5 py-4 text-left transition-colors focus-visible:outline-none',
-        tokens.card,
-        onClick && tokens.cardInteractive,
-        align === 'end' && 'text-right',
-      )}
-    >
-      <div className={cx('flex items-center gap-3', align === 'end' && 'flex-row-reverse')}>
-        <div
-          className={cx(
-            'flex h-14 w-14 items-center justify-center rounded-2xl border text-sky-200',
-            tokens.iconSurface,
-          )}
-        >
-          {data.icon ?? (align === 'end' ? <BatteryIcon /> : <GridIcon />)}
-        </div>
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            {data.badge && (
-              <span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', tokens.border)}>
-                {data.badge}
-              </span>
-            )}
-            <span className="text-sm font-medium uppercase tracking-wide">{data.title}</span>
-          </div>
-          {data.subtitle && <p className={cx('text-xs', tokens.muted)}>{data.subtitle}</p>}
-        </div>
-      </div>
-      {headline && (
-        <div className={cx('flex flex-col', align === 'end' && 'items-end')}>
-          <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-semibold leading-none">
-              {valueFormatter(headline.value)}
-            </span>
-            {headline.unit && <span className={cx('text-sm', tokens.muted)}>{headline.unit}</span>}
-          </div>
-          {headline.hint && <span className={cx('text-xs', tokens.muted)}>{headline.hint}</span>}
-        </div>
-      )}
-      {data.metrics && data.metrics.length > (headline ? 1 : 0) && (
-        <dl className={cx('mt-2 grid gap-1 text-sm', align === 'end' && 'text-right')}>
-          {data.metrics.map((metric, idx) => (
-            <div className="flex justify-between gap-2" key={`${metric.label ?? idx}-${metric.unit ?? ''}`}>
-              {metric.label && <dt className={tokens.muted}>{metric.label}</dt>}
-              <dd className="font-medium">
-                {valueFormatter(metric.value)}
-                {metric.unit && <span className={cx('ml-1 text-xs', tokens.muted)}>{metric.unit}</span>}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {data.footer && <p className={cx('text-xs uppercase tracking-wide', tokens.muted)}>{data.footer}</p>}
-    </Component>
-  );
-};
-
-interface FlowConnectorProps {
-  direction: FlowDirection;
-  orientation?: 'horizontal' | 'vertical';
-  durationMs?: number;
-  className?: string;
-}
-
-const FlowConnector = ({
+export function PCSEnergyFlow({
   direction,
-  orientation = 'horizontal',
-  durationMs,
+  acPower,
+  dcPower,
+  efficiency,
+  variant = 'light',
   className,
-}: FlowConnectorProps) => (
-  <div
-    className={cx(
-      'pcs-flow-connector',
-      orientation === 'vertical' ? 'pcs-flow-connector--vertical' : 'pcs-flow-connector--horizontal',
-      className,
-    )}
-    aria-hidden="true"
-  >
-    <span
-      className={cx(
-        'pcs-flow-line',
-        orientation === 'vertical' && 'pcs-flow-line--vertical',
-        flowClassName[direction],
-      )}
-      style={durationMs ? { animationDuration: `${durationMs}ms` } : undefined}
-    />
-  </div>
-);
+}: PCSEnergyFlowProps) {
+  const isCharging = direction === 'charge'
+  const isDischarging = direction === 'discharge'
+  const isIdle = direction === 'idle'
 
-interface PcsNodeProps {
-  data: PcsDescriptor;
-  tokens: VariantTokens;
-  flowDirection: FlowDirection;
-  onClick?: () => void;
-  valueFormatter: (value?: number | string) => string;
-}
+  // 箭头颜色
+  const arrowColor = isCharging
+    ? '#3b82f6' // 蓝色 - 充电
+    : isDischarging
+    ? '#10b981' // 绿色 - 放电
+    : '#6b7280' // 灰色 - 待机
 
-const PcsNode = ({
-  data,
-  tokens,
-  flowDirection,
-  onClick,
-  valueFormatter,
-}: PcsNodeProps) => {
-  const Component = onClick ? 'button' : 'div';
-  const stateCopy = data.statusLabel ?? flowStateCopy[flowDirection];
+  // 功率显示颜色（SVG fill颜色）
+  const powerFillColor = isCharging
+    ? '#2563eb' // blue-600
+    : isDischarging
+    ? '#059669' // green-600
+    : '#6b7280' // gray-500
+  
+  // 文本颜色
+  const textFillColor = variant === 'dark' ? '#f9fafb' : '#111827'
+  const mutedTextFillColor = variant === 'dark' ? '#9ca3af' : '#6b7280'
+
   return (
-    <Component
-      type={onClick ? 'button' : undefined}
-      onClick={onClick}
-      className={cx(
-        'flex flex-col items-center gap-4 rounded-3xl border px-6 py-5 text-center transition-colors focus-visible:outline-none',
-        tokens.card,
-        onClick && tokens.cardInteractive,
-      )}
-    >
-      <span
-        className={cx(
-          'inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest',
-          tokens.border,
-        )}
+    <div className={cn('w-full', className)}>
+      <svg
+        viewBox="0 0 800 300"
+        className="w-full h-auto"
+        xmlns="http://www.w3.org/2000/svg"
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-current" />
-        {stateCopy}
-      </span>
-      <div className="pcs-core relative flex h-28 w-28 items-center justify-center rounded-3xl border border-transparent bg-gradient-to-br from-white/10 to-transparent">
-        <div
-          className={cx(
-            'flex h-20 w-20 items-center justify-center rounded-2xl border text-emerald-300 shadow-inner',
-            tokens.iconSurface,
-          )}
-        >
-          {data.icon ?? <PcsIcon />}
-        </div>
-      </div>
-      <div className="space-y-2">
-        <p className="text-lg font-semibold">{data.title ?? 'PCS'}</p>
-        {data.efficiency && (
-          <p className={cx('text-sm font-medium', tokens.accent)}>
-            {data.efficiency.label && `${data.efficiency.label}: `}
-            {valueFormatter(data.efficiency.value)}
-            {data.efficiency.unit && <span className="ml-1">{data.efficiency.unit}</span>}
-          </p>
+        {/* 背景 */}
+        <rect width="800" height="300" fill="transparent" />
+
+        {/* 交流侧区域 */}
+        <g id="ac-side">
+          {/* 交流侧框 */}
+          <rect
+            x="50"
+            y="100"
+            width="200"
+            height="100"
+            rx="8"
+            fill={variant === 'dark' ? '#1f2937' : '#f9fafb'}
+            stroke={variant === 'dark' ? '#374151' : '#e5e7eb'}
+            strokeWidth="2"
+          />
+          <text
+            x="150"
+            y="130"
+            textAnchor="middle"
+            fill={textFillColor}
+            fontSize="16"
+            fontWeight="600"
+          >
+            交流侧 (AC)
+          </text>
+          <text
+            x="150"
+            y="155"
+            textAnchor="middle"
+            fill={powerFillColor}
+            fontSize="20"
+            fontWeight="700"
+          >
+            {acPower.toFixed(1)} kW
+          </text>
+          <text
+            x="150"
+            y="180"
+            textAnchor="middle"
+            fill={mutedTextFillColor}
+            fontSize="12"
+          >
+            50Hz / 380V
+          </text>
+        </g>
+
+        {/* PCS 区域 */}
+        <g id="pcs">
+          {/* PCS 框 */}
+          <rect
+            x="300"
+            y="80"
+            width="200"
+            height="140"
+            rx="8"
+            fill={variant === 'dark' ? '#111827' : '#ffffff'}
+            stroke={variant === 'dark' ? '#4b5563' : '#d1d5db'}
+            strokeWidth="3"
+          />
+          <text
+            x="400"
+            y="110"
+            textAnchor="middle"
+            fill={textFillColor}
+            fontSize="18"
+            fontWeight="700"
+          >
+            PCS
+          </text>
+          <text
+            x="400"
+            y="135"
+            textAnchor="middle"
+            fill={mutedTextFillColor}
+            fontSize="11"
+          >
+            储能变流器
+          </text>
+          <text
+            x="400"
+            y="160"
+            textAnchor="middle"
+            fill={textFillColor}
+            fontSize="14"
+          >
+            效率: {efficiency.toFixed(1)}%
+          </text>
+          <text
+            x="400"
+            y="185"
+            textAnchor="middle"
+            fill={powerFillColor}
+            fontSize="13"
+            fontWeight="600"
+          >
+            {isCharging ? '充电' : isDischarging ? '放电' : '待机'}
+          </text>
+        </g>
+
+        {/* 直流侧区域 */}
+        <g id="dc-side">
+          {/* 直流侧框 */}
+          <rect
+            x="550"
+            y="100"
+            width="200"
+            height="100"
+            rx="8"
+            fill={variant === 'dark' ? '#1f2937' : '#f9fafb'}
+            stroke={variant === 'dark' ? '#374151' : '#e5e7eb'}
+            strokeWidth="2"
+          />
+          <text
+            x="650"
+            y="130"
+            textAnchor="middle"
+            fill={textFillColor}
+            fontSize="16"
+            fontWeight="600"
+          >
+            直流侧 (DC)
+          </text>
+          <text
+            x="650"
+            y="155"
+            textAnchor="middle"
+            fill={powerFillColor}
+            fontSize="20"
+            fontWeight="700"
+          >
+            {dcPower.toFixed(1)} kW
+          </text>
+          <text
+            x="650"
+            y="180"
+            textAnchor="middle"
+            fill={mutedTextFillColor}
+            fontSize="12"
+          >
+            600V
+          </text>
+        </g>
+
+        {/* 能量流向箭头 */}
+        {isCharging && (
+          <g id="charge-arrow">
+            {/* 从交流到PCS */}
+            <path
+              d="M 250 150 L 300 150"
+              stroke={arrowColor}
+              strokeWidth="4"
+              fill="none"
+              markerEnd="url(#arrowhead-charge)"
+            />
+            {/* 从PCS到直流 */}
+            <path
+              d="M 500 150 L 550 150"
+              stroke={arrowColor}
+              strokeWidth="4"
+              fill="none"
+              markerEnd="url(#arrowhead-charge)"
+            />
+            {/* 箭头定义 */}
+            <defs>
+              <marker
+                id="arrowhead-charge"
+                markerWidth="10"
+                markerHeight="10"
+                refX="9"
+                refY="3"
+                orient="auto"
+              >
+                <polygon
+                  points="0 0, 10 3, 0 6"
+                  fill={arrowColor}
+                />
+              </marker>
+            </defs>
+          </g>
         )}
-        {data.metric && (
-          <div className="text-sm">
-            {data.metric.label && <p className={tokens.muted}>{data.metric.label}</p>}
-            <p className="text-xl font-semibold">
-              {valueFormatter(data.metric.value)}
-              {data.metric.unit && <span className={cx('ml-1 text-sm', tokens.muted)}>{data.metric.unit}</span>}
-            </p>
-            {data.metric.hint && <p className={cx('text-xs', tokens.muted)}>{data.metric.hint}</p>}
-          </div>
+
+        {isDischarging && (
+          <g id="discharge-arrow">
+            {/* 从直流到PCS */}
+            <path
+              d="M 550 150 L 500 150"
+              stroke={arrowColor}
+              strokeWidth="4"
+              fill="none"
+              markerEnd="url(#arrowhead-discharge)"
+            />
+            {/* 从PCS到交流 */}
+            <path
+              d="M 300 150 L 250 150"
+              stroke={arrowColor}
+              strokeWidth="4"
+              fill="none"
+              markerEnd="url(#arrowhead-discharge)"
+            />
+            {/* 箭头定义 */}
+            <defs>
+              <marker
+                id="arrowhead-discharge"
+                markerWidth="10"
+                markerHeight="10"
+                refX="1"
+                refY="3"
+                orient="auto"
+              >
+                <polygon
+                  points="10 0, 0 3, 10 6"
+                  fill={arrowColor}
+                />
+              </marker>
+            </defs>
+          </g>
         )}
-        {data.metrics && data.metrics.length > 0 && (
-          <dl className="mt-2 grid gap-1 text-sm">
-            {data.metrics.map((metric, idx) => (
-              <div className="flex items-center justify-between gap-2" key={`${metric.label ?? idx}-${metric.unit ?? ''}`}>
-                {metric.label && <dt className={tokens.muted}>{metric.label}</dt>}
-                <dd className="font-medium">
-                  {valueFormatter(metric.value)}
-                  {metric.unit && <span className={cx('ml-1 text-xs', tokens.muted)}>{metric.unit}</span>}
-                </dd>
-              </div>
-            ))}
-          </dl>
+
+        {isIdle && (
+          <g id="idle-line">
+            {/* 待机状态 - 虚线连接 */}
+            <line
+              x1="250"
+              y1="150"
+              x2="550"
+              y2="150"
+              stroke="#9ca3af"
+              strokeWidth="2"
+              strokeDasharray="5,5"
+            />
+          </g>
         )}
-      </div>
-    </Component>
-  );
-};
 
-const GridIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" role="img" aria-label="Grid">
-    <g fill="none" stroke="currentColor" strokeWidth="1.6">
-      <rect x="4" y="4" width="24" height="24" rx="6" opacity="0.4" />
-      <circle cx="12" cy="16" r="4" />
-      <circle cx="20" cy="16" r="4" />
-      <path d="M16 6v20" opacity="0.5" />
-    </g>
-  </svg>
-);
-
-const BatteryIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" role="img" aria-label="Battery">
-    <g fill="none" stroke="currentColor" strokeWidth="1.6">
-      <rect x="6" y="5" width="20" height="22" rx="4" opacity="0.6" />
-      <rect x="12" y="3" width="8" height="3" rx="1" opacity="0.6" />
-      <path d="M12 10h8M12 15h8M12 20h8" />
-    </g>
-  </svg>
-);
-
-const PcsIcon = () => (
-  <svg width="36" height="36" viewBox="0 0 36 36" role="img" aria-label="PCS">
-    <g fill="none" stroke="currentColor" strokeWidth="1.6">
-      <rect x="6" y="6" width="24" height="24" rx="8" opacity="0.35" />
-      <path d="M12 24L24 12" />
-      <path d="M14 12h10v10" opacity="0.6" />
-    </g>
-  </svg>
-);
-
-export const PcsEnergyFlow = ({
-  title = 'Real-time Energy Flow',
-  grid,
-  dc,
-  pcs,
-  flowDirection = 'idle',
-  className,
-  variant = 'dark',
-  energyColor,
-  lineDurationMs = 2200,
-  valueFormatter = defaultFormat,
-  onGridClick,
-  onDcClick,
-  onPcsClick,
-  style,
-}: PcsEnergyFlowProps) => {
-  const tokens = variantTokens[variant];
-  const cssVars: CSSProperties & { [key: string]: string | number | undefined } = {
-    '--pcs-flow-color': energyColor ?? tokens.flowColor,
-    '--pcs-track-color': tokens.track,
-    ...style,
-  };
-
-  return (
-    <section
-      className={cx(
-        'pcs-energy-flow relative flex flex-col gap-6 rounded-3xl border bg-transparent p-6 shadow-[0_20px_80px_-60px_rgba(15,23,42,0.8)]',
-        tokens.container,
-        className,
-      )}
-      style={cssVars}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-lg font-semibold tracking-wide">{title}</p>
-          <p className={cx('text-sm', tokens.muted)}>可挂接你的实时变量接口</p>
-        </div>
-        <span className={cx('text-xs uppercase tracking-[0.3em]', tokens.muted)}>PCS Monitor</span>
-      </div>
-
-      <div className="flex flex-col gap-6 md:flex-row md:items-center">
-        <div className="md:flex-1">
-          <EndpointCard
-            data={grid}
-            align="start"
-            tokens={tokens}
-            onClick={onGridClick}
-            valueFormatter={valueFormatter}
-          />
-        </div>
-
-        <div className="flex flex-col items-center gap-4 md:min-w-[320px] md:flex-1">
-          <FlowConnector
-            direction={flowDirection === 'discharge' ? 'discharge' : 'charge'}
-            durationMs={lineDurationMs}
-            className="hidden w-full md:flex"
-          />
-          <FlowConnector
-            direction={flowDirection === 'discharge' ? 'discharge' : 'charge'}
-            orientation="vertical"
-            durationMs={lineDurationMs}
-            className="md:hidden"
-          />
-
-          <PcsNode
-            data={pcs ?? {}}
-            tokens={tokens}
-            flowDirection={flowDirection}
-            onClick={onPcsClick}
-            valueFormatter={valueFormatter}
-          />
-
-          <FlowConnector
-            direction={flowDirection === 'discharge' ? 'charge' : 'discharge'}
-            durationMs={lineDurationMs}
-            className="hidden w-full md:flex"
-          />
-          <FlowConnector
-            direction={flowDirection === 'discharge' ? 'charge' : 'discharge'}
-            orientation="vertical"
-            durationMs={lineDurationMs}
-            className="md:hidden"
-          />
-        </div>
-
-        <div className="md:flex-1">
-          <EndpointCard
-            data={dc}
-            align="end"
-            tokens={tokens}
-            onClick={onDcClick}
-            valueFormatter={valueFormatter}
-          />
-        </div>
-      </div>
-    </section>
-  );
-};
-
+        {/* 功率标签 */}
+        {!isIdle && (
+          <g id="power-labels">
+            <text
+              x={isCharging ? "275" : "325"}
+              y="140"
+              textAnchor="middle"
+              fill={mutedTextFillColor}
+              fontSize="11"
+            >
+              {isCharging ? `${acPower.toFixed(1)}kW` : `${dcPower.toFixed(1)}kW`}
+            </text>
+            <text
+              x={isCharging ? "525" : "475"}
+              y="140"
+              textAnchor="middle"
+              fill={mutedTextFillColor}
+              fontSize="11"
+            >
+              {isCharging ? `${dcPower.toFixed(1)}kW` : `${acPower.toFixed(1)}kW`}
+            </text>
+          </g>
+        )}
+      </svg>
+    </div>
+  )
+}

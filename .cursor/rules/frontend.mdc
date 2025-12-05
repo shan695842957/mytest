@@ -1,0 +1,855 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# AI 开发规则 - LCCU-V Frontend
+
+> **核心原则：保持一致性，优先使用现有机制，除非绝对必要否则不引入新技术**
+
+## 📋 开发前必读清单
+
+在开发任何新功能前，AI 必须按以下顺序检查：
+
+```
+1. ✅ 阅读 ARCHITECTURE.md - 了解整体架构
+2. ✅ 阅读 IMPLEMENTATION_SUMMARY.md - 了解已实现功能
+3. ✅ 检查现有代码 - 是否有类似实现可参考
+4. ✅ 确认是否需要新机制 - 90% 情况下不需要
+5. ✅ 遵循现有模式 - 保持代码风格一致
+```
+
+---
+
+## 🏗️ 必须遵循的现有架构
+
+### 1. 技术栈（禁止更改）
+
+```typescript
+// ✅ 必须使用的技术栈
+- React 19 + TypeScript        // UI 框架
+- Vite 7                        // 构建工具
+- Tailwind CSS v4               // 样式（Vite 插件方式）
+- shadcn/ui                     // 组件库
+- Zustand                       // 全局状态（认证）
+- TanStack Query                // 服务端状态
+- React Router 7                // 路由
+- React Hook Form + Zod         // 表单验证
+- i18next                       // 国际化
+- Axios                         // HTTP 客户端
+
+// ❌ 禁止引入的库（除非有充分理由）
+- Redux / MobX                  // 已有 Zustand
+- Ant Design / Material-UI      // 已有 shadcn/ui
+- SWR / Apollo                  // 已有 TanStack Query
+- Formik / Final Form           // 已有 React Hook Form
+- React Intl                    // 已有 i18next
+- Fetch API                     // 已有 Axios
+```
+
+---
+
+## 📁 目录结构规范
+
+```
+src/
+├── api/              # ✅ API 请求层 - 所有后端接口调用放这里
+├── components/       # ✅ React 组件
+│   ├── auth/        # 权限相关组件（AuthGuard、ProtectedRoute）
+│   ├── layout/      # 布局组件（MainLayout、Sidebar、Header）
+│   └── ui/          # shadcn/ui 组件（不要手动修改）
+├── config/          # ✅ 配置文件（constants、i18n、query、menu、routes）
+├── hooks/           # ✅ 自定义 Hooks
+├── locales/         # ✅ 国际化翻译文件
+│   ├── zh-CN/      # 简体中文
+│   └── en-US/      # 英文
+├── pages/           # ✅ 页面组件（每个路由一个页面）
+├── stores/          # ✅ Zustand 状态管理
+├── types/           # ✅ TypeScript 类型定义
+└── utils/           # ✅ 工具函数
+
+// ❌ 不要创建的目录
+- services/          // 使用 api/ 和 hooks/
+- contexts/          // 使用 stores/
+- providers/         // 使用 stores/
+- helpers/           // 使用 utils/
+- constants/         // 使用 config/constants.ts
+```
+
+---
+
+## 🎯 开发新功能时必须参考的文件
+
+### 场景 1: 添加新页面
+
+**必须参考：**
+1. `src/pages/auth/LoginPage.tsx` - 页面结构示例
+2. `src/config/routes.tsx` - 路由配置
+3. `src/config/menu.tsx` - 菜单配置
+4. `src/locales/zh-CN/*.json` - 添加翻译
+
+**标准步骤：**
+```typescript
+// 1. 创建页面组件 (src/pages/xxx/XxxPage.tsx)
+export default function XxxPage() {
+  const { t } = useTranslation('namespace')
+  // ... 组件实现
+}
+
+// 2. 在 routes.tsx 添加路由（使用 lazy 加载）
+const XxxPage = lazy(() => import('@/pages/xxx/XxxPage'))
+
+// 3. 在 menu.tsx 添加菜单（如果需要）
+{
+  key: 'xxx',
+  label: 'menu.xxx',
+  icon: <Icon />,
+  path: '/xxx',
+  roles: [UserRole.DEVELOPER], // 根据权限配置
+}
+
+// 4. 在 locales 添加翻译
+// zh-CN/menu.json: { "xxx": "XXX功能" }
+// en-US/menu.json: { "xxx": "XXX Feature" }
+```
+
+**❌ 不要：**
+- 不要使用 `<Route>` 直接在组件中定义路由
+- 不要创建新的路由配置文件
+- 不要硬编码文本，必须使用 i18n
+
+---
+
+### 场景 2: 调用后端 API
+
+**必须参考：**
+1. `src/api/auth.ts` - API 函数写法
+2. `src/utils/request.ts` - HTTP 客户端封装
+3. `src/config/query.ts` - Query Keys 定义
+
+**标准步骤：**
+```typescript
+// 1. 在 src/api/ 创建 API 函数
+// src/api/users.ts
+import { http } from '@/utils/request'
+import type { User } from '@/types'
+
+export const getUsers = async () => {
+  const response = await http.get<User[]>('/users')
+  return response.data
+}
+
+// 2. 在 config/query.ts 添加 Query Key
+export const queryKeys = {
+  users: {
+    all: () => ['users'] as const,
+    list: () => ['users', 'list'] as const,
+  }
+}
+
+// 3. 在组件中使用 TanStack Query
+import { useQuery } from '@tanstack/react-query'
+import { getUsers } from '@/api/users'
+import { queryKeys } from '@/config/query'
+
+function Component() {
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.users.list(),
+    queryFn: getUsers
+  })
+}
+```
+
+**❌ 不要：**
+- 不要在组件中直接使用 `axios.get()`
+- 不要创建新的 HTTP 客户端实例
+- 不要使用 `fetch()` API
+- 不要不定义 Query Keys
+
+---
+
+### 场景 3: 添加权限控制
+
+**必须参考：**
+1. `src/components/auth/AuthGuard.tsx` - 组件级权限
+2. `src/components/auth/ProtectedRoute.tsx` - 路由级权限
+3. `src/hooks/useAuth.ts` - 权限检查 Hook
+4. `src/types/permission.ts` - 权限定义
+
+**标准步骤：**
+```typescript
+// 1. 路由级权限（在 routes.tsx）
+<ProtectedRoute roles={[UserRole.DEVELOPER]}>
+  <AdminPage />
+</ProtectedRoute>
+
+// 2. 组件级权限
+<AuthGuard roles={[UserRole.DEVELOPER, UserRole.OPERATOR]}>
+  <Button>删除</Button>
+</AuthGuard>
+
+// 3. Hook 方式（条件渲染）
+const { hasRole, isDeveloper } = useAuth()
+
+{isDeveloper && <Button>管理员功能</Button>}
+```
+
+**❌ 不要：**
+- 不要创建新的权限检查组件
+- 不要直接访问 `useAuthStore()`
+- 不要硬编码角色字符串（使用 `UserRole` 枚举）
+
+---
+
+### 场景 4: 添加表单
+
+**必须参考：**
+1. `src/pages/auth/LoginPage.tsx` - 表单示例
+2. `src/components/ui/form.tsx` - Form 组件
+3. `src/components/ui/input.tsx` - Input 组件
+
+**标准步骤：**
+```typescript
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
+
+// 1. 定义 Schema
+const schema = z.object({
+  username: z.string().min(1, '请输入用户名'),
+})
+
+// 2. 使用 useForm
+const form = useForm({
+  resolver: zodResolver(schema),
+  defaultValues: { username: '' }
+})
+
+// 3. 使用 Form 组件
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <FormField
+      control={form.control}
+      name="username"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>用户名</FormLabel>
+          <FormControl>
+            <Input {...field} />
+          </FormControl>
+        </FormItem>
+      )}
+    />
+  </form>
+</Form>
+```
+
+**❌ 不要：**
+- 不要使用 `useState` 管理表单状态
+- 不要手动写验证逻辑
+- 不要使用其他表单库
+
+---
+
+### 场景 5: 添加 UI 组件
+
+**必须参考：**
+1. `src/components/ui/*` - 现有组件
+2. [shadcn/ui 文档](https://ui.shadcn.com)
+
+**标准步骤：**
+```bash
+# 1. 从 shadcn/ui 添加组件
+npx shadcn@latest add [component-name]
+
+# 2. 在代码中使用
+import { Button } from '@/components/ui/button'
+```
+
+**❌ 不要：**
+- 不要手动创建 UI 组件（除非 shadcn/ui 没有）
+- 不要修改 `src/components/ui/*` 下的文件
+- 不要引入其他 UI 库
+
+---
+
+### 场景 6: 添加国际化文本
+
+**必须参考：**
+1. `src/locales/zh-CN/*.json` - 现有翻译
+2. `src/config/i18n.ts` - i18n 配置
+
+**标准步骤：**
+```typescript
+// 1. 在对应的命名空间添加翻译
+// src/locales/zh-CN/common.json
+{
+  "button": {
+    "save": "保存",
+    "cancel": "取消"
+  }
+}
+
+// 2. 在组件中使用
+import { useTranslation } from 'react-i18next'
+
+function Component() {
+  const { t } = useTranslation('common')
+  return <Button>{t('button.save')}</Button>
+}
+```
+
+**❌ 不要：**
+- 不要硬编码中文文本
+- 不要创建新的命名空间（使用现有的 common/auth/menu）
+- 不要忘记添加英文翻译
+
+---
+
+### 场景 7: 添加类型定义
+
+**必须参考：**
+1. `src/types/user.ts` - 用户类型
+2. `src/types/api.ts` - API 响应类型
+3. `src/types/permission.ts` - 权限类型
+
+**标准步骤：**
+```typescript
+// 1. 在对应的文件添加类型（或创建新文件）
+// src/types/xxx.ts
+export interface Xxx {
+  id: number
+  name: string
+}
+
+// 2. 在 types/index.ts 导出
+export * from './xxx'
+
+// 3. 使用类型
+import type { Xxx } from '@/types'
+```
+
+**❌ 不要：**
+- 不要在组件文件中定义类型
+- 不要使用 `any` 类型
+- 不要忘记 `export`
+
+---
+
+### 场景 8: 添加全局状态
+
+**必须参考：**
+1. `src/stores/authStore.ts` - Zustand Store 示例
+
+**标准步骤：**
+```typescript
+// 1. 创建 Store (src/stores/xxxStore.ts)
+import { create } from 'zustand'
+import { devtools, persist } from 'zustand/middleware'
+
+interface XxxState {
+  data: any
+  setData: (data: any) => void
+}
+
+export const useXxxStore = create<XxxState>()(
+  devtools(
+    persist(
+      (set) => ({
+        data: null,
+        setData: (data) => set({ data })
+      }),
+      { name: 'xxx-storage' }
+    )
+  )
+)
+
+// 2. 创建 Hook (src/hooks/useXxx.ts)
+export function useXxx() {
+  return useXxxStore()
+}
+```
+
+**❌ 不要：**
+- 不要为简单状态创建 Store（使用 `useState`）
+- 不要使用 Context API
+- 不要使用 Redux
+
+---
+
+### 场景 9: 文件下载处理
+
+**必须参考：**
+1. `src/api/capture.ts` - 文件下载实现
+2. `src/utils/request.ts` - HTTP 客户端
+
+**标准步骤：**
+```typescript
+// 1. 在 API 层添加下载函数
+export const downloadFile = async (fileId: number, filename: string) => {
+  try {
+    // ⭐ 关键：使用 responseType: 'blob' 获取二进制数据
+    const response = await http.get(
+      `/files/${fileId}/download`,
+      {
+        responseType: 'blob',  // 必须指定！
+      }
+    )
+    
+    // 创建 Blob 对象
+    const blob = response.data as unknown as Blob
+    const url = window.URL.createObjectURL(blob)
+    
+    // 触发下载
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    
+    // 清理资源
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('下载失败:', error)
+    throw error
+  }
+}
+
+// 2. 在组件中使用（异步调用）
+<Button
+  onClick={async () => {
+    try {
+      await downloadFile(fileId, 'example.pcap')
+      toast.success('下载成功')
+    } catch (error) {
+      toast.error('下载失败')
+    }
+  }}
+>
+  下载
+</Button>
+```
+
+**❌ 不要：**
+- 不要直接使用 `<a href>` 标签下载（无法携带认证 token）
+- 不要忘记设置 `responseType: 'blob'`
+- 不要忘记清理 `URL.revokeObjectURL()`
+
+---
+
+### 场景 10: 动态超时配置
+
+**必须参考：**
+1. `src/api/tools.ts` - traceroute 超时配置
+2. `src/config/constants.ts` - 默认超时设置
+
+**标准步骤：**
+```typescript
+// 对于长时间运行的 API，动态计算超时时间
+export const longRunningTask = async (params: { maxSteps: number, timePerStep: number }) => {
+  // ⭐ 根据参数动态计算超时时间
+  // 后端超时 = timePerStep * maxSteps + 30秒
+  // 前端超时 = 后端超时 + 30秒余量
+  const timeoutMs = (params.timePerStep * params.maxSteps + 60) * 1000
+  
+  const response = await http.post(
+    '/api/long-task',
+    params,
+    { timeout: timeoutMs }  // ⭐ 传递动态超时
+  )
+  return response.data
+}
+```
+
+**原则**：
+- ✅ 前端超时 > 后端超时（留30-60秒余量）
+- ✅ 避免前端先超时导致误报
+- ✅ 根据业务参数动态计算
+
+---
+
+### 场景 11: UI 响应式设计（自适应宽度）
+
+**必须参考：**
+1. `src/pages/tools/NetworkCapturePage.tsx` - 下拉框自适应示例
+
+**标准步骤：**
+```typescript
+// ❌ 错误：固定宽度（多语言时会截断）
+<SelectTrigger className="w-[100px]">
+  <SelectValue />
+</SelectTrigger>
+
+// ✅ 正确：自适应宽度
+<SelectTrigger className="flex-1 min-w-[130px]">
+  <SelectValue />
+</SelectTrigger>
+
+// 多个元素平分空间
+<div className="flex gap-2">
+  <Select>
+    <SelectTrigger className="flex-1 min-w-[140px]">
+      {/* 左侧下拉框 */}
+    </SelectTrigger>
+  </Select>
+  <Select>
+    <SelectTrigger className="flex-1 min-w-[130px]">
+      {/* 右侧下拉框 */}
+    </SelectTrigger>
+  </Select>
+</div>
+```
+
+**原则**：
+- ✅ 使用 `flex-1` 平分空间
+- ✅ 使用 `min-w-[]` 设置最小宽度（防止文字截断）
+- ✅ 考虑英文文本长度（通常比中文长 30-50%）
+- ❌ 避免使用固定宽度 `w-[100px]`
+
+---
+
+### 场景 12: 状态清理和重置
+
+**必须参考：**
+1. `src/pages/tools/TraceroutePage.tsx` - 表单提交前清空结果
+
+**标准步骤：**
+```typescript
+const [result, setResult] = useState<Result | null>(null)
+
+const onSubmit = (data: FormData) => {
+  // ⭐ 提交新请求前，清空旧结果
+  setResult(null)
+  
+  // 然后执行新请求
+  mutation.mutate(data)
+}
+```
+
+**原则**：
+- ✅ 避免新旧结果混淆
+- ✅ 提供更好的视觉反馈
+- ✅ 重新提交时给用户明确的"正在加载"状态
+
+---
+
+### 场景 13: 全局样式定制（滚动条、主题等）
+
+**必须参考：**
+1. `src/index.css` - 全局样式和主题定义
+
+**标准步骤：**
+```css
+/* 在 src/index.css 的 @layer base 中添加 */
+
+@layer base {
+  /* 自定义滚动条 - 与主题一致 */
+  * {
+    scrollbar-gutter: stable;  /* 强制经典滚动条 */
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--muted);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+
+  /* ⭐ 深色模式需要增强对比度 */
+  .dark ::-webkit-scrollbar-track {
+    background: oklch(0.18 0.01 285.885);  /* 更暗 */
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: oklch(0.4 0.02 285.885);   /* 更亮 - 确保可见 */
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.5 0.03 285.885);
+  }
+}
+```
+
+**原则**：
+- ✅ 使用 CSS 变量（`var(--xxx)`）确保主题一致
+- ✅ 深色模式需要额外注意对比度（轨道和滑块要有明显区分）
+- ✅ 在 `@layer base` 中定义全局样式
+- ❌ 不要在组件中使用内联样式修改滚动条
+
+---
+
+## 🚨 什么情况下可以引入新机制？
+
+只有满足以下**所有**条件时才可以引入新技术/库：
+
+1. ✅ **现有机制无法实现** - 确认无法用现有技术实现
+2. ✅ **经过充分调研** - 比较至少 3 个备选方案
+3. ✅ **获得批准** - 在引入前必须说明理由并获得同意
+4. ✅ **更新文档** - 必须更新 ARCHITECTURE.md 和本文档
+5. ✅ **团队培训** - 确保团队了解新机制
+
+**示例：**
+```
+❓ 需要：添加图表功能
+✅ 现有机制：无
+✅ 备选方案：ECharts、Recharts、Chart.js
+✅ 推荐方案：ECharts（功能最强大）
+✅ 引入理由：shadcn/ui 没有图表组件，项目需要复杂图表
+```
+
+---
+
+## 📝 代码风格规范
+
+### 命名规范
+
+```typescript
+// ✅ 正确
+- 组件: PascalCase      (UserList, LoginPage)
+- 文件: PascalCase.tsx  (UserList.tsx)
+- 函数: camelCase       (getUserList)
+- 常量: UPPER_CASE      (API_BASE_URL)
+- 类型: PascalCase      (User, ApiResponse)
+- 枚举: PascalCase      (UserRole, ErrorCode)
+
+// ❌ 错误
+- user-list.tsx         // 使用 UserList.tsx
+- get_user_list()       // 使用 getUserList()
+- apibaseurl            // 使用 API_BASE_URL
+```
+
+### Import 顺序
+
+```typescript
+// 1. React 核心
+import { useState } from 'react'
+
+// 2. 第三方库
+import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+
+// 3. 类型导入（使用 type 关键字）
+import type { User } from '@/types'
+
+// 4. 项目内部模块
+import { useAuth } from '@/hooks/useAuth'
+import { Button } from '@/components/ui/button'
+```
+
+### 组件结构
+
+```typescript
+// ✅ 标准组件结构
+import type { ComponentProps } from '@/types'
+
+export default function Component() {
+  // 1. Hooks
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  
+  // 2. State
+  const [state, setState] = useState()
+  
+  // 3. 副作用
+  useEffect(() => {}, [])
+  
+  // 4. 事件处理
+  const handleClick = () => {}
+  
+  // 5. 渲染
+  return <div>...</div>
+}
+```
+
+---
+
+## ✅ 检查清单
+
+在提交代码前，确保：
+
+- [ ] 没有引入新的技术栈
+- [ ] 遵循现有的目录结构
+- [ ] 使用现有的组件和工具
+- [ ] 添加了类型定义（无 `any`）
+- [ ] 添加了国际化文本（中英文）
+- [ ] 使用了统一的代码风格
+- [ ] 更新了相关文档（如有必要）
+- [ ] 编译通过（`npm run build`）
+- [ ] 代码可读性良好
+- [ ] 符合权限控制规范
+
+---
+
+## 📚 必读文档清单
+
+开发前必须阅读以下文档：
+
+1. **ARCHITECTURE.md** - 架构设计说明
+2. **IMPLEMENTATION_SUMMARY.md** - 已实现功能总结
+3. **SETUP.md** - 技术栈和配置
+4. **本文档** - 开发规范
+
+---
+
+## 💡 常见错误
+
+### ❌ 错误示例 1: 引入新库
+
+```typescript
+// ❌ 错误
+import moment from 'moment'  // 项目没有使用 moment
+
+// ✅ 正确
+// 使用原生 Date 或 date-fns（如果项目已有）
+```
+
+### ❌ 错误示例 2: 不使用现有机制
+
+```typescript
+// ❌ 错误
+const [user, setUser] = useState()  // 认证状态应该用 Zustand
+
+// ✅ 正确
+import { useAuth } from '@/hooks/useAuth'
+const { user } = useAuth()
+```
+
+### ❌ 错误示例 3: 硬编码文本
+
+```typescript
+// ❌ 错误
+<Button>保存</Button>
+
+// ✅ 正确
+const { t } = useTranslation('common')
+<Button>{t('common.save')}</Button>
+```
+
+### ❌ 错误示例 4: 不使用类型
+
+```typescript
+// ❌ 错误
+function getUser(id: any): any { }
+
+// ✅ 正确
+import type { User } from '@/types'
+function getUser(id: number): Promise<User> { }
+```
+
+### ❌ 错误示例 5: 文件下载不处理二进制数据
+
+```typescript
+// ❌ 错误：直接用 <a> 标签（无法携带 token）
+export const downloadFile = (fileId: number) => {
+  const url = `${API_URL}/files/${fileId}/download`
+  window.open(url)  // 无法携带认证信息！
+}
+
+// ❌ 错误：不指定 responseType（文件会损坏）
+export const downloadFile = async (fileId: number) => {
+  const response = await http.get(`/files/${fileId}/download`)
+  // response.data 会被当作 JSON 解析，导致文件损坏
+}
+
+// ✅ 正确：使用 axios + blob
+export const downloadFile = async (fileId: number, filename: string) => {
+  const response = await http.get(
+    `/files/${fileId}/download`,
+    { responseType: 'blob' }  // ⭐ 必须指定
+  )
+  
+  const blob = response.data as unknown as Blob
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
+}
+```
+
+### ❌ 错误示例 6: 固定宽度导致文字截断
+
+```typescript
+// ❌ 错误：固定宽度（英文会截断）
+<SelectTrigger className="w-[100px]">
+  <SelectValue />  {/* "Any Direction" → "Any Direc" */}
+</SelectTrigger>
+
+// ✅ 正确：自适应宽度
+<SelectTrigger className="flex-1 min-w-[130px]">
+  <SelectValue />  {/* 完整显示 */}
+</SelectTrigger>
+```
+
+### ❌ 错误示例 7: 长时间 API 使用默认超时
+
+```typescript
+// ❌ 错误：使用默认 30 秒超时（API 可能需要 5 分钟）
+export const traceroute = async (params: { maxHops: 64, timeout: 5 }) => {
+  return await http.post('/traceroute', params)
+  // 前端 30 秒后超时，但后端还在运行！
+}
+
+// ✅ 正确：动态计算超时
+export const traceroute = async (params: { maxHops: number, timeout: number }) => {
+  const timeoutMs = (params.timeout * params.maxHops + 60) * 1000
+  return await http.post(
+    '/traceroute',
+    params,
+    { timeout: timeoutMs }  // 前端不会先超时
+  )
+}
+```
+
+### ❌ 错误示例 8: 不清空旧状态
+
+```typescript
+// ❌ 错误：不清空旧结果
+const onSubmit = (data) => {
+  mutation.mutate(data)  // 旧结果还在页面上显示
+}
+
+// ✅ 正确：提交前清空
+const onSubmit = (data) => {
+  setResult(null)  // ⭐ 先清空
+  mutation.mutate(data)
+}
+```
+
+---
+
+## 🎯 总结
+
+**核心原则：**
+1. **优先使用现有机制** - 90% 的需求都可以用现有技术实现
+2. **保持一致性** - 代码风格、目录结构、命名规范
+3. **类型安全** - 100% TypeScript，无 any
+4. **配置驱动** - 菜单、路由、权限全部配置化
+5. **文档优先** - 先读文档，再写代码
+
+**记住：每次引入新机制，都会增加项目的复杂度和维护成本！**
+
+---
+
+*最后更新: 2025-11-06*
+*适用版本: v0.1.0*
+

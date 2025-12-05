@@ -67,6 +67,21 @@
       "description": "Configure basic parameters and routing rules for API gateway",
       "comingSoon": "This feature will be available in a future release."
     }
+  },
+  "settings": {
+    "description": "System settings and configuration management",
+    "no_access": "You don't have permission to access any settings",
+    "group": {
+      "gateway": {
+        "description": "Gateway device related settings"
+      },
+      "software": {
+        "description": "Software service related settings"
+      },
+      "frontend": {
+        "description": "Frontend interface related settings"
+      }
+    }
   }
 }
 

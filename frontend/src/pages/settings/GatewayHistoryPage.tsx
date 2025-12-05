@@ -303,7 +303,10 @@ export default function GatewayHistoryPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{t('gateway:monitor.historyTitle')}</h1>
+            <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              {t('gateway:monitor.historyTitle')}
+            </h1>
           </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -322,7 +325,10 @@ export default function GatewayHistoryPage() {
       {/* 顶部工具栏 */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('gateway:monitor.historyTitle')}</h1>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            {t('gateway:monitor.historyTitle')}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">{t('gateway:monitor.historyDescription')}</p>
         </div>
         <div className="flex gap-2">
