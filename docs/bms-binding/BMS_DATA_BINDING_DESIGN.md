@@ -1,6 +1,6 @@
 # BMS 数据绑定功能设计文档
 
-> **版本**: v1.4.0  
+> **版本**: v1.4.1  
 > **创建时间**: 2025-01-XX  
 > **最后更新**: 2025-01-XX  
 > **作者**: AI Assistant  
@@ -310,7 +310,7 @@ CREATE TABLE IF NOT EXISTS bms_topology_field_configs (
 );
 
 -- BMS BMU 配置表（BMU 页面的字段配置）
--- 注意：串并数（series_count、parallel_count）现在从 bms_hierarchy_nodes 表获取，不再在此表配置
+-- 注意：串并数（series_count、parallel_count）现在从 bms_hierarchy_configs 表获取，不再在此表配置
 -- 说明：每个 BMS 实例有自己独立的 BMU 配置
 CREATE TABLE IF NOT EXISTS bms_bmu_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -371,9 +371,8 @@ CREATE TABLE IF NOT EXISTS bms_bmu_cell_field_configs (
     UNIQUE(bmu_config_id, field_key)
 );
 
--- BMS BMU 温度测点配置表
 -- 说明：温度测点不是每个单体都有，需要单独配置
--- 注意：温度测点的数量从 bms_hierarchy_nodes.has_temperature_points 判断，但具体测点配置在此表
+-- 注意：温度测点的数量从 bms_hierarchy_configs.temperature_point_count 获取（统一配置），具体测点在此表定义
 CREATE TABLE IF NOT EXISTS bms_bmu_temperature_points (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     bmu_config_id INTEGER NOT NULL,                 -- BMU 配置ID
@@ -475,45 +474,25 @@ CREATE TABLE IF NOT EXISTS bms_instances (
     UNIQUE(asset_id, architecture_id, instance_name)
 );
 
--- BMS 层级节点表（配置 BMS 的层级结构）
--- 三级架构：堆 → 簇 → 包 → 单体
--- 二级架构：簇 → 包 → 单体
--- 说明：记录每个层级的节点信息，包括数量、串并数等
-CREATE TABLE IF NOT EXISTS bms_hierarchy_nodes (
+CREATE TABLE IF NOT EXISTS bms_hierarchy_configs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bms_instance_id INTEGER NOT NULL,               -- BMS 实例ID（外键关联 bms_instances.id）
-    node_type TEXT NOT NULL,                        -- 节点类型：'stack' | 'cluster' | 'pack' | 'cell'
-    parent_node_id INTEGER,                          -- 父节点ID（外键关联 bms_hierarchy_nodes.id，根节点为 NULL）
-    node_number INTEGER NOT NULL,                    -- 节点编号（如：1号簇、2号包）
-    display_name_zh TEXT NOT NULL,                   -- 中文显示名（如 '1号电池簇', '2号电池包'）
-    display_name_en TEXT NOT NULL,                   -- 英文显示名（如 'Cluster 1', 'Pack 2'）
-    -- 包节点特有字段（仅当 node_type='pack' 时使用）
-    series_count INTEGER,                            -- 串联数（如 15，仅 pack 节点）
-    parallel_count INTEGER,                          -- 并联数（如 2，仅 pack 节点）
-    has_temperature_points BOOLEAN NOT NULL DEFAULT 0, -- 是否有温度测点（仅 pack 节点）
-    -- 节点关联（可选，某些节点可能关联到独立的资产）
-    associated_asset_id INTEGER,                     -- 关联的资产ID（外键关联 assets.id，可选）
-    enabled BOOLEAN NOT NULL DEFAULT 1,              -- 是否启用
-    metadata_json TEXT NOT NULL DEFAULT '{}',       -- 自定义元数据JSON
+    bms_instance_id INTEGER NOT NULL UNIQUE,         -- BMS 实例ID（外键关联 bms_instances.id），每个实例仅一条
+    cluster_count INTEGER NOT NULL DEFAULT 1,         -- 簇数量（三级架构为堆下簇数，二级架构通常为 1）
+    pack_count_per_cluster INTEGER NOT NULL DEFAULT 1,-- 每个簇下的包数量
+    series_count INTEGER NOT NULL,                    -- 包的串联数（如 15）
+    parallel_count INTEGER NOT NULL,                  -- 包的并联数（如 2）
+    temperature_point_count INTEGER NOT NULL DEFAULT 0,-- 每个包的温度测点数量（统一配置，若没有则填 0）
+    description_zh TEXT NOT NULL DEFAULT '',         -- 中文描述
+    description_en TEXT NOT NULL DEFAULT '',          -- 英文描述
+    metadata_json TEXT NOT NULL DEFAULT '{}',        -- 自定义元数据JSON
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(bms_instance_id) REFERENCES bms_instances(id) ON DELETE CASCADE,
-    FOREIGN KEY(parent_node_id) REFERENCES bms_hierarchy_nodes(id) ON DELETE CASCADE,
-    FOREIGN KEY(associated_asset_id) REFERENCES assets(id) ON DELETE SET NULL,
-    -- 检查约束：节点类型验证
-    CHECK (node_type IN ('stack', 'cluster', 'pack', 'cell')),
-    -- 检查约束：包节点必须有串并数
-    CHECK (
-        (node_type != 'pack') OR 
-        (node_type = 'pack' AND series_count IS NOT NULL AND parallel_count IS NOT NULL)
-    ),
-    -- 检查约束：根节点类型验证（三级架构根节点为 stack，二级架构根节点为 cluster）
-    CHECK (
-        (parent_node_id IS NULL AND node_type IN ('stack', 'cluster')) OR
-        (parent_node_id IS NOT NULL)
-    ),
-    -- 唯一约束：同一实例下，同一父节点下，节点编号唯一
-    UNIQUE(bms_instance_id, parent_node_id, node_number)
+    CHECK (cluster_count >= 1),
+    CHECK (pack_count_per_cluster >= 1),
+    CHECK (series_count >= 1),
+    CHECK (parallel_count >= 1),
+    CHECK (temperature_point_count >= 0)
 );
 
 -- 注意：字段绑定信息现在直接存储在字段配置表中，不再需要单独的绑定表
@@ -553,12 +532,11 @@ POST   /api/bms/instances                  # 创建 BMS 实例
 PATCH  /api/bms/instances/{id}             # 更新 BMS 实例
 DELETE /api/bms/instances/{id}             # 删除 BMS 实例
 
-# BMS 层级节点管理
-GET    /api/bms/instances/{id}/hierarchy-nodes        # 获取层级节点树（树形结构）
-GET    /api/bms/instances/{id}/hierarchy-nodes/{node_id}  # 获取节点详情
-POST   /api/bms/instances/{id}/hierarchy-nodes        # 创建层级节点
-PATCH  /api/bms/hierarchy-nodes/{id}                  # 更新层级节点
-DELETE /api/bms/hierarchy-nodes/{id}                  # 删除层级节点
+# BMS 层级配置管理（简化：每个实例一条记录）
+GET    /api/bms/instances/{id}/hierarchy-config        # 获取层级配置（簇数、每簇包数、串并数、温度测点数）
+POST   /api/bms/instances/{id}/hierarchy-config        # 创建层级配置
+PATCH  /api/bms/hierarchy-configs/{id}                 # 更新层级配置
+DELETE /api/bms/hierarchy-configs/{id}                 # 删除层级配置
 
 #### 3.2.3 BMS 字段配置管理 API
 
@@ -579,7 +557,7 @@ GET    /api/bms/instances/{id}/data/bmu              # 获取 BMU 页面数据
 # 获取拓扑数据
 GET    /api/bms/instances/{id}/topology/packs        # 获取包列表（二级架构，从层级节点获取）
 GET    /api/bms/instances/{id}/topology/clusters     # 获取簇列表（三级架构，从层级节点获取）
-GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（用于拓扑图渲染）
+GET    /api/bms/instances/{id}/hierarchy-summary     # 根据 hierarchy-config 生成层级概览/树（用于拓扑图渲染，包含簇/包编号、串并数、温度测点数）
 ```
 
 ### 3.3 前端页面设计
@@ -729,14 +707,14 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
   ↓
 6. 配置拓扑图字段（簇/包的显示字段，每个字段配置数据来源）
    → 在 bms_topology_field_configs 表中配置
-   → 拓扑图的节点从 bms_hierarchy_nodes 表中获取
+   → 拓扑图的节点数量从 bms_hierarchy_configs 表获取（cluster_count、pack_count_per_cluster），前端/后端按编号生成节点（第 X 簇 / 第 X 包）
   ↓
 7. 配置 BMU 页面
    → 配置阈值（电压上限/下限、温度上限/下限，在 bms_bmu_configs 表中）
    → 配置单体字段（电压、SOC、SOH等，在 bms_bmu_cell_field_configs 表中，不包含温度）
    → 配置温度测点（在 bms_bmu_temperature_points 表中单独配置）
    → 配置其它数据（均衡器等，在 bms_bmu_other_data_configs 表中配置）
-   → 包的串并数从 bms_hierarchy_nodes 表中获取
+   → 包的串并数从 bms_hierarchy_configs 表中获取（series_count、parallel_count）
 ```
 
 ### 5.3 运行阶段
@@ -805,11 +783,11 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 
 ### 6.4 拓扑图处理
 
-- **节点数量**：从 `bms_hierarchy_nodes` 表中获取
-  - 三级架构：查询 `node_type='cluster'` 且 `parent_node_id` 指向 stack 节点的所有节点
-  - 二级架构：查询 `node_type='pack'` 且 `parent_node_id` 指向 cluster 节点的所有节点
-- **节点信息**：每个节点的编号、显示名称从 `bms_hierarchy_nodes` 表获取
-- **节点字段**：拓扑图中的节点字段（如簇的电压、电流、SOC）在 `bms_topology_field_configs` 表中配置
+- **节点数量与编号生成**：从 `bms_hierarchy_configs` 表获取
+  - 三级架构：`cluster_count` 表示堆下簇数量，`pack_count_per_cluster` 表示每簇下包数量
+  - 二级架构：`cluster_count` 通常为 1，`pack_count_per_cluster` 表示簇下包数量
+  - 前端/后端按数量生成节点编号：第 X 簇 / 第 X 包（无需逐节点存表）
+- **节点字段**：拓扑图中的节点字段（如簇/包的电压、电流、SOC）在 `bms_topology_field_configs` 表中配置
   - 每个字段的数据来源在配置表中直接定义（`source_type`、`read_device_type_tag_id`、`read_comm_instance_id`、`read_point_id`）
 - **簇的分合闸**（三级架构）：
   - 分合闸状态（读）：在 `bms_topology_field_configs` 表中配置 `read_device_type_tag_id` 或 `read_comm_instance_id` + `read_point_id`
@@ -817,19 +795,17 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 
 ### 6.5 BMU 处理
 
-- **串并数**：在层级节点中设置（`bms_hierarchy_nodes` 表的 `series_count` 和 `parallel_count` 字段）
+- **串并数**：在 `bms_hierarchy_configs` 表中统一设置（`series_count`、`parallel_count`），用于计算每包单体数量及显示串并数
 - **阈值配置**：在 `bms_bmu_configs` 表中配置
   - 电压阈值：`voltage_upper_limit`（过压报警）、`voltage_lower_limit`（欠压报警）、`voltage_warning_upper_limit`（过压警告）、`voltage_warning_lower_limit`（欠压警告）
   - 温度阈值：`temperature_upper_limit`（过温报警）、`temperature_lower_limit`（欠温报警）、`temperature_warning_upper_limit`（过温警告）、`temperature_warning_lower_limit`（欠温警告）
   - 这些阈值用于判断单体和温度测点的颜色状态（normal/warning/alarm）
 - **单体字段**（电压、SOC、SOH等，**不包含温度**）：在 `bms_bmu_cell_field_configs` 表中配置
-  - 不同供应商提供的字段不同（某些供应商提供电压、SOC、SOH、温度，我们公司只提供电压）
+  - 不同供应商提供的字段不同（某些供应商提供电压、SOC、SOH，我们公司只提供电压）
   - 每个字段的数据来源在配置表中直接定义（`source_type`、`device_type_tag_id`、`comm_instance_id`、`point_id`）
   - **注意**：温度字段不在此表配置，温度测点单独配置
 - **温度测点**：在 `bms_bmu_temperature_points` 表中单独配置
-  - 温度测点不是每个单体都有，需要单独配置（如电池箱内部署约5个温度测点）
-  - 从 `bms_hierarchy_nodes.has_temperature_points` 判断包是否有温度测点
-  - 如果有温度测点，从 `bms_bmu_temperature_points` 表查询该包的测点配置
+  - 温度测点数量从 `bms_hierarchy_configs.temperature_point_count` 获取（统一配置），再按数量生成测点编号（第 X 测点）
   - 每个温度测点的数据来源在配置表中直接定义（`source_type`、`device_type_tag_id`、`comm_instance_id`、`point_id`）
 - **其它数据**（均衡器等）：在 `bms_bmu_other_data_configs` 表中配置
   - 某些BMS供应商提供的与单体、温度无关的数据（如均衡器状态、均衡电流等）
@@ -917,6 +893,7 @@ GET    /api/bms/instances/{id}/hierarchy-tree        # 获取完整层级树（�
 | v1.2.3 | 2025-01-XX | AI Assistant | 层级结构配置：<br/>1. 新增 bms_hierarchy_nodes 表，配置堆/簇/包节点<br/>2. 支持配置堆下簇数量、簇下包数量<br/>3. 支持配置每个包的串并数<br/>4. 拓扑图和BMU页面从层级节点获取数据 |
 | v1.3.0 | 2025-01-XX | AI Assistant | 重大重构：<br/>1. 所有配置表关联到 bms_instances（每个实例独立配置）<br/>2. 字段配置表直接包含数据来源信息（外键关联，不使用名称依赖）<br/>3. 删除独立的绑定表，绑定信息集成到配置表<br/>4. 明确 BAU、BCU、BMU 页面的配置方式 |
 | v1.4.0 | 2025-01-XX | AI Assistant | BMU 功能增强：<br/>1. BMU 配置表添加阈值字段（电压/温度上下限，用于判断颜色状态）<br/>2. 温度测点单独配置（bms_bmu_temperature_points 表）<br/>3. 添加其它数据配置（bms_bmu_other_data_configs 表，如均衡器等）<br/>4. 单体字段配置移除温度字段（温度单独配置） |
+| v1.4.1 | 2025-01-XX | AI Assistant | 层级配置简化：<br/>1. bms_hierarchy_nodes 精简为 bms_hierarchy_configs（每个实例一条记录）<br/>2. 统一配置簇数量、每簇包数量、包的串并数、包的温度测点数量<br/>3. 拓扑与 BMU 串并数、测点数量均从 bms_hierarchy_configs 读取并按编号生成 |
 
 ---
 
