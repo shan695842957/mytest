@@ -39,11 +39,11 @@ import {
   createBMSInstance,
   updateBMSInstance,
   getBMSArchitectures,
-  getAssetList,
   type BMSInstance,
   type CreateBMSInstanceRequest,
   type UpdateBMSInstanceRequest,
 } from '@/api/bms'
+import { getAssetList } from '@/api/assets'
 
 interface BMSInstanceFormDialogProps {
   open: boolean
