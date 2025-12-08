@@ -850,10 +850,10 @@ async def export_field_configs(
 )
 async def import_field_configs(
     instance_id: int,
+    request: Request,
     page_type: str = Query(..., description="页面类型：'SYS' | 'BCU' | 'BAU' | 'BMU'"),
     import_mode: str = Query("append", description="导入模式：'append'（追加）| 'update'（更新）"),
     file: UploadFile = File(..., description="CSV文件"),
-    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     locale: str = Depends(get_locale),
