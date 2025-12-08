@@ -42,7 +42,7 @@ import { AuthGuard } from '@/components/auth'
 import { UserRole } from '@/types'
 
 export default function BMSConfigPage() {
-  const { t } = useTranslation('config')
+  const { t } = useTranslation(['config', 'common'])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -176,13 +176,13 @@ export default function BMSConfigPage() {
                     </Button>
                     <Button variant="outline" onClick={handleExport}>
                       <Download className="h-4 w-4 mr-2" />
-                      {t('common.export')}
+                      {t('common:export')}
                     </Button>
                     <label>
                       <Button variant="outline" asChild>
                         <span>
                           <Upload className="h-4 w-4 mr-2" />
-                          {t('common.import')}
+                          {t('common:import')}
                         </span>
                       </Button>
                       <Input
@@ -194,7 +194,7 @@ export default function BMSConfigPage() {
                     </label>
                   </div>
                   <AuthGuard roles={[UserRole.DEVELOPER, UserRole.OPERATOR]}>
-                    <Button>
+                    <Button onClick={() => toast.info(t('common:coming_soon'))}>
                       <Plus className="h-4 w-4 mr-2" />
                       {t('bms.field_config.create')}
                     </Button>
