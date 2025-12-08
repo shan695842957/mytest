@@ -644,7 +644,7 @@ export function BMSFieldConfigDialog({
                               ) : (
                                 assetFields.map((field) => (
                                   <SelectItem key={field.id} value={field.id.toString()}>
-                                    {field.display_name || field.tag_name} ({field.tag_name})
+                                    {`${field.display_name || field.tag_name} (${field.tag_name})`}
                                   </SelectItem>
                                 ))
                               )
@@ -683,7 +683,7 @@ export function BMSFieldConfigDialog({
                               ) : (
                                 assetFields.map((field) => (
                                   <SelectItem key={field.id} value={field.id.toString()}>
-                                    {field.display_name || field.tag_name} ({field.tag_name})
+                                    {`${field.display_name || field.tag_name} (${field.tag_name})`}
                                   </SelectItem>
                                 ))
                               )
