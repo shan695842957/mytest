@@ -383,12 +383,16 @@ export default function BMSDisplayLevel2Page() {
   // EVT页面数据
   const [eventLog, setEventLog] = useState<EventLogResponse | null>(null)
   
-  // 加载数据
+  // 加载数据（依赖selectedBMSInstanceId）
   useEffect(() => {
+    // 如果没有选择BMS实例，不加载数据
+    if (!selectedBMSInstanceId) return
+    
     const loadData = async () => {
+      // TODO: 传递instance_id到API调用
       const [basicInfo, packs] = await Promise.all([
-        fetchClusterBasicInfo(),
-        fetchPackList(),
+        fetchClusterBasicInfo(), // TODO: fetchClusterBasicInfo(selectedBMSInstanceId)
+        fetchPackList(), // TODO: fetchPackList(selectedBMSInstanceId)
       ])
       
       setClusterBasicInfo(basicInfo)
@@ -406,13 +410,14 @@ export default function BMSDisplayLevel2Page() {
     // 定时更新数据
     const interval = setInterval(loadData, 5000)
     return () => clearInterval(interval)
-  }, [])
+  }, [selectedBMSInstanceId])
   
-  // 加载BCU页面数据
+  // 加载BCU页面数据（依赖selectedBMSInstanceId）
   useEffect(() => {
-    if (activeTab === 'bcu') {
+    if (activeTab === 'bcu' && selectedBMSInstanceId) {
       const loadBCUData = async () => {
-        const data = await fetchClusterDetailInfo()
+        // TODO: 传递instance_id到API调用
+        const data = await fetchClusterDetailInfo() // TODO: fetchClusterDetailInfo(selectedBMSInstanceId)
         setClusterDetailInfo(data)
       }
       loadBCUData()
@@ -421,17 +426,19 @@ export default function BMSDisplayLevel2Page() {
       const interval = setInterval(loadBCUData, 5000)
       return () => clearInterval(interval)
     }
-  }, [activeTab])
+  }, [activeTab, selectedBMSInstanceId])
   
-  // 加载BMU页面数据
+  // 加载BMU页面数据（依赖selectedBMSInstanceId）
   useEffect(() => {
-    if (activeTab === 'bmu' && selectedPackId) {
+    if (activeTab === 'bmu' && selectedPackId && selectedBMSInstanceId) {
       const loadBMUData = async () => {
         if (bmuActiveSubTab === 'cell') {
-          const data = await fetchPackCellInfo(selectedPackId)
+          // TODO: 传递instance_id到API调用
+          const data = await fetchPackCellInfo(selectedPackId) // TODO: fetchPackCellInfo(selectedBMSInstanceId, selectedPackId)
           setPackCellInfo(data)
         } else {
-          const data = await fetchPackTemperature(selectedPackId)
+          // TODO: 传递instance_id到API调用
+          const data = await fetchPackTemperature(selectedPackId) // TODO: fetchPackTemperature(selectedBMSInstanceId, selectedPackId)
           setPackTemperature(data)
         }
       }
@@ -441,13 +448,14 @@ export default function BMSDisplayLevel2Page() {
       const interval = setInterval(loadBMUData, 5000)
       return () => clearInterval(interval)
     }
-  }, [activeTab, selectedPackId, bmuActiveSubTab])
+  }, [activeTab, selectedPackId, bmuActiveSubTab, selectedBMSInstanceId])
   
-  // 加载EVT页面数据
+  // 加载EVT页面数据（依赖selectedBMSInstanceId）
   useEffect(() => {
-    if (activeTab === 'evt') {
+    if (activeTab === 'evt' && selectedBMSInstanceId) {
       const loadEVTData = async () => {
-        const data = await fetchEventLog()
+        // TODO: 传递instance_id到API调用
+        const data = await fetchEventLog() // TODO: fetchEventLog(selectedBMSInstanceId)
         setEventLog(data)
       }
       loadEVTData()
@@ -456,7 +464,7 @@ export default function BMSDisplayLevel2Page() {
       const interval = setInterval(loadEVTData, 5000)
       return () => clearInterval(interval)
     }
-  }, [activeTab])
+  }, [activeTab, selectedBMSInstanceId])
   
   // 控制簇断路器
   const handleBreakerControl = async (action: 'close' | 'open') => {
@@ -638,34 +646,51 @@ export default function BMSDisplayLevel2Page() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* BMS选择下拉框 */}
-      {instances.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium">
-                {t('select_bms_instance')}:
-              </span>
-              <Select
-                value={selectedBMSInstanceId?.toString() || ''}
-                onValueChange={(value) => setSelectedBMSInstanceId(parseInt(value))}
-              >
-                <SelectTrigger className="w-[300px]">
-                  <SelectValue placeholder={t('select_bms_instance_placeholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {instances.map((instance) => (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium">
+              {t('select_bms_instance')}:
+            </span>
+            <Select
+              value={selectedBMSInstanceId?.toString() || ''}
+              onValueChange={(value) => setSelectedBMSInstanceId(parseInt(value))}
+            >
+              <SelectTrigger className="w-[300px]">
+                <SelectValue placeholder={t('select_bms_instance_placeholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {instances.length === 0 ? (
+                  <SelectItem value="empty" disabled>
+                    暂无BMS实例
+                  </SelectItem>
+                ) : (
+                  instances.map((instance) => (
                     <SelectItem key={instance.id} value={instance.id.toString()}>
                       {instance.display_name_zh} ({instance.instance_name})
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* 如果没有选择BMS实例，显示提示 */}
+      {!selectedBMSInstanceId && instances.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-muted-foreground">
+              请先选择一个BMS实例以查看数据
             </div>
           </CardContent>
         </Card>
       )}
       
-      <Card>
+      {/* 只有在选择了BMS实例时才显示数据 */}
+      {selectedBMSInstanceId && (
+        <Card>
         <CardHeader>
           <CardTitle>{t('level2_title')}</CardTitle>
           <CardDescription>{t('level2_description')}</CardDescription>
@@ -1321,6 +1346,7 @@ export default function BMSDisplayLevel2Page() {
           </Tabs>
         </CardContent>
       </Card>
+      )}
     </div>
   )
 }
