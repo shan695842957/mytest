@@ -74,10 +74,6 @@ export function BMSFieldConfigDialog({
   const { t } = useTranslation(['config', 'common'])
   const queryClient = useQueryClient()
   const isEdit = !!fieldConfig
-  
-  // 判断是否为SYS页面的固定字段（监听字段键变化）
-  const currentFieldKey = form.watch('field_key')
-  const isSysFixedField = pageType === 'SYS' && currentFieldKey && SYS_FIXED_FIELDS.includes(currentFieldKey)
 
   // 获取BMS实例的资产信息（所有hooks必须在组件顶部无条件调用）
   const { data: instanceData } = useQuery({
@@ -234,6 +230,10 @@ export function BMSFieldConfigDialog({
       description_en: '',
     },
   })
+
+  // 判断是否为SYS页面的固定字段（监听字段键变化）
+  const currentFieldKey = form.watch('field_key')
+  const isSysFixedField = pageType === 'SYS' && currentFieldKey && SYS_FIXED_FIELDS.includes(currentFieldKey)
 
   // 编辑模式：填充表单
   useEffect(() => {
