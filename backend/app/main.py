@@ -15,7 +15,7 @@ from app.middleware import AuditMiddleware
 from app.middleware.auth import AuthMiddleware
 from app.api import (
     health, auth, audit, gateway, tools, port_forwarding, rathole,
-    device_types, point_tables, comm_instances, assets, soe, dicts, light_panel, protocol_types, peripherals, history
+    device_types, point_tables, comm_instances, assets, soe, dicts, light_panel, protocol_types, peripherals, history, bms
 )
 
 
@@ -283,6 +283,13 @@ app.include_router(
     history.router,
     prefix=f"{settings.api_prefix}/history",
     tags=["历史数据查询"]
+)
+
+# BMS 管理路由
+app.include_router(
+    bms.router,
+    prefix=f"{settings.api_prefix}/bms",
+    tags=["BMS管理"]
 )
 
 

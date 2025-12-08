@@ -446,6 +446,34 @@
   "history.error.too_many_data_points": "Too many data points (max 20)",
   "history.error.no_data_to_export": "No data to export",
   "history.error.xlsx_not_implemented": "XLSX format not implemented yet",
-  "history.station.uncategorized": "Uncategorized"
+  "history.station.uncategorized": "Uncategorized",
+  
+  "bms.success.architectures_listed": "BMS architectures listed successfully",
+  "bms.success.page_configs_listed": "Page configs listed successfully",
+  "bms.success.instances_listed": "BMS instances listed successfully",
+  "bms.success.instance_retrieved": "BMS instance retrieved successfully",
+  "bms.success.instance_created": "BMS instance created successfully",
+  "bms.success.instance_updated": "BMS instance updated successfully",
+  "bms.success.instance_deleted": "BMS instance deleted successfully",
+  "bms.success.hierarchy_config_retrieved": "Hierarchy config retrieved successfully",
+  "bms.success.hierarchy_config_created": "Hierarchy config created successfully",
+  "bms.success.hierarchy_config_updated": "Hierarchy config updated successfully",
+  "bms.success.field_configs_listed": "Field configs listed successfully",
+  "bms.error.architecture_not_found": "BMS architecture not found",
+  "bms.error.instance_not_found": "BMS instance not found",
+  "bms.error.asset_not_found": "Asset not found",
+  "bms.error.asset_already_bms": "Asset is already associated with a BMS instance",
+  "bms.error.permission_denied": "Permission denied",
+  "bms.error.hierarchy_config_not_found": "Hierarchy config not found",
+  "bms.error.hierarchy_config_already_exists": "Hierarchy config already exists",
+  
+  "audit.action.bms_instance_created": "Create BMS Instance",
+  "audit.action.bms_instance_updated": "Update BMS Instance",
+  "audit.action.bms_instance_deleted": "Delete BMS Instance",
+  "audit.action.bms_hierarchy_config_created": "Create BMS Hierarchy Config",
+  "audit.action.bms_hierarchy_config_updated": "Update BMS Hierarchy Config",
+  "audit.module.bms": "BMS Management",
+  "audit.target.bms_instance": "BMS Instance",
+  "audit.target.bms_hierarchy_config": "BMS Hierarchy Config"
   
 }

@@ -14,6 +14,20 @@ from app.models.asset import Asset, AssetMapping, AssetCommBinding
 from app.models.soe import SOEEvent
 from app.models.protocol_type import ProtocolType, ProtocolTypeParam
 from app.models.peripheral import Peripheral
+from app.models.bms import (
+    BMSArchitecture,
+    BMSPageConfig,
+    BMSInstance,
+    BMSHierarchyConfig,
+    BMSFieldConfig,
+    BMSTeleindicationConfig,
+    BMSTopologyConfig,
+    BMSTopologyFieldConfig,
+    BMSBMUConfig,
+    BMSBMUCellFieldConfig,
+    BMSBMUTemperaturePoint,
+    BMSBMUOtherDataConfig,
+)
 
 __all__ = [
     "User",
@@ -35,4 +49,16 @@ __all__ = [
     "ProtocolType",
     "ProtocolTypeParam",
     "Peripheral",
+    "BMSArchitecture",
+    "BMSPageConfig",
+    "BMSInstance",
+    "BMSHierarchyConfig",
+    "BMSFieldConfig",
+    "BMSTeleindicationConfig",
+    "BMSTopologyConfig",
+    "BMSTopologyFieldConfig",
+    "BMSBMUConfig",
+    "BMSBMUCellFieldConfig",
+    "BMSBMUTemperaturePoint",
+    "BMSBMUOtherDataConfig",
 ]
