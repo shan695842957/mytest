@@ -53,6 +53,11 @@ async def lifespan(app: FastAPI):
     await init_system_metadata()
     print("✅ 系统元数据初始化完成")
     
+    # 初始化BMS系统默认数据（架构和页面配置）
+    from app.scripts.init_bms_data import init_bms_data
+    await init_bms_data()
+    print("✅ BMS系统数据初始化完成")
+    
     # 启动监控数据采集调度器
     from app.core.scheduler import monitor_scheduler
     await monitor_scheduler.start()
