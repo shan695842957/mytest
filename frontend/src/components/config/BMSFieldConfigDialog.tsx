@@ -644,10 +644,11 @@ export function BMSFieldConfigDialog({
                               ) : (
                                 assetFields.map((assetField) => {
                                   const displayName = assetField.display_name || assetField.tag_name
-                                  const displayText = `${displayName} (${assetField.tag_name})`
+                                  const tagName = assetField.tag_name
+                                  const fullText = displayName + ' (' + tagName + ')'
                                   return (
                                     <SelectItem key={assetField.id} value={assetField.id.toString()}>
-                                      {displayText}
+                                      {fullText}
                                     </SelectItem>
                                   )
                                 })
@@ -687,10 +688,11 @@ export function BMSFieldConfigDialog({
                               ) : (
                                 assetFields.map((assetField) => {
                                   const displayName = assetField.display_name || assetField.tag_name
-                                  const displayText = `${displayName} (${assetField.tag_name})`
+                                  const tagName = assetField.tag_name
+                                  const fullText = displayName + ' (' + tagName + ')'
                                   return (
                                     <SelectItem key={assetField.id} value={assetField.id.toString()}>
-                                      {displayText}
+                                      {fullText}
                                     </SelectItem>
                                   )
                                 })
