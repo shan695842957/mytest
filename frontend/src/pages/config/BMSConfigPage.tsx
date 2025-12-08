@@ -255,10 +255,7 @@ export default function BMSConfigPage() {
                                   size="icon"
                                   onClick={() => {
                                     // TODO: 打开编辑对话框
-                                    toast({
-                                      title: t('common.coming_soon'),
-                                      variant: 'default',
-                                    })
+                                    toast.info(t('common.coming_soon'))
                                   }}
                                 >
                                   <Edit className="h-4 w-4" />
