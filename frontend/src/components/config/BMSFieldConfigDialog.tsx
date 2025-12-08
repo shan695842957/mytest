@@ -642,11 +642,11 @@ export function BMSFieldConfigDialog({
                                   {t('bms.field_config.no_asset_fields', '暂无资产字段')}
                                 </SelectItem>
                               ) : (
-                                assetFields.map((field) => {
-                                  const displayName = field.display_name || field.tag_name
-                                  const displayText = `${displayName} (${field.tag_name})`
+                                assetFields.map((assetField) => {
+                                  const displayName = assetField.display_name || assetField.tag_name
+                                  const displayText = `${displayName} (${assetField.tag_name})`
                                   return (
-                                    <SelectItem key={field.id} value={field.id.toString()}>
+                                    <SelectItem key={assetField.id} value={assetField.id.toString()}>
                                       {displayText}
                                     </SelectItem>
                                   )
@@ -685,11 +685,11 @@ export function BMSFieldConfigDialog({
                                   {t('bms.field_config.no_asset_fields', '暂无资产字段')}
                                 </SelectItem>
                               ) : (
-                                assetFields.map((field) => {
-                                  const displayName = field.display_name || field.tag_name
-                                  const displayText = `${displayName} (${field.tag_name})`
+                                assetFields.map((assetField) => {
+                                  const displayName = assetField.display_name || assetField.tag_name
+                                  const displayText = `${displayName} (${assetField.tag_name})`
                                   return (
-                                    <SelectItem key={field.id} value={field.id.toString()}>
+                                    <SelectItem key={assetField.id} value={assetField.id.toString()}>
                                       {displayText}
                                     </SelectItem>
                                   )
