@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="headerGrad" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#0c9454" />
+      <stop offset="1" stop-color="#087248" />
+    </linearGradient>
+    <style>
+      .title { font: 600 36px 'DejaVu Sans', 'Noto Sans SC', sans-serif; fill: #fff; }
+      .subtitle { font: 20px 'DejaVu Sans', 'Noto Sans SC', sans-serif; fill: #d9ffe8; }
+      .nav { font: 18px 'DejaVu Sans', 'Noto Sans SC', sans-serif; }
+      .label { font: 18px 'DejaVu Sans', 'Noto Sans SC', sans-serif; fill: #5d6874; }
+      .value { font: 26px 'DejaVu Sans', 'Noto Sans SC', sans-serif; fill: #0d9c5d; font-weight: 600; }
+      .card-title { font: 22px 'DejaVu Sans', 'Noto Sans SC', sans-serif; fill: #12202c; font-weight: 600; }
+      .table-head { font: 18px 'DejaVu Sans', 'Noto Sans SC', sans-serif; fill: #0f2a3d; font-weight: 600; }
+      .table-row { font: 16px 'DejaVu Sans', 'Noto Sans SC', sans-serif; fill: #3c4a57; }
+      .badge-ok { fill: #51d19c; }
+      .badge-warn { fill: #ffb347; }
+      .badge-danger { fill: #ff6b6b; }
+    </style>
+  </defs>
+
+  <!-- Ìo -->
+  <rect width="1600" height="900" fill="#f4f7fb" />
+
+  <!-- vè -->
+  <rect width="1600" height="90" fill="url(#headerGrad)" />
+  <text class="title" x="40" y="55">PCSı¦ · ÓQöb</text>
+  <text class="subtitle" x="40" y="80">Ù¹p—D05 | !vQE5 + FRTİ¤</text>
+  <text class="subtitle" x="1180" y="60">¦-Ã'O / 2025-12-08 15:42</text>
+
+  <!-- æ§ü* -->
+  <rect x="0" y="90" width="130" height="810" fill="#0c3444" rx="8" />
+  <g class="nav">
+    <rect x="15" y="120" width="100" height="40" rx="18" fill="none" stroke="#51e1a9" stroke-width="2" />
+    <text x="30" y="147" fill="#51e1a9">ÓQ¿</text>
+    <rect x="15" y="180" width="100" height="40" rx="18" fill="none" stroke="#90a9ba" stroke-width="2" />
+    <text x="30" y="207" fill="#90a9ba">öpn</text>
+    <rect x="15" y="240" width="100" height="40" rx="18" fill="none" stroke="#90a9ba" stroke-width="2" />
+    <text x="30" y="267" fill="#90a9ba">âbÑ§</text>
+    <rect x="15" y="300" width="100" height="40" rx="18" fill="none" stroke="#90a9ba" stroke-width="2" />
+    <text x="30" y="327" fill="#90a9ba">Jf°U</text>
+    <rect x="15" y="360" width="100" height="40" rx="18" fill="none" stroke="#90a9ba" stroke-width="2" />
+    <text x="30" y="387" fill="#90a9ba">§6ä</text>
+  </g>
+
+  <!-- ;aG¹h -->
+  <rect x="150" y="110" width="1400" height="660" rx="28" fill="#fff" stroke="#dbe4ef" stroke-width="2" />
+  <text class="card-title" x="190" y="160">vQ ’ PCS ’ 5`öıÏA</text>
+  <text class="label" x="190" y="190">Ÿ‡¹vQ5` (E5) | RCUVe‘ø</text>
+
+  <!-- ÓQ¿ -->
+  <g stroke="#1f2d3a" stroke-width="6" fill="none">
+    <path d="M220 260 H440" />
+    <polygon points="250,210 280,250 280,320 250,280" fill="#1f2d3a" />
+    <path d="M440 260 L620 180" />
+    <rect x="620" y="140" width="130" height="140" rx="6" />
+    <path d="M750 200 H880" />
+    <rect x="890" y="140" width="90" height="140" rx="6" />
+    <rect x="1010" y="100" width="190" height="220" rx="12" />
+    <rect x="1035" y="140" width="70" height="140" rx="6" fill="#0a7d4a" />
+    <path d="M1200 200 H1360" />
+    <polygon points="1360,180 1360,220 1400,200" fill="#0a7d4a" stroke="none" />
+  </g>
+
+  <!-- ÏK~ -->
+  <g class="label">
+    <text x="190" y="240">AB¿5‹</text>
+    <text class="value" x="190" y="270">10.6 kV</text>
+    <text x="360" y="240">ø5A</text>
+    <text class="value" x="360" y="270">312 A</text>
+    <text x="620" y="320">ôAÍ¿</text>
+    <text class="value" x="620" y="350">1188 V</text>
+    <text x="890" y="320">äâ5—</text>
+    <text class="value" x="890" y="350">3.1 %THD</text>
+    <text x="1020" y="70">5` SOC</text>
+    <text class="value" x="1020" y="100">86 %</text>
+    <text x="1230" y="250">vQŸ‡</text>
+    <text class="value" x="1230" y="280">-2.3 MW</text>
+  </g>
+
+  <!-- áoaG -->
+  <g>
+    <rect x="190" y="380" width="320" height="180" rx="18" fill="#f6fafc" stroke="#dbe4ef" />
+    <text class="card-title" x="210" y="420">¤A§</text>
+    <text class="label" x="210" y="450">‘‡</text>
+    <text class="value" x="320" y="450">50.02 Hz</text>
+    <text class="label" x="210" y="490">Ÿ‡àp</text>
+    <text class="value" x="320" y="490">0.985</text>
+    <text class="label" x="210" y="530">A/B/C øsa</text>
+    <text class="value" x="390" y="530">0.7 %</text>
+  </g>
+  <g>
+    <rect x="540" y="380" width="320" height="180" rx="18" fill="#f6fafc" stroke="#dbe4ef" />
+    <text class="card-title" x="560" y="420">ôAÍ¿</text>
+    <text class="label" x="560" y="450">P-O 5‹</text>
+    <text class="value" x="700" y="450">1185 V</text>
+    <text class="label" x="560" y="490">O-N 5‹</text>
+    <text class="value" x="700" y="490">1162 V</text>
+    <text class="label" x="560" y="530">;Ÿ‡</text>
+    <text class="value" x="700" y="530">2.36 MW</text>
+  </g>
+  <g>
+    <rect x="890" y="380" width="320" height="180" rx="18" fill="#f6fafc" stroke="#dbe4ef" />
+    <text class="card-title" x="910" y="420">5`</text>
+    <text class="label" x="910" y="450">)¦</text>
+    <text class="value" x="1020" y="450">27.6 </text>
+    <text class="label" x="910" y="490">ï(p</text>
+    <text class="value" x="1050" y="490">24 / 24</text>
+    <text class="label" x="910" y="530">Ga¶</text>
+    <text class="value" x="1050" y="530">ÛL-</text>
+  </g>
+
+  <!-- !½à -->
+  <g>
+    <rect x="1250" y="380" width="260" height="180" rx="18" fill="#0f2d3a" />
+    <text class="title" x="1280" y="430">VSG vQ</text>
+    <text class="subtitle" x="1280" y="470">øOK | (Ñ/¨</text>
+    <rect x="1280" y="490" width="200" height="36" rx="18" class="badge-ok" />
+    <text class="nav" x="1295" y="515" fill="#0f2d3a">¦ä2.0 MW E5</text>
+  </g>
+
+  <!-- Jfh -->
+  <rect x="150" y="800" width="1400" height="90" rx="18" fill="#fff" stroke="#dbe4ef" />
+  <text class="table-head" x="180" y="830">öô</text>
+  <text class="table-head" x="420" y="830">e</text>
+  <text class="table-head" x="620" y="830">§+</text>
+  <text class="table-head" x="780" y="830">Ïğ</text>
+  <g class="table-row">
+    <text x="180" y="860">15:40:12</text>
+    <text x="420" y="860">CPU-A1</text>
+    <text x="620" y="860" fill="#ffb347">fJ</text>
+    <text x="780" y="860">Í¿‹î 32Vòê¨sa</text>
+
+    <text x="180" y="890">15:38:06</text>
+    <text x="420" y="890">Battery-C</text>
+    <text x="620" y="890" fill="#ff6b6b">%Í</text>
+    <text x="780" y="890">#12 )G 5/minæÑ4· :</text>
+  </g>
+</svg>
