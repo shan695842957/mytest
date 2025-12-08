@@ -2,7 +2,7 @@
  * BMS配置详情页面 - 字段配置管理
  */
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus, Download, Upload, RefreshCw, Edit, Trash2 } from 'lucide-react'
@@ -120,6 +120,38 @@ export default function BMSConfigPage() {
   
   const instance = instanceData?.data
   const fieldConfigs = (fieldConfigsData?.data as BMSFieldConfig[] | null | undefined) || []
+  const sysFixedFieldPresets: Array<Partial<BMSFieldConfig> & { field_key: string; display_name_zh: string; display_name_en: string; data_type: string; sort_order: number }> = useMemo(
+    () => [
+      { field_key: 'fault', display_name_zh: '告警状态', display_name_en: 'Fault Status', data_type: 'boolean', field_type: 'fixed', sort_order: 1, is_required: true },
+      { field_key: 'voltage', display_name_zh: '电压', display_name_en: 'Voltage', data_type: 'number', field_type: 'fixed', sort_order: 2, is_required: true },
+      { field_key: 'current', display_name_zh: '电流', display_name_en: 'Current', data_type: 'number', field_type: 'fixed', sort_order: 3, is_required: true },
+      { field_key: 'power', display_name_zh: '功率', display_name_en: 'Power', data_type: 'number', field_type: 'fixed', sort_order: 4, is_required: true },
+      { field_key: 'breaker_status', display_name_zh: '分合闸状态', display_name_en: 'Breaker Status', data_type: 'boolean', field_type: 'fixed', sort_order: 5, is_required: true },
+      { field_key: 'breaker_open_command', display_name_zh: '分闸指令', display_name_en: 'Breaker Open Command', data_type: 'boolean', field_type: 'fixed', sort_order: 6, is_required: true },
+      { field_key: 'breaker_close_command', display_name_zh: '合闸指令', display_name_en: 'Breaker Close Command', data_type: 'boolean', field_type: 'fixed', sort_order: 7, is_required: true },
+    ],
+    []
+  )
+
+  const displayFieldConfigs = useMemo(() => {
+    if (activePageType !== 'SYS') return fieldConfigs
+    const map = new Map(fieldConfigs.map((item) => [item.field_key, item]))
+    const mergedFixed = sysFixedFieldPresets.map((preset) => {
+      const existed = map.get(preset.field_key)
+      return (
+        existed || {
+          ...preset,
+          source_type: '-',
+          is_readable: true,
+          is_writable: preset.field_key?.includes('command') ?? false,
+          field_type: 'fixed',
+        }
+      )
+    })
+    const presetKeys = new Set(sysFixedFieldPresets.map((p) => p.field_key))
+    const dynamics = fieldConfigs.filter((item) => !presetKeys.has(item.field_key))
+    return [...mergedFixed, ...dynamics]
+  }, [activePageType, fieldConfigs, sysFixedFieldPresets])
   
   const pageTypes = ['SYS', 'BCU', 'BAU', 'BMU']
   
@@ -225,7 +257,7 @@ export default function BMSConfigPage() {
                       <Skeleton key={i} className="h-12 w-full" />
                     ))}
                   </div>
-                ) : fieldConfigs.length === 0 ? (
+                ) : displayFieldConfigs.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     {t('bms.field_config.empty')}
                   </div>
@@ -243,8 +275,8 @@ export default function BMSConfigPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {fieldConfigs.map((config) => (
-                        <TableRow key={config.id}>
+                      {displayFieldConfigs.map((config) => (
+                        <TableRow key={config.id ?? config.field_key}>
                           <TableCell className="font-medium">{config.field_key}</TableCell>
                           <TableCell>
                             {config.display_name_zh}
@@ -261,7 +293,7 @@ export default function BMSConfigPage() {
                           </TableCell>
                           <TableCell>{config.data_type}</TableCell>
                           <TableCell>
-                            <Badge variant="outline">{config.source_type}</Badge>
+                            <Badge variant="outline">{config.source_type || '-'}</Badge>
                           </TableCell>
                           <TableCell>{config.sort_order}</TableCell>
                           <TableCell className="text-right">
@@ -270,6 +302,7 @@ export default function BMSConfigPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  disabled={!config.id}
                                   onClick={() => {
                                     setEditingFieldConfig(config)
                                     setFieldConfigDialogOpen(true)
@@ -280,6 +313,7 @@ export default function BMSConfigPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  disabled={!config.id}
                                   onClick={() => deleteMutation.mutate(config.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
