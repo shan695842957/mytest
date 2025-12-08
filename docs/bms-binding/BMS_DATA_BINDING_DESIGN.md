@@ -155,19 +155,16 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
     unit_zh TEXT NOT NULL DEFAULT '',               -- 中文单位
     unit_en TEXT NOT NULL DEFAULT '',               -- 英文单位
     is_required BOOLEAN NOT NULL DEFAULT 0,        -- 是否必填（固定字段为1）
-    -- 读写权限
-    is_readable BOOLEAN NOT NULL DEFAULT 1,         -- 是否可读（1=可读，0=只写）
-    is_writable BOOLEAN NOT NULL DEFAULT 0,         -- 是否可写（1=可写，0=只读）
     -- 字段来源类型（明确字段的数据来源）
     source_type TEXT NOT NULL,                      -- 字段来源类型：'asset_field'（资产字段）| 'custom'（自定义字段）| 'di_point'（DI点）
     -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
     read_device_type_tag_id INTEGER,                -- 读：资产字段ID（外键关联 device_type_tags.id）
-    write_device_type_tag_id INTEGER,               -- 写：资产字段ID（外键关联 device_type_tags.id，仅当 is_writable=1 时使用）
+    write_device_type_tag_id INTEGER,               -- 写：资产字段ID（外键关联 device_type_tags.id，用于可写字段）
     -- 当 source_type='di_point' 时使用
     read_comm_instance_id INTEGER,                  -- 读：通信实例ID（外键关联 comm_instances.id）
     read_point_id INTEGER,                          -- 读：点表点ID（外键关联 point_table_points.id）
-    write_comm_instance_id INTEGER,                 -- 写：通信实例ID（外键关联 comm_instances.id，仅当 is_writable=1 时使用）
-    write_point_id INTEGER,                         -- 写：点表点ID（外键关联 point_table_points.id，仅当 is_writable=1 时使用）
+    write_comm_instance_id INTEGER,                 -- 写：通信实例ID（外键关联 comm_instances.id，用于可写字段）
+    write_point_id INTEGER,                         -- 写：点表点ID（外键关联 point_table_points.id，用于可写字段）
     -- 写入值（用于写指令/设定值；对 COMMAND/SETPOINT/PARAM_SET 类型字段必填）
     write_value TEXT,                               -- 写入的目标值（例如分闸=0，合闸=1，可存储数值或字符串）
     -- 固定字段的预定义键（仅当 field_type='fixed' 时使用）
@@ -206,14 +203,18 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
         (source_type = 'di_point' AND read_comm_instance_id IS NOT NULL AND read_point_id IS NOT NULL)
     ),
     -- 检查约束：可写字段必须可读（写入后需要读取反馈）
-    CHECK (is_writable = 0 OR is_readable = 1),
     -- 检查约束：可写字段必须配置写数据来源和值
     CHECK (
-        is_writable = 0 OR
-        (source_type = 'asset_field' AND write_device_type_tag_id IS NOT NULL) OR
+        (write_device_type_tag_id IS NULL AND write_comm_instance_id IS NULL AND write_point_id IS NULL)
+        OR
+        (source_type = 'asset_field' AND write_device_type_tag_id IS NOT NULL)
+        OR
         (source_type = 'di_point' AND write_comm_instance_id IS NOT NULL AND write_point_id IS NOT NULL)
     ),
-    CHECK (is_writable = 0 OR write_value IS NOT NULL),
+    CHECK (
+        (write_device_type_tag_id IS NULL AND write_comm_instance_id IS NULL AND write_point_id IS NULL)
+        OR write_value IS NOT NULL
+    ),
     UNIQUE(bms_instance_id, page_type, field_key)
 );
 
