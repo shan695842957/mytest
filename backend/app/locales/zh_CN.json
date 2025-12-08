@@ -460,7 +460,14 @@
   "bms.success.hierarchy_config_created": "层级配置创建成功",
   "bms.success.hierarchy_config_updated": "层级配置更新成功",
   "bms.success.field_configs_listed": "获取字段配置列表成功",
+  "bms.success.field_config_created": "字段配置创建成功",
+  "bms.success.field_config_updated": "字段配置更新成功",
+  "bms.success.field_config_deleted": "字段配置删除成功",
+  "bms.success.field_configs_imported": "字段配置导入成功",
+  "bms.success.realtime_data_retrieved": "实时数据获取成功",
   "bms.error.architecture_not_found": "BMS架构不存在",
+  "bms.error.field_config_not_found": "字段配置不存在",
+  "bms.error.invalid_import_mode": "无效的导入模式（必须是 'append' 或 'update'）",
   "bms.error.instance_not_found": "BMS实例不存在",
   "bms.error.asset_not_found": "资产不存在",
   "bms.error.asset_already_bms": "该资产已经被关联为BMS实例",
@@ -473,8 +480,14 @@
   "audit.action.bms_instance_deleted": "删除BMS实例",
   "audit.action.bms_hierarchy_config_created": "创建BMS层级配置",
   "audit.action.bms_hierarchy_config_updated": "更新BMS层级配置",
+  "audit.action.bms_field_config_created": "创建BMS字段配置",
+  "audit.action.bms_field_config_updated": "更新BMS字段配置",
+  "audit.action.bms_field_config_deleted": "删除BMS字段配置",
+  "audit.action.bms_field_configs_imported": "导入BMS字段配置",
   "audit.module.bms": "BMS管理",
   "audit.target.bms_instance": "BMS实例",
-  "audit.target.bms_hierarchy_config": "BMS层级配置"
+  "audit.target.bms_hierarchy_config": "BMS层级配置",
+  "audit.target.bms_field_config": "BMS字段配置",
+  "audit.target.bms_field_configs": "BMS字段配置（批量）"
   
 }

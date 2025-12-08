@@ -23,6 +23,7 @@ import zhCN_dashboard from '@/locales/zh-CN/dashboard.json'
 import zhCN_history from '@/locales/zh-CN/history.json'
 import zhCN_topology from '@/locales/zh-CN/topology.json'
 import zhCN_testPanel from '@/locales/zh-CN/testPanel.json'
+import zhCN_bms from '@/locales/zh-CN/bms.json'
 import enUS_common from '@/locales/en-US/common.json'
 import enUS_auth from '@/locales/en-US/auth.json'
 import enUS_menu from '@/locales/en-US/menu.json'
@@ -39,6 +40,7 @@ import enUS_dashboard from '@/locales/en-US/dashboard.json'
 import enUS_history from '@/locales/en-US/history.json'
 import enUS_topology from '@/locales/en-US/topology.json'
 import enUS_testPanel from '@/locales/en-US/testPanel.json'
+import enUS_bms from '@/locales/en-US/bms.json'
 
 // 支持的语言
 export const SUPPORTED_LOCALES = {
@@ -70,6 +72,7 @@ const resources = {
     history: zhCN_history,
     topology: zhCN_topology,
     testPanel: zhCN_testPanel,
+    bms: zhCN_bms,
   },
   'en-US': {
     common: enUS_common,
@@ -88,6 +91,7 @@ const resources = {
     history: enUS_history,
     topology: enUS_topology,
     testPanel: enUS_testPanel,
+    bms: enUS_bms,
   },
 }
 
@@ -99,7 +103,7 @@ i18n
     resources,
     fallbackLng: DEFAULT_LOCALE,
     defaultNS: 'common',
-    ns: ['common', 'auth', 'menu', 'audit', 'settings', 'user', 'gateway', 'software', 'tools', 'config', 'soe', 'lightPanel', 'dashboard', 'history', 'topology', 'testPanel'],
+    ns: ['common', 'auth', 'menu', 'audit', 'settings', 'user', 'gateway', 'software', 'tools', 'config', 'soe', 'lightPanel', 'dashboard', 'history', 'topology', 'testPanel', 'bms'],
     
     interpolation: {
       escapeValue: false, // React 已经处理了 XSS

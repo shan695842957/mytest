@@ -459,7 +459,14 @@
   "bms.success.hierarchy_config_created": "Hierarchy config created successfully",
   "bms.success.hierarchy_config_updated": "Hierarchy config updated successfully",
   "bms.success.field_configs_listed": "Field configs listed successfully",
+  "bms.success.field_config_created": "Field config created successfully",
+  "bms.success.field_config_updated": "Field config updated successfully",
+  "bms.success.field_config_deleted": "Field config deleted successfully",
+  "bms.success.field_configs_imported": "Field configs imported successfully",
+  "bms.success.realtime_data_retrieved": "Realtime data retrieved successfully",
   "bms.error.architecture_not_found": "BMS architecture not found",
+  "bms.error.field_config_not_found": "Field config not found",
+  "bms.error.invalid_import_mode": "Invalid import mode (must be 'append' or 'update')",
   "bms.error.instance_not_found": "BMS instance not found",
   "bms.error.asset_not_found": "Asset not found",
   "bms.error.asset_already_bms": "Asset is already associated with a BMS instance",
@@ -472,8 +479,14 @@
   "audit.action.bms_instance_deleted": "Delete BMS Instance",
   "audit.action.bms_hierarchy_config_created": "Create BMS Hierarchy Config",
   "audit.action.bms_hierarchy_config_updated": "Update BMS Hierarchy Config",
+  "audit.action.bms_field_config_created": "Create BMS Field Config",
+  "audit.action.bms_field_config_updated": "Update BMS Field Config",
+  "audit.action.bms_field_config_deleted": "Delete BMS Field Config",
+  "audit.action.bms_field_configs_imported": "Import BMS Field Configs",
   "audit.module.bms": "BMS Management",
   "audit.target.bms_instance": "BMS Instance",
-  "audit.target.bms_hierarchy_config": "BMS Hierarchy Config"
+  "audit.target.bms_hierarchy_config": "BMS Hierarchy Config",
+  "audit.target.bms_field_config": "BMS Field Config",
+  "audit.target.bms_field_configs": "BMS Field Configs (Batch)"
   
 }

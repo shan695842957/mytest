@@ -287,6 +287,13 @@ export const MENU_CONFIG: MenuItem[] = [
         path: '/config/assets',
         roles: [UserRole.DEVELOPER, UserRole.OPERATOR],
       },
+      {
+        key: 'config-bms',
+        label: 'bms',
+        icon: <Battery className="size-4" />,
+        path: '/config/bms',
+        roles: [UserRole.DEVELOPER, UserRole.OPERATOR],
+      },
     ],
   },
   {
@@ -316,6 +323,29 @@ export const MENU_CONFIG: MenuItem[] = [
     icon: <GitBranch className="size-4" />,
     path: '/topology',
     roles: [UserRole.DEVELOPER, UserRole.OPERATOR],
+  },
+  {
+    key: 'bms-display',
+    label: 'bms_display',
+    icon: <Battery className="size-4" />,
+    path: '/bms-display',
+    roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
+    children: [
+      {
+        key: 'bms-display-level2',
+        label: 'bms_level2',
+        icon: <Battery className="size-4" />,
+        path: '/bms-display/level2',
+        roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
+      },
+      {
+        key: 'bms-display-level3',
+        label: 'bms_level3',
+        icon: <Battery className="size-4" />,
+        path: '/bms-display/level3',
+        roles: [UserRole.DEVELOPER, UserRole.OPERATOR, UserRole.USER],
+      },
+    ],
   },
   {
     key: 'test-panel',

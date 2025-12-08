@@ -53,6 +53,8 @@ const ProtocolTypesPage = lazy(() => import('@/pages/config/ProtocolTypesPage'))
 const PeripheralsPage = lazy(() => import('@/pages/config/PeripheralsPage'))
 const AssetsPage = lazy(() => import('@/pages/config/AssetsPage'))
 const MappingsPage = lazy(() => import('@/pages/config/MappingsPage'))
+const BMSPage = lazy(() => import('@/pages/config/BMSPage'))
+const BMSConfigPage = lazy(() => import('@/pages/config/BMSConfigPage'))
 
 // SOE 查询页面
 const SOEPage = lazy(() => import('@/pages/soe/SOEPage'))
@@ -71,6 +73,8 @@ const LightPanelTestPage = lazy(() => import('@/pages/test/LightPanelTestPage'))
 const HistoryTestPage = lazy(() => import('@/pages/test/HistoryTestPage'))
 const BMSLevel2Page = lazy(() => import('@/pages/test/BMSLevel2Page'))
 const BMSLevel3Page = lazy(() => import('@/pages/test/BMSLevel3Page'))
+const BMSDisplayLevel2Page = lazy(() => import('@/pages/bms/BMSDisplayLevel2Page'))
+const BMSDisplayLevel3Page = lazy(() => import('@/pages/bms/BMSDisplayLevel3Page'))
 
 // 路由守卫
 import { ProtectedRoute } from '@/components/auth'
@@ -363,6 +367,19 @@ export const routes: RouteObject[] = [
                 path: 'assets/:id/mappings',
                 element: <MappingsPage />,
               },
+              {
+                path: 'bms',
+                children: [
+                  {
+                    index: true,
+                    element: <BMSPage />,
+                  },
+                  {
+                    path: ':id',
+                    element: <BMSConfigPage />,
+                  },
+                ],
+              },
             ],
           },
           {
@@ -390,6 +407,19 @@ export const routes: RouteObject[] = [
               {
                 index: true,
                 element: <TopologyPage />,
+              },
+            ],
+          },
+          {
+            path: 'bms-display',
+            children: [
+              {
+                path: 'level2',
+                element: <BMSDisplayLevel2Page />,
+              },
+              {
+                path: 'level3',
+                element: <BMSDisplayLevel3Page />,
               },
             ],
           },
