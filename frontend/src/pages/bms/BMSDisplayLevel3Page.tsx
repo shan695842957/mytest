@@ -1009,7 +1009,7 @@ export default function BMSDisplayLevel3Page() {
                         {/* Clusters in Parallel - 横向排列，支持触摸滚动 */}
                         <div 
                           ref={scrollContainerRef}
-                          className="flex gap-3 overflow-x-auto pb-4 cursor-grab active:cursor-grabbing select-none"
+                          className="flex gap-3 overflow-x-auto pb-4 cursor-grab active:cursor-grabbing select-none relative"
                           style={{
                             scrollbarWidth: 'thin',
                             scrollbarColor: 'rgba(0,0,0,0.2) transparent',
@@ -1051,7 +1051,7 @@ export default function BMSDisplayLevel3Page() {
                             isDraggingRef.current = false
                           }}
                         >
-                          {clusterList.clusters.map((cluster) => {
+                          {clusterList.clusters.map((cluster, index) => {
                             const isClosed =
                               clusterBreakerStatuses.get(cluster.id) ??
                               cluster.fixedFields.breakerClosed
@@ -1066,8 +1066,12 @@ export default function BMSDisplayLevel3Page() {
 
                             return (
                               <div key={cluster.id} className="relative flex-shrink-0" style={{ minWidth: '280px' }}>
-                                {/* Connection Line from Busbar - 固定显示 */}
-                                <div className="absolute left-1/2 -top-6 w-0.5 h-6 bg-blue-500 transform -translate-x-1/2" />
+                                {/* Connection Line from Busbar to Cluster - 连接到上方红色母线 */}
+                                {/* 母线有 mb-6 (24px)，连接线需要从簇卡片顶部向上延伸到母线底部 */}
+                                <div 
+                                  className="absolute left-1/2 -top-6 w-0.5 bg-blue-500 transform -translate-x-1/2 z-10"
+                                  style={{ height: '24px' }}
+                                />
 
                                 {/* Cluster Card - 减小宽度以适应更多簇 */}
                                 <Card className="border-2 w-full">
