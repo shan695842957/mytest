@@ -643,14 +643,14 @@ export default function BMSDisplayLevel2Page() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium">
-                {t('bms.select_bms_instance', '选择BMS实例')}:
+                {t('select_bms_instance')}:
               </span>
               <Select
                 value={selectedBMSInstanceId?.toString() || ''}
                 onValueChange={(value) => setSelectedBMSInstanceId(parseInt(value))}
               >
                 <SelectTrigger className="w-[300px]">
-                  <SelectValue placeholder={t('bms.select_bms_instance_placeholder', '请选择BMS实例')} />
+                  <SelectValue placeholder={t('select_bms_instance_placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {instances.map((instance) => (
@@ -667,16 +667,16 @@ export default function BMSDisplayLevel2Page() {
       
       <Card>
         <CardHeader>
-          <CardTitle>{t('bms.level2_title', 'BMS二级架构')}</CardTitle>
-          <CardDescription>{t('bms.level2_description', '电池簇 → 电池包 → 电池单体')}</CardDescription>
+          <CardTitle>{t('level2_title')}</CardTitle>
+          <CardDescription>{t('level2_description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="sys">{t('bms.tab_sys')}</TabsTrigger>
-              <TabsTrigger value="bcu">{t('bms.tab_bcu')}</TabsTrigger>
-              <TabsTrigger value="bmu">{t('bms.tab_bmu')}</TabsTrigger>
-              <TabsTrigger value="evt">{t('bms.tab_evt')}</TabsTrigger>
+              <TabsTrigger value="sys">{t('tab_sys')}</TabsTrigger>
+              <TabsTrigger value="bcu">{t('tab_bcu')}</TabsTrigger>
+              <TabsTrigger value="bmu">{t('tab_bmu')}</TabsTrigger>
+              <TabsTrigger value="evt">{t('tab_evt')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="sys" className="mt-4">
@@ -685,29 +685,29 @@ export default function BMSDisplayLevel2Page() {
                   {/* Cluster Basic Information */}
                   <Card>
                     <CardHeader>
-                      <CardTitle>{t('bms.cluster_basic_info')}</CardTitle>
+                      <CardTitle>{t('cluster_basic_info')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {/* Fault Status - 固定字段（修复：告警状态→故障状态，对齐样式） */}
                         <div className="bg-muted/50 rounded-lg p-4 flex flex-col justify-end">
                           <div className="text-xs text-muted-foreground mb-1">
-                            {t('bms.fault_status', '故障状态')}
+                            {t('fault_status')}
                           </div>
                           <Badge
                             variant={clusterBasicInfo.fixedFields.fault ? 'destructive' : 'secondary'}
                             className="w-full justify-center"
                           >
                             {clusterBasicInfo.fixedFields.fault
-                              ? t('bms.fault')
-                              : t('bms.normal')}
+                              ? t('fault')
+                              : t('normal')}
                           </Badge>
                         </div>
 
                         {/* Cluster Voltage - 固定字段 */}
                         <div className="bg-muted/50 rounded-lg p-4">
                           <div className="text-xs text-muted-foreground mb-1">
-                            {t('bms.cluster_voltage')}
+                            {t('cluster_voltage')}
                           </div>
                           <div className="text-2xl font-bold">
                             {clusterBasicInfo.fixedFields.voltage} V
@@ -717,7 +717,7 @@ export default function BMSDisplayLevel2Page() {
                         {/* Cluster Current - 固定字段 */}
                         <div className="bg-muted/50 rounded-lg p-4">
                           <div className="text-xs text-muted-foreground mb-1">
-                            {t('bms.cluster_current')}
+                            {t('cluster_current')}
                           </div>
                           <div className="text-2xl font-bold">
                             {clusterBasicInfo.fixedFields.current} A
@@ -727,7 +727,7 @@ export default function BMSDisplayLevel2Page() {
                         {/* Power - 固定字段 */}
                         <div className="bg-muted/50 rounded-lg p-4">
                           <div className="text-xs text-muted-foreground mb-1">
-                            {t('bms.power')}
+                            {t('power')}
                           </div>
                           <div className="text-2xl font-bold">
                             {clusterBasicInfo.fixedFields.power} kW
@@ -738,17 +738,17 @@ export default function BMSDisplayLevel2Page() {
                       {/* Breaker Status - 固定字段 */}
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
-                          {t('bms.breaker_status')}:
+                          {t('breaker_status')}:
                         </span>
                         {clusterBreakerClosed ? (
                           <Badge variant="default" className="bg-green-500">
                             <CheckCircle2 className="w-3 h-3 mr-1" />
-                            {t('bms.closed')}
+                            {t('closed')}
                           </Badge>
                         ) : (
                           <Badge variant="destructive">
                             <XCircle className="w-3 h-3 mr-1" />
-                            {t('bms.open')}
+                            {t('open')}
                           </Badge>
                         )}
                       </div>
@@ -776,7 +776,7 @@ export default function BMSDisplayLevel2Page() {
                   {/* Breaker Control - 固定功能 */}
                   <Card>
                     <CardHeader>
-                      <CardTitle>{t('bms.breaker_control')}</CardTitle>
+                      <CardTitle>{t('breaker_control')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex gap-4">
@@ -785,14 +785,14 @@ export default function BMSDisplayLevel2Page() {
                           className="bg-green-500 hover:bg-green-600 text-white"
                           disabled={clusterBreakerClosed}
                         >
-                          {t('bms.close_breaker')}
+                          {t('close_breaker')}
                         </Button>
                         <Button
                           onClick={() => handleBreakerControl('open')}
                           variant="destructive"
                           disabled={!clusterBreakerClosed}
                         >
-                          {t('bms.open_breaker')}
+                          {t('open_breaker')}
                         </Button>
                       </div>
                     </CardContent>
@@ -804,7 +804,7 @@ export default function BMSDisplayLevel2Page() {
                   {packList && (
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('bms.pack_status_series')}</CardTitle>
+                        <CardTitle>{t('pack_status_series')}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <ScrollArea className="h-[600px]">
@@ -849,14 +849,14 @@ export default function BMSDisplayLevel2Page() {
                                         <div className="flex-1 grid grid-cols-4 gap-4">
                                           <div>
                                             <div className="text-sm font-semibold mb-1">
-                                              {t('bms.pack')} {pack.number}
+                                              {t('pack')} {pack.number}
                                             </div>
                                           </div>
 
                                           {/* 固定字段：电压、电流 */}
                                           <div className="space-y-1">
                                             <div className="text-xs text-muted-foreground">
-                                              {t('bms.voltage')}
+                                              {t('voltage')}
                                             </div>
                                             <div className="text-sm font-semibold">
                                               {pack.fixedFields.voltage.toFixed(1)}V
@@ -865,7 +865,7 @@ export default function BMSDisplayLevel2Page() {
 
                                           <div className="space-y-1">
                                             <div className="text-xs text-muted-foreground">
-                                              {t('bms.current')}
+                                              {t('current')}
                                             </div>
                                             <div className="text-sm font-semibold">
                                               {pack.fixedFields.current.toFixed(1)}A
@@ -906,8 +906,8 @@ export default function BMSDisplayLevel2Page() {
                                           {/* 状态 - 固定字段 */}
                                           <Badge variant={pack.fixedFields.fault ? 'default' : 'secondary'}>
                                             {pack.fixedFields.fault
-                                              ? t('bms.warning')
-                                              : t('bms.normal')}
+                                              ? t('warning')
+                                              : t('normal')}
                                           </Badge>
                                         </div>
                                       </div>
@@ -932,7 +932,7 @@ export default function BMSDisplayLevel2Page() {
                     {/* 遥测数据 */}
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('bms.telemetry_data', '遥测数据')}</CardTitle>
+                        <CardTitle>{t('telemetry_data')}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
@@ -953,7 +953,7 @@ export default function BMSDisplayLevel2Page() {
                     {/* 遥信数据 */}
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('bms.telecontrol_data', '遥信数据')}</CardTitle>
+                        <CardTitle>{t('telecontrol_data')}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex flex-wrap gap-2">
@@ -969,14 +969,14 @@ export default function BMSDisplayLevel2Page() {
                     {/* 控制命令 */}
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('bms.control_commands', '控制命令')}</CardTitle>
+                        <CardTitle>{t('control_commands')}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <Button
                           variant="destructive"
                           onClick={handleFaultReset}
                         >
-                          {t('bms.fault_reset', '故障复位')}
+                          {t('fault_reset')}
                         </Button>
                       </CardContent>
                     </Card>
@@ -984,7 +984,7 @@ export default function BMSDisplayLevel2Page() {
                 ) : (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
-                      {t('bms.loading', '加载中...')}
+                      {t('loading')}
                     </CardContent>
                   </Card>
                 )}
@@ -997,12 +997,12 @@ export default function BMSDisplayLevel2Page() {
                 {packList && packList.packs.length > 0 && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>{t('bms.select_pack', '选择包')}</CardTitle>
+                      <CardTitle>{t('select_pack')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-4">
                         <span className="text-sm font-medium">
-                          {t('bms.pack', '包')}:
+                          {t('pack')}:
                         </span>
                         <Select
                           value={selectedPackId}
@@ -1032,7 +1032,7 @@ export default function BMSDisplayLevel2Page() {
                               }}
                               disabled={packList.packs.findIndex(p => p.id === selectedPackId) === 0}
                             >
-                              {t('bms.previous', '上一个')}
+                              {t('previous')}
                             </Button>
                             <Button
                               variant="outline"
@@ -1045,7 +1045,7 @@ export default function BMSDisplayLevel2Page() {
                               }}
                               disabled={packList.packs.findIndex(p => p.id === selectedPackId) === packList.packs.length - 1}
                             >
-                              {t('bms.next', '下一个')}
+                              {t('next')}
                             </Button>
                           </>
                         )}
@@ -1057,8 +1057,8 @@ export default function BMSDisplayLevel2Page() {
                 {/* BMU子标签页 */}
                 <Tabs value={bmuActiveSubTab} onValueChange={(v) => setBmuActiveSubTab(v as 'cell' | 'temperature')}>
                   <TabsList>
-                    <TabsTrigger value="cell">{t('bms.cell_information', '单体信息')}</TabsTrigger>
-                    <TabsTrigger value="temperature">{t('bms.temperature_points', '温度测点')}</TabsTrigger>
+                    <TabsTrigger value="cell">{t('cell_information')}</TabsTrigger>
+                    <TabsTrigger value="temperature">{t('temperature_points')}</TabsTrigger>
                   </TabsList>
 
                   {/* 单体信息 */}
@@ -1068,7 +1068,7 @@ export default function BMSDisplayLevel2Page() {
                         {/* 单体配置 */}
                         <Card>
                           <CardHeader>
-                            <CardTitle>{t('bms.cell_configuration', '单体配置')}</CardTitle>
+                            <CardTitle>{t('cell_configuration')}</CardTitle>
                           </CardHeader>
                           <CardContent>
                             <p className="text-lg font-semibold">{packCellInfo.cellConfiguration}</p>
@@ -1078,7 +1078,7 @@ export default function BMSDisplayLevel2Page() {
                         {/* 单体数据网格 */}
                         <Card>
                           <CardHeader>
-                            <CardTitle>{t('bms.cell_data', '单体数据')}</CardTitle>
+                            <CardTitle>{t('cell_data')}</CardTitle>
                           </CardHeader>
                           <CardContent>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10 gap-3">
@@ -1138,7 +1138,7 @@ export default function BMSDisplayLevel2Page() {
                     ) : (
                       <Card>
                         <CardContent className="py-8 text-center text-muted-foreground">
-                          {t('bms.loading', '加载中...')}
+                          {t('loading')}
                         </CardContent>
                       </Card>
                     )}
@@ -1149,7 +1149,7 @@ export default function BMSDisplayLevel2Page() {
                     {packTemperature ? (
                       <Card>
                         <CardHeader>
-                          <CardTitle>{t('bms.temperature_points', '温度测点')}</CardTitle>
+                          <CardTitle>{t('temperature_points')}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
@@ -1192,7 +1192,7 @@ export default function BMSDisplayLevel2Page() {
                     ) : (
                       <Card>
                         <CardContent className="py-8 text-center text-muted-foreground">
-                          {t('bms.loading', '加载中...')}
+                          {t('loading')}
                         </CardContent>
                       </Card>
                     )}
@@ -1209,7 +1209,7 @@ export default function BMSDisplayLevel2Page() {
                     {eventLog.activeTelecontrols.length > 0 && (
                       <Card>
                         <CardHeader>
-                          <CardTitle>{t('bms.active_telecontrols', '当前激活的遥信量')}</CardTitle>
+                          <CardTitle>{t('active_telecontrols')}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="flex flex-wrap gap-2">
@@ -1242,7 +1242,7 @@ export default function BMSDisplayLevel2Page() {
                     {/* 事件记录表格 */}
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('bms.event_log', '事件记录')}</CardTitle>
+                        <CardTitle>{t('event_log')}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="overflow-x-auto">
@@ -1250,13 +1250,13 @@ export default function BMSDisplayLevel2Page() {
                             <thead>
                               <tr className="border-b">
                                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                                  {t('bms.time', '时间')}
+                                  {t('time')}
                                 </th>
                                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                                  {t('bms.category', '类别')}
+                                  {t('category')}
                                 </th>
                                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                                  {t('bms.details', '详情')}
+                                  {t('details')}
                                 </th>
                               </tr>
                             </thead>
@@ -1274,12 +1274,12 @@ export default function BMSDisplayLevel2Page() {
                                     return isZh ? `${event.device} 状态` : `${event.device} Status`
                                   }
                                   if (event.category === 'Fault') {
-                                    return t('bms.system_fault', '系统故障')
+                                    return t('system_fault')
                                   }
                                   if (event.category === 'Alarm') {
-                                    return t('bms.system_alarm', '系统告警')
+                                    return t('system_alarm')
                                   }
-                                  return t('bms.system_status', '系统状态')
+                                  return t('system_status')
                                 }
                                 
                                 const getCategoryColor = () => {
@@ -1312,7 +1312,7 @@ export default function BMSDisplayLevel2Page() {
                 ) : (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
-                      {t('bms.loading', '加载中...')}
+                      {t('loading')}
                     </CardContent>
                   </Card>
                 )}
