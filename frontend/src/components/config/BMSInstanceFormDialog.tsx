@@ -83,12 +83,12 @@ export function BMSInstanceFormDialog({
   })
   
   // 获取架构列表和资产列表
-  const { data: architecturesData } = useQuery({
+  const { data: architecturesData, isLoading: architecturesLoading } = useQuery({
     queryKey: ['bms-architectures'],
     queryFn: () => getBMSArchitectures(),
   })
   
-  const { data: assetsData } = useQuery({
+  const { data: assetsData, isLoading: assetsLoading } = useQuery({
     queryKey: ['assets', { skip: 0, limit: 100 }],
     queryFn: () => getAssetList({ skip: 0, limit: 100 }),
   })
@@ -167,7 +167,11 @@ export function BMSInstanceFormDialog({
     }
   }
   
+  // 处理架构数据：getBMSArchitectures返回的是ApiResponse，需要访问.data
+  // 注意：getBMSArchitectures()已经返回了response.data，所以architecturesData就是ApiResponse对象
   const architectures = (architecturesData?.data as any[] | null | undefined) || []
+  
+  // 处理资产数据：getAssetList返回的是ApiResponse，需要访问.data
   const assets = ((assetsData?.data as any[] | null | undefined) || []).filter(
     (asset: any) => asset.enabled
   )
@@ -232,11 +236,21 @@ export function BMSInstanceFormDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {architectures.map((arch) => (
-                        <SelectItem key={arch.id} value={arch.id.toString()}>
-                          {arch.display_name_zh} ({arch.name})
+                      {architecturesLoading ? (
+                        <SelectItem value="loading" disabled>
+                          {t('common.loading')}
                         </SelectItem>
-                      ))}
+                      ) : architectures.length === 0 ? (
+                        <SelectItem value="empty" disabled>
+                          暂无架构数据
+                        </SelectItem>
+                      ) : (
+                        architectures.map((arch) => (
+                          <SelectItem key={arch.id} value={arch.id.toString()}>
+                            {arch.display_name_zh} ({arch.name})
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
