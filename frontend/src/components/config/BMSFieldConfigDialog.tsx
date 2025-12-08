@@ -644,9 +644,10 @@ export function BMSFieldConfigDialog({
                               ) : (
                                 assetFields.map((field) => {
                                   const displayName = field.display_name || field.tag_name
+                                  const displayText = `${displayName} (${field.tag_name})`
                                   return (
                                     <SelectItem key={field.id} value={field.id.toString()}>
-                                      {displayName} ({field.tag_name})
+                                      {displayText}
                                     </SelectItem>
                                   )
                                 })
@@ -686,9 +687,10 @@ export function BMSFieldConfigDialog({
                               ) : (
                                 assetFields.map((field) => {
                                   const displayName = field.display_name || field.tag_name
+                                  const displayText = `${displayName} (${field.tag_name})`
                                   return (
                                     <SelectItem key={field.id} value={field.id.toString()}>
-                                      {displayName} ({field.tag_name})
+                                      {displayText}
                                     </SelectItem>
                                   )
                                 })
