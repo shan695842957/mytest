@@ -642,11 +642,14 @@ export function BMSFieldConfigDialog({
                                   {t('bms.field_config.no_asset_fields', '暂无资产字段')}
                                 </SelectItem>
                               ) : (
-                                assetFields.map((field) => (
-                                  <SelectItem key={field.id} value={field.id.toString()}>
-                                    {`${field.display_name || field.tag_name} (${field.tag_name})`}
-                                  </SelectItem>
-                                ))
+                                assetFields.map((field) => {
+                                  const displayName = field.display_name || field.tag_name
+                                  return (
+                                    <SelectItem key={field.id} value={field.id.toString()}>
+                                      {displayName} ({field.tag_name})
+                                    </SelectItem>
+                                  )
+                                })
                               )
                             </SelectContent>
                           </Select>
@@ -681,11 +684,14 @@ export function BMSFieldConfigDialog({
                                   {t('bms.field_config.no_asset_fields', '暂无资产字段')}
                                 </SelectItem>
                               ) : (
-                                assetFields.map((field) => (
-                                  <SelectItem key={field.id} value={field.id.toString()}>
-                                    {`${field.display_name || field.tag_name} (${field.tag_name})`}
-                                  </SelectItem>
-                                ))
+                                assetFields.map((field) => {
+                                  const displayName = field.display_name || field.tag_name
+                                  return (
+                                    <SelectItem key={field.id} value={field.id.toString()}>
+                                      {displayName} ({field.tag_name})
+                                    </SelectItem>
+                                  )
+                                })
                               )
                             </SelectContent>
                           </Select>
