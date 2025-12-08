@@ -162,12 +162,14 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
     source_type TEXT NOT NULL,                      -- 字段来源类型：'asset_field'（资产字段）| 'custom'（自定义字段）| 'di_point'（DI点）
     -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
     read_device_type_tag_id INTEGER,                -- 读：资产字段ID（外键关联 device_type_tags.id）
-    write_device_type_tag_id INTEGER,                -- 写：资产字段ID（外键关联 device_type_tags.id，仅当 is_writable=1 时使用）
+    write_device_type_tag_id INTEGER,               -- 写：资产字段ID（外键关联 device_type_tags.id，仅当 is_writable=1 时使用）
     -- 当 source_type='di_point' 时使用
     read_comm_instance_id INTEGER,                  -- 读：通信实例ID（外键关联 comm_instances.id）
     read_point_id INTEGER,                          -- 读：点表点ID（外键关联 point_table_points.id）
-    write_comm_instance_id INTEGER,                  -- 写：通信实例ID（外键关联 comm_instances.id，仅当 is_writable=1 时使用）
+    write_comm_instance_id INTEGER,                 -- 写：通信实例ID（外键关联 comm_instances.id，仅当 is_writable=1 时使用）
     write_point_id INTEGER,                         -- 写：点表点ID（外键关联 point_table_points.id，仅当 is_writable=1 时使用）
+    -- 写入值（用于写指令/设定值；对 COMMAND/SETPOINT/PARAM_SET 类型字段必填）
+    write_value TEXT,                               -- 写入的目标值（例如分闸=0，合闸=1，可存储数值或字符串）
     -- 固定字段的预定义键（仅当 field_type='fixed' 时使用）
     -- 二级架构SYS页面固定字段：
     --   'fault'（告警状态，只读，STATUS类型）
@@ -175,12 +177,14 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
     --   'current'（电流，只读，MEASURE类型）
     --   'power'（功率，只读，MEASURE类型，可能通过计算）
     --   'breaker_status'（断路器状态，只读，STATUS类型）
-    --   'breaker_command'（断路器指令，可写，COMMAND类型）
+    --   'breaker_open_command'（断路器分闸指令，可写，COMMAND类型，典型 write_value=0）
+    --   'breaker_close_command'（断路器合闸指令，可写，COMMAND类型，典型 write_value=1）
     -- 三级架构SYS页面固定字段（同二级架构）：
-    --   'fault', 'voltage', 'current', 'power', 'breaker_status', 'breaker_command'
+    --   'fault', 'voltage', 'current', 'power', 'breaker_status', 'breaker_open_command', 'breaker_close_command'
     -- 三级架构拓扑图（簇）固定字段：
     --   'breaker_status'（簇分合闸状态，只读，STATUS类型）
-    --   'breaker_command'（簇分合闸指令，可写，COMMAND类型）
+    --   'breaker_open_command'（簇分闸指令，可写，COMMAND类型，典型 write_value=0）
+    --   'breaker_close_command'（簇合闸指令，可写，COMMAND类型，典型 write_value=1）
     sort_order INTEGER NOT NULL DEFAULT 0,          -- 排序索引（避免使用 index 关键字）
     description_zh TEXT NOT NULL DEFAULT '',        -- 中文描述
     description_en TEXT NOT NULL DEFAULT '',        -- 英文描述
@@ -203,12 +207,13 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
     ),
     -- 检查约束：可写字段必须可读（写入后需要读取反馈）
     CHECK (is_writable = 0 OR is_readable = 1),
-    -- 检查约束：可写字段必须配置写数据来源
+    -- 检查约束：可写字段必须配置写数据来源和值
     CHECK (
         is_writable = 0 OR
         (source_type = 'asset_field' AND write_device_type_tag_id IS NOT NULL) OR
         (source_type = 'di_point' AND write_comm_instance_id IS NOT NULL AND write_point_id IS NOT NULL)
     ),
+    CHECK (is_writable = 0 OR write_value IS NOT NULL),
     UNIQUE(bms_instance_id, page_type, field_key)
 );
 
@@ -755,11 +760,12 @@ GET    /api/bms/instances/{id}/hierarchy-summary     # 根据 hierarchy-config �
   - `current`（电流）- 只读，MEASURE类型
   - `power`（功率）- 只读，MEASURE类型（可能通过计算：电压 * 电流 / 1000）
   - `breaker_status`（断路器状态）- 只读，STATUS类型
-  - `breaker_command`（断路器指令）- 可写，COMMAND类型
+  - `breaker_open_command`（断路器分闸指令）- 可写，COMMAND类型，典型 write_value=0
+  - `breaker_close_command`（断路器合闸指令）- 可写，COMMAND类型，典型 write_value=1
 - **固定字段绑定**：需要绑定到数据来源（资产字段或DI点），不是硬编码
 - **读写分离**：
-  - 读：根据 `source_type` 和对应的读字段（`read_device_type_tag_id` 或 `read_comm_instance_id` + `read_point_id`）获取数据
-  - 写：根据 `source_type` 和对应的写字段（`write_device_type_tag_id` 或 `write_comm_instance_id` + `write_point_id`）写入数据（资产字段必须是 COMMAND/SETPOINT/PARAM_SET 类型）
+- 读：根据 `source_type` 和对应的读字段（`read_device_type_tag_id` 或 `read_comm_instance_id` + `read_point_id`）获取数据
+- 写：根据 `source_type`、写字段（`write_device_type_tag_id` 或 `write_comm_instance_id` + `write_point_id`）以及 `write_value` 写入目标值（资产字段必须是 COMMAND/SETPOINT/PARAM_SET 类型）
 
 ### 6.2 可配置字段处理
 
