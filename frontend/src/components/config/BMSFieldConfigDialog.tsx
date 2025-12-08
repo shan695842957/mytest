@@ -52,7 +52,15 @@ import type { AssetDetail, DeviceTypeTag } from '@/types'
 import type { CommInstance } from '@/types/commInstance'
 
 // SYS页面的固定字段（必须配置）
-const SYS_FIXED_FIELDS = ['fault', 'voltage', 'current', 'power', 'breaker_status', 'breaker_command']
+const SYS_FIXED_FIELDS = [
+  'fault',
+  'voltage',
+  'current',
+  'power',
+  'breaker_status',
+  'breaker_open_command',
+  'breaker_close_command',
+]
 
 interface BMSFieldConfigDialogProps {
   open: boolean
@@ -73,7 +81,7 @@ export function BMSFieldConfigDialog({
 }: BMSFieldConfigDialogProps) {
   const { t } = useTranslation(['config', 'common'])
   const queryClient = useQueryClient()
-  const isEdit = !!fieldConfig
+  const isEdit = !!(fieldConfig && fieldConfig.id)
 
   // 获取BMS实例的资产信息（所有hooks必须在组件顶部无条件调用）
   const { data: instanceData } = useQuery({
@@ -132,13 +140,10 @@ export function BMSFieldConfigDialog({
     field_key: z.string().min(1, t('validation.required', { ns: 'common' })),
     display_name_zh: z.string().min(1, t('validation.required', { ns: 'common' })),
     display_name_en: z.string().min(1, t('validation.required', { ns: 'common' })),
-    field_type: z.enum(['fixed', 'dynamic']),
     data_type: z.enum(['boolean', 'number', 'enum']),
     unit_zh: z.string().optional(),
     unit_en: z.string().optional(),
     is_required: z.boolean().optional(),
-    is_readable: z.boolean().optional(),
-    is_writable: z.boolean().optional(),
     source_type: z.enum(['asset_field', 'custom', 'di_point']),
     // 资产字段相关
     read_device_type_tag_id: z.number().optional(),
@@ -152,54 +157,32 @@ export function BMSFieldConfigDialog({
     description_zh: z.string().optional(),
     description_en: z.string().optional(),
   }).refine((data) => {
-    // 如果是SYS固定字段，source_type不能是custom
+    // SYS 固定字段必须配置读来源；命令类需写来源；不允许 custom
     if (pageType === 'SYS' && SYS_FIXED_FIELDS.includes(data.field_key)) {
-      if (data.source_type === 'custom') {
+      if (data.source_type === 'custom') return false
+      const isCommand = data.field_key === 'breaker_open_command' || data.field_key === 'breaker_close_command'
+      if (data.source_type === 'asset_field') {
+        if (!data.read_device_type_tag_id) return false
+        if (isCommand && !data.write_device_type_tag_id) return false
+      } else if (data.source_type === 'di_point') {
+        if (!data.read_comm_instance_id || !data.read_point_id) return false
+        if (isCommand && (!data.write_comm_instance_id || !data.write_point_id)) return false
+      } else {
         return false
       }
-      // SYS固定字段必须配置数据来源
+    } else {
+      // 非 SYS 固定字段：读来源必填；若配置写目标则写来源也需完整
       if (data.source_type === 'asset_field') {
-        if (data.is_readable && !data.read_device_type_tag_id) {
-          return false
-        }
-        if (data.is_writable && !data.write_device_type_tag_id) {
-          return false
-        }
+        if (!data.read_device_type_tag_id) return false
       } else if (data.source_type === 'di_point') {
-        if (data.is_readable && (!data.read_comm_instance_id || !data.read_point_id)) {
-          return false
+        if (!data.read_comm_instance_id || !data.read_point_id) return false
+        if (data.write_comm_instance_id || data.write_point_id) {
+          if (!data.write_comm_instance_id || !data.write_point_id) return false
         }
-        if (data.is_writable && (!data.write_comm_instance_id || !data.write_point_id)) {
-          return false
-        }
-      } else {
-        return false // SYS固定字段必须有数据来源
+      } else if (data.source_type === 'custom') {
+        // 允许无数据来源
       }
     }
-    return true
-  }, {
-    message: t('bms.field_config.sys_fixed_field_validation_error', 'SYS固定字段必须配置数据来源（资产字段或DI点）'),
-    path: ['source_type'],
-  }).refine((data) => {
-    // 根据source_type验证必填字段（非SYS固定字段的通用验证）
-    if (pageType !== 'SYS' || !SYS_FIXED_FIELDS.includes(data.field_key)) {
-      if (data.source_type === 'asset_field') {
-        if (data.is_readable && !data.read_device_type_tag_id) {
-          return false
-        }
-        if (data.is_writable && !data.write_device_type_tag_id) {
-          return false
-        }
-      } else if (data.source_type === 'di_point') {
-        if (data.is_readable && (!data.read_comm_instance_id || !data.read_point_id)) {
-          return false
-        }
-        if (data.is_writable && (!data.write_comm_instance_id || !data.write_point_id)) {
-          return false
-        }
-      }
-    }
-    // SYS固定字段的验证已在第一个refine中完成
     return true
   }, {
     message: t('bms.field_config.data_source_validation_error', '请配置完整的数据来源'),
@@ -211,13 +194,10 @@ export function BMSFieldConfigDialog({
       field_key: '',
       display_name_zh: '',
       display_name_en: '',
-      field_type: 'dynamic',
       data_type: 'number',
       unit_zh: '',
       unit_en: '',
       is_required: false,
-      is_readable: true,
-      is_writable: false,
       source_type: 'asset_field',
       read_device_type_tag_id: undefined,
       write_device_type_tag_id: undefined,
@@ -234,6 +214,9 @@ export function BMSFieldConfigDialog({
   // 判断是否为SYS页面的固定字段（监听字段键变化）
   const currentFieldKey = form.watch('field_key')
   const isSysFixedField = pageType === 'SYS' && currentFieldKey && SYS_FIXED_FIELDS.includes(currentFieldKey)
+  const lockedFixedMeta =
+    pageType === 'SYS' &&
+    SYS_FIXED_FIELDS.includes((currentFieldKey || fieldConfig?.field_key || '') as string)
 
   // 编辑模式：填充表单
   useEffect(() => {
@@ -242,13 +225,10 @@ export function BMSFieldConfigDialog({
         field_key: fieldConfig.field_key,
         display_name_zh: fieldConfig.display_name_zh,
         display_name_en: fieldConfig.display_name_en,
-        field_type: fieldConfig.field_type as 'fixed' | 'dynamic',
         data_type: fieldConfig.data_type as 'boolean' | 'number' | 'enum',
         unit_zh: fieldConfig.unit_zh,
         unit_en: fieldConfig.unit_en,
         is_required: fieldConfig.is_required,
-        is_readable: fieldConfig.is_readable,
-        is_writable: fieldConfig.is_writable,
         source_type: fieldConfig.source_type as 'asset_field' | 'custom' | 'di_point',
         read_device_type_tag_id: fieldConfig.read_device_type_tag_id ?? undefined,
         write_device_type_tag_id: fieldConfig.write_device_type_tag_id ?? undefined,
@@ -265,13 +245,10 @@ export function BMSFieldConfigDialog({
         field_key: '',
         display_name_zh: '',
         display_name_en: '',
-        field_type: 'dynamic',
         data_type: 'number',
         unit_zh: '',
         unit_en: '',
         is_required: false,
-        is_readable: true,
-        is_writable: false,
         source_type: 'asset_field',
         read_device_type_tag_id: undefined,
         write_device_type_tag_id: undefined,
@@ -288,9 +265,6 @@ export function BMSFieldConfigDialog({
 
   // 监听source_type变化，清空相关字段
   const sourceType = form.watch('source_type')
-  const isReadable = form.watch('is_readable')
-  const isWritable = form.watch('is_writable')
-
   useEffect(() => {
     if (sourceType === 'asset_field') {
       form.setValue('read_comm_instance_id', undefined)
@@ -344,21 +318,24 @@ export function BMSFieldConfigDialog({
     },
   })
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    if (isEdit) {
-      updateMutation.mutate(data as UpdateBMSFieldConfigRequest)
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const isSysFixed = pageType === 'SYS' && SYS_FIXED_FIELDS.includes(values.field_key)
+    const payload = {
+      ...values,
+      page_type: pageType,
+      field_type: isSysFixed ? 'fixed' : 'dynamic',
+      is_required: isSysFixed ? true : (values.is_required ?? false),
+    }
+    if (isEdit && fieldConfig?.id) {
+      updateMutation.mutate(payload as UpdateBMSFieldConfigRequest)
     } else {
-      const createData: CreateBMSFieldConfigRequest = {
-        ...data,
-        page_type: pageType,
-      }
-      createMutation.mutate(createData)
+      createMutation.mutate(payload as CreateBMSFieldConfigRequest)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-4xl md:max-w-5xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEdit
@@ -396,7 +373,7 @@ export function BMSFieldConfigDialog({
                       <FormControl>
                         <Input
                           {...field}
-                          disabled={isEdit}
+                          disabled={isEdit || lockedFixedMeta}
                           placeholder="例如：voltage, current, soc"
                         />
                       </FormControl>
@@ -405,34 +382,7 @@ export function BMSFieldConfigDialog({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="field_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('bms.field_config.field_type', '字段类型')}
-                        {isEdit && <span className="text-muted-foreground ml-2">(不可修改)</span>}
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={isEdit}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="fixed">{t('bms.field_config.fixed', '固定')}</SelectItem>
-                          <SelectItem value="dynamic">{t('bms.field_config.dynamic', '动态')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -443,7 +393,7 @@ export function BMSFieldConfigDialog({
                     <FormItem>
                       <FormLabel>{t('bms.field_config.display_name_zh', '中文显示名')}</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="例如：电压" />
+                        <Input {...field} placeholder="例如：电压" disabled={lockedFixedMeta} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -457,7 +407,7 @@ export function BMSFieldConfigDialog({
                     <FormItem>
                       <FormLabel>{t('bms.field_config.display_name_en', '英文显示名')}</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="例如：Voltage" />
+                        <Input {...field} placeholder="例如：Voltage" disabled={lockedFixedMeta} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -472,7 +422,7 @@ export function BMSFieldConfigDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('bms.field_config.data_type', '数据类型')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={lockedFixedMeta}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -497,7 +447,7 @@ export function BMSFieldConfigDialog({
                       <FormItem>
                         <FormLabel>{t('bms.field_config.unit_zh', '中文单位')}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="例如：V" />
+                        <Input {...field} placeholder="例如：V" disabled={lockedFixedMeta} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -511,69 +461,13 @@ export function BMSFieldConfigDialog({
                       <FormItem>
                         <FormLabel>{t('bms.field_config.unit_en', '英文单位')}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="例如：V" />
+                        <Input {...field} placeholder="例如：V" disabled={lockedFixedMeta} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* 读写权限 */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">{t('bms.field_config.permissions', '读写权限')}</h3>
-              
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="is_readable"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          {t('bms.field_config.is_readable', '可读')}
-                        </FormLabel>
-                        <FormDescription>
-                          {t('bms.field_config.is_readable_desc', '字段是否可读取数据')}
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="is_writable"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          {t('bms.field_config.is_writable', '可写')}
-                        </FormLabel>
-                        <FormDescription>
-                          {t('bms.field_config.is_writable_desc', '字段是否可写入数据（可写字段必须可读）')}
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={!isReadable}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
               </div>
             </div>
 
@@ -890,6 +784,7 @@ export function BMSFieldConfigDialog({
                           type="number"
                           {...field}
                           onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          disabled={lockedFixedMeta}
                         />
                       </FormControl>
                       <FormMessage />
@@ -914,6 +809,7 @@ export function BMSFieldConfigDialog({
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
+                          disabled={lockedFixedMeta}
                         />
                       </FormControl>
                     </FormItem>
@@ -929,7 +825,7 @@ export function BMSFieldConfigDialog({
                     <FormItem>
                       <FormLabel>{t('bms.field_config.description_zh', '中文描述')}</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="可选" />
+                        <Input {...field} placeholder="可选" disabled={lockedFixedMeta} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -943,7 +839,7 @@ export function BMSFieldConfigDialog({
                     <FormItem>
                       <FormLabel>{t('bms.field_config.description_en', '英文描述')}</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="可选" />
+                        <Input {...field} placeholder="可选" disabled={lockedFixedMeta} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

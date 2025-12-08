@@ -275,9 +275,13 @@ export default function BMSConfigPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {displayFieldConfigs.map((config) => (
-                        <TableRow key={config.id ?? config.field_key}>
-                          <TableCell className="font-medium">{config.field_key}</TableCell>
+                      {displayFieldConfigs.map((config) => {
+                        const isSysFixed =
+                          activePageType === 'SYS' &&
+                          sysFixedFieldPresets.some((p) => p.field_key === config.field_key)
+                        return (
+                          <TableRow key={config.id ?? config.field_key}>
+                            <TableCell className="font-medium">{config.field_key}</TableCell>
                           <TableCell>
                             {config.display_name_zh}
                             {config.display_name_en && (
@@ -302,7 +306,6 @@ export default function BMSConfigPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  disabled={!config.id}
                                   onClick={() => {
                                     setEditingFieldConfig(config)
                                     setFieldConfigDialogOpen(true)
@@ -313,8 +316,8 @@ export default function BMSConfigPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  disabled={!config.id}
-                                  onClick={() => deleteMutation.mutate(config.id)}
+                                    disabled={!config.id || isSysFixed}
+                                    onClick={() => config.id && deleteMutation.mutate(config.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -322,7 +325,8 @@ export default function BMSConfigPage() {
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
+                        )
+                      })}
                     </TableBody>
                   </Table>
                 )}
