@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import {
   getBMSInstanceDetail,
   getBMSFieldConfigList,
@@ -68,17 +68,12 @@ export default function BMSConfigPage() {
   const deleteMutation = useMutation({
     mutationFn: (fieldConfigId: number) => deleteBMSFieldConfig(instanceId, fieldConfigId),
     onSuccess: () => {
-      toast({
-        title: t('bms.field_config.deleted_success'),
-        variant: 'default',
-      })
+      toast.success(t('bms.field_config.deleted_success'))
       queryClient.invalidateQueries({ queryKey: ['bms-field-configs'] })
     },
     onError: (error: any) => {
-      toast({
-        title: t('bms.field_config.delete_failed'),
+      toast.error(t('bms.field_config.delete_failed'), {
         description: error?.response?.data?.detail || error.message,
-        variant: 'destructive',
       })
     },
   })
@@ -87,15 +82,10 @@ export default function BMSConfigPage() {
   const handleExport = async () => {
     try {
       await exportBMSFieldConfigs(instanceId, activePageType)
-      toast({
-        title: t('bms.field_config.exported_success'),
-        variant: 'default',
-      })
+      toast.success(t('bms.field_config.exported_success'))
     } catch (error: any) {
-      toast({
-        title: t('bms.field_config.export_failed'),
+      toast.error(t('bms.field_config.export_failed'), {
         description: error?.response?.data?.detail || error.message,
-        variant: 'destructive',
       })
     }
   }
@@ -107,20 +97,16 @@ export default function BMSConfigPage() {
     
     try {
       const result = await importBMSFieldConfigs(instanceId, activePageType, file, 'update')
-      toast({
-        title: t('bms.field_config.imported_success'),
+      toast.success(t('bms.field_config.imported_success'), {
         description: t('bms.field_config.import_result', {
           success: result.data?.success_count || 0,
           failed: result.data?.failed_count || 0,
         }),
-        variant: 'default',
       })
       queryClient.invalidateQueries({ queryKey: ['bms-field-configs'] })
     } catch (error: any) {
-      toast({
-        title: t('bms.field_config.import_failed'),
+      toast.error(t('bms.field_config.import_failed'), {
         description: error?.response?.data?.detail || error.message,
-        variant: 'destructive',
       })
     }
     

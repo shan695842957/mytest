@@ -43,7 +43,7 @@ import {
   type BMSInstance,
   type BMSInstanceListParams,
 } from '@/api/bms'
-import { toast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import { BMSInstanceFormDialog } from '@/components/config/BMSInstanceFormDialog'
 import { DeleteBMSInstanceDialog } from '@/components/config/DeleteBMSInstanceDialog'
 
@@ -79,19 +79,14 @@ export default function BMSPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteBMSInstance(id),
     onSuccess: () => {
-      toast({
-        title: t('bms.instance.deleted_success'),
-        variant: 'default',
-      })
+      toast.success(t('bms.instance.deleted_success'))
       queryClient.invalidateQueries({ queryKey: ['bms-instances'] })
       setDeleteDialogOpen(false)
       setSelectedInstance(null)
     },
     onError: (error: any) => {
-      toast({
-        title: t('bms.instance.delete_failed'),
+      toast.error(t('bms.instance.delete_failed'), {
         description: error?.response?.data?.detail || error.message,
-        variant: 'destructive',
       })
     },
   })

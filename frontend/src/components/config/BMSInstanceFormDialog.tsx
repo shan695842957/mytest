@@ -34,7 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { toast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import {
   createBMSInstance,
   updateBMSInstance,
@@ -97,17 +97,12 @@ export function BMSInstanceFormDialog({
   const createMutation = useMutation({
     mutationFn: (data: CreateBMSInstanceRequest) => createBMSInstance(data),
     onSuccess: () => {
-      toast({
-        title: t('bms.instance.created_success'),
-        variant: 'default',
-      })
+      toast.success(t('bms.instance.created_success'))
       onSuccess?.()
     },
     onError: (error: any) => {
-      toast({
-        title: t('bms.instance.create_failed'),
+      toast.error(t('bms.instance.create_failed'), {
         description: error?.response?.data?.detail || error.message,
-        variant: 'destructive',
       })
     },
   })
@@ -116,17 +111,12 @@ export function BMSInstanceFormDialog({
     mutationFn: (data: { id: number; data: UpdateBMSInstanceRequest }) =>
       updateBMSInstance(data.id, data.data),
     onSuccess: () => {
-      toast({
-        title: t('bms.instance.updated_success'),
-        variant: 'default',
-      })
+      toast.success(t('bms.instance.updated_success'))
       onSuccess?.()
     },
     onError: (error: any) => {
-      toast({
-        title: t('bms.instance.update_failed'),
+      toast.error(t('bms.instance.update_failed'), {
         description: error?.response?.data?.detail || error.message,
-        variant: 'destructive',
       })
     },
   })
