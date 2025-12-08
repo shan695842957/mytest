@@ -40,6 +40,7 @@ import { toast } from 'sonner'
 import {
   createBMSFieldConfig,
   updateBMSFieldConfig,
+  getBMSInstanceDetail,
   type BMSFieldConfig,
   type CreateBMSFieldConfigRequest,
   type UpdateBMSFieldConfigRequest,
@@ -78,10 +79,12 @@ export function BMSFieldConfigDialog({
   const currentFieldKey = form.watch('field_key')
   const isSysFixedField = pageType === 'SYS' && currentFieldKey && SYS_FIXED_FIELDS.includes(currentFieldKey)
 
-  // 获取BMS实例的资产信息
+  // 获取BMS实例的资产信息（所有hooks必须在组件顶部无条件调用）
   const { data: instanceData } = useQuery({
     queryKey: ['bms-instance', instanceId],
+    queryFn: () => getBMSInstanceDetail(instanceId),
     enabled: !!instanceId && open,
+    staleTime: 5 * 60 * 1000, // 5分钟内不重新获取
   })
 
   const assetId = (instanceData?.data as any)?.asset_id
@@ -89,7 +92,7 @@ export function BMSFieldConfigDialog({
   // 获取资产详情
   const { data: assetDetailData } = useQuery({
     queryKey: ['asset-detail', assetId],
-    queryFn: () => getAssetDetail(assetId),
+    queryFn: () => getAssetDetail(assetId!),
     enabled: !!assetId && open,
   })
 
@@ -108,7 +111,7 @@ export function BMSFieldConfigDialog({
   // 获取通信实例列表
   const { data: commInstancesData } = useQuery({
     queryKey: ['comm-instances', { asset_id: assetId }],
-    queryFn: () => getCommInstanceList({ asset_id: assetId }),
+    queryFn: () => getCommInstanceList({ asset_id: assetId! }),
     enabled: !!assetId && open,
   })
 

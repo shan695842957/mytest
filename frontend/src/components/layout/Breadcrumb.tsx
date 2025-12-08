@@ -48,6 +48,7 @@ const ROUTE_NAMES: Record<string, string> = {
   '/config/peripherals': 'peripherals',
   '/config/assets': 'assets',
   '/config/assets/mappings': 'asset_mappings',
+  '/config/bms': 'bms',
   '/theme-test': 'Theme Test',
   '/tools': 'tools',
   '/tools/ping': 'ping',
@@ -68,6 +69,7 @@ const PATH_TO_QUERY_KEY: Record<string, (id: number) => readonly unknown[]> = {
   '/config/protocol-types': (id) => queryKeys.protocolTypes.detail(id),
   '/config/peripherals': (id) => queryKeys.peripherals.detail(id),
   '/config/assets': (id) => queryKeys.assets.detail(id),
+  '/config/bms': (id) => ['bms-instance', id],
   '/users': (id) => queryKeys.users.detail(id),
 }
 
@@ -119,24 +121,13 @@ export function Breadcrumb() {
   // 生成面包屑路径
   const pathSegments = location.pathname.split('/').filter(Boolean)
   
-  // 如果是首页，只显示首页
-  if (pathSegments.length === 0 || location.pathname === '/') {
-    return (
-      <BreadcrumbUI>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbPage className="flex items-center gap-2">
-              <Home className="size-4" />
-              {t('dashboard')}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </BreadcrumbUI>
-    )
-  }
-  
-  // 构建面包屑路径
+  // 构建面包屑路径（必须在条件返回之前调用useMemo）
   const breadcrumbs = useMemo(() => {
+    // 如果是首页，返回空数组
+    if (pathSegments.length === 0 || location.pathname === '/') {
+      return []
+    }
+    
     return pathSegments.map((segment, index) => {
       const path = '/' + pathSegments.slice(0, index + 1).join('/')
       const isLast = index === pathSegments.length - 1
@@ -173,7 +164,23 @@ export function Breadcrumb() {
         isLast,
       }
     })
-  }, [pathSegments, queryClient, t, tCommon])
+  }, [pathSegments, queryClient, t, tCommon, location.pathname])
+  
+  // 如果是首页，只显示首页
+  if (pathSegments.length === 0 || location.pathname === '/') {
+    return (
+      <BreadcrumbUI>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbPage className="flex items-center gap-2">
+              <Home className="size-4" />
+              {t('dashboard')}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </BreadcrumbUI>
+    )
+  }
   
   return (
     <BreadcrumbUI>
