@@ -40,6 +40,8 @@ import {
 import { formatDateTime } from '@/utils/format'
 import { AuthGuard } from '@/components/auth'
 import { UserRole } from '@/types'
+import { BMSFieldConfigDialog } from '@/components/config/BMSFieldConfigDialog'
+import { BMSHierarchyConfigForm } from '@/components/config/BMSHierarchyConfigForm'
 
 export default function BMSConfigPage() {
   const { t } = useTranslation(['config', 'common'])
@@ -49,6 +51,8 @@ export default function BMSConfigPage() {
   const instanceId = parseInt(id || '0')
   
   const [activePageType, setActivePageType] = useState<string>('SYS')
+  const [fieldConfigDialogOpen, setFieldConfigDialogOpen] = useState(false)
+  const [editingFieldConfig, setEditingFieldConfig] = useState<BMSFieldConfig | null>(null)
   
   // 获取BMS实例详情
   const { data: instanceData, isLoading: instanceLoading } = useQuery({
@@ -152,19 +156,27 @@ export default function BMSConfigPage() {
       </div>
       
       {/* 配置管理Tabs */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('bms.config.field_configs')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activePageType} onValueChange={setActivePageType}>
-            <TabsList className="grid w-full grid-cols-4">
-              {pageTypes.map((pageType) => (
-                <TabsTrigger key={pageType} value={pageType}>
-                  {pageType}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+      <Tabs defaultValue="field-configs" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="field-configs">{t('bms.config.field_configs', '字段配置')}</TabsTrigger>
+          <TabsTrigger value="hierarchy-config">{t('bms.config.hierarchy_config', '层级配置')}</TabsTrigger>
+        </TabsList>
+
+        {/* 字段配置Tab */}
+        <TabsContent value="field-configs">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('bms.config.field_configs')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={activePageType} onValueChange={setActivePageType}>
+                <TabsList className="grid w-full grid-cols-4">
+                  {pageTypes.map((pageType) => (
+                    <TabsTrigger key={pageType} value={pageType}>
+                      {pageType}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
             
             {pageTypes.map((pageType) => (
               <TabsContent key={pageType} value={pageType} className="space-y-4">
@@ -194,7 +206,12 @@ export default function BMSConfigPage() {
                     </label>
                   </div>
                   <AuthGuard roles={[UserRole.DEVELOPER, UserRole.OPERATOR]}>
-                    <Button onClick={() => toast.info(t('common:coming_soon'))}>
+                    <Button
+                      onClick={() => {
+                        setEditingFieldConfig(null)
+                        setFieldConfigDialogOpen(true)
+                      }}
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       {t('bms.field_config.create')}
                     </Button>
@@ -254,8 +271,8 @@ export default function BMSConfigPage() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => {
-                                    // TODO: 打开编辑对话框
-                                    toast.info(t('common.coming_soon'))
+                                    setEditingFieldConfig(config)
+                                    setFieldConfigDialogOpen(true)
                                   }}
                                 >
                                   <Edit className="h-4 w-4" />
@@ -280,6 +297,25 @@ export default function BMSConfigPage() {
           </Tabs>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        {/* 层级配置Tab */}
+        <TabsContent value="hierarchy-config">
+          <BMSHierarchyConfigForm instanceId={instanceId} />
+        </TabsContent>
+      </Tabs>
+
+      {/* 字段配置对话框 */}
+      <BMSFieldConfigDialog
+        open={fieldConfigDialogOpen}
+        onOpenChange={setFieldConfigDialogOpen}
+        instanceId={instanceId}
+        pageType={activePageType}
+        fieldConfig={editingFieldConfig}
+        onSuccess={() => {
+          refetch()
+        }}
+      />
     </div>
   )
 }
