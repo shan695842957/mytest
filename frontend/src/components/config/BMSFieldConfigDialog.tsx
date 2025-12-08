@@ -2,7 +2,7 @@
  * BMS字段配置对话框
  */
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -107,6 +107,20 @@ export function BMSFieldConfigDialog({
   })
 
   const assetFields = (assetFieldsData?.data as DeviceTypeTag[] | null | undefined) || []
+
+  // 预计算资产字段选项列表（避免JSX表达式中的复杂逻辑）
+  const assetFieldOptions = useMemo(() => {
+    return assetFields.map((assetField) => {
+      const displayName = assetField.display_name || assetField.tag_name
+      const tagName = assetField.tag_name
+      const fullText = displayName + ' (' + tagName + ')'
+      return {
+        id: assetField.id,
+        value: assetField.id.toString(),
+        label: fullText,
+      }
+    })
+  }, [assetFields])
 
   // 获取通信实例列表
   const { data: commInstancesData } = useQuery({
@@ -637,22 +651,17 @@ export function BMSFieldConfigDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {assetFields.length === 0 ? (
+                              {assetFieldOptions.length === 0 ? (
                                 <SelectItem value="empty" disabled>
                                   {t('bms.field_config.no_asset_fields', '暂无资产字段')}
                                 </SelectItem>
                               ) : (
-                                assetFields.map((assetField) => {
-                                  const displayName = assetField.display_name || assetField.tag_name
-                                  const tagName = assetField.tag_name
-                                  const fullText = displayName + ' (' + tagName + ')'
-                                  return (
-                                    <SelectItem key={assetField.id} value={assetField.id.toString()}>
-                                      {fullText}
-                                    </SelectItem>
-                                  )
-                                })
-                              )
+                                assetFieldOptions.map((option) => (
+                                  <SelectItem key={option.id} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))
+                              )}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -681,22 +690,17 @@ export function BMSFieldConfigDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {assetFields.length === 0 ? (
+                              {assetFieldOptions.length === 0 ? (
                                 <SelectItem value="empty" disabled>
                                   {t('bms.field_config.no_asset_fields', '暂无资产字段')}
                                 </SelectItem>
                               ) : (
-                                assetFields.map((assetField) => {
-                                  const displayName = assetField.display_name || assetField.tag_name
-                                  const tagName = assetField.tag_name
-                                  const fullText = displayName + ' (' + tagName + ')'
-                                  return (
-                                    <SelectItem key={assetField.id} value={assetField.id.toString()}>
-                                      {fullText}
-                                    </SelectItem>
-                                  )
-                                })
-                              )
+                                assetFieldOptions.map((option) => (
+                                  <SelectItem key={option.id} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))
+                              )}
                             </SelectContent>
                           </Select>
                           <FormMessage />
