@@ -320,12 +320,12 @@ export function BMSSysTabLevel3({
                     </div>
                     <div className="flex items-start gap-8 min-w-max">
                       {Array.from({ length: hierarchyConfig.cluster_count }).map((_, index) => (
-                        <div key={index} className="flex flex-col items-center gap-3">
-                          <div className="w-px h-10 bg-red-500" />
+                        <div key={index} className="flex flex-col items-center gap-0">
+                          <div className="w-px h-14 bg-red-500" />
                           <div className="w-28 h-24 rounded-lg border-2 border-red-500 bg-card flex items-center justify-center text-base font-semibold">
                             C{(index + 1).toString().padStart(2, '0')}
                           </div>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground mt-2">
                             {t('cluster', '簇')} {index + 1}
                           </span>
                         </div>

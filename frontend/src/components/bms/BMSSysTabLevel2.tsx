@@ -320,7 +320,7 @@ export function BMSSysTabLevel2({
           {hierarchyConfig ? (
             hierarchyConfig.pack_count_per_cluster > 0 ? (
               <div className="max-h-96 overflow-y-auto py-6">
-                <div className="flex flex-col items-center gap-8">
+                <div className="flex flex-col items-center gap-0">
                   {Array.from({ length: hierarchyConfig.pack_count_per_cluster }).map((_, index) => (
                     <div key={index} className="flex flex-col items-center">
                       <div className="flex items-center gap-3">
@@ -332,7 +332,7 @@ export function BMSSysTabLevel2({
                         </div>
                       </div>
                       {index < hierarchyConfig.pack_count_per_cluster - 1 && (
-                        <div className="w-px h-14 bg-border mt-2" />
+                        <div className="w-px h-16 bg-border" />
                       )}
                     </div>
                   ))}
