@@ -56,20 +56,60 @@ export function BMSSysTabLevel2({
   const fieldConfigs = (fieldConfigsData?.data as BMSFieldConfig[] | null | undefined) || []
   const hierarchyConfig = hierarchyData?.data as BMSHierarchyConfig | undefined
 
-  // 分离固定字段和动态字段
+  // SYS页面固定字段预设（与配置页面保持一致）
+  const sysFixedFieldPresets: Array<Partial<BMSFieldConfig> & { field_key: string; display_name_zh: string; display_name_en: string; data_type: string; sort_order: number }> = useMemo(
+    () => [
+      { field_key: 'fault', display_name_zh: '告警状态', display_name_en: 'Fault Status', data_type: 'boolean', field_type: 'fixed', sort_order: 1, is_required: true },
+      { field_key: 'voltage', display_name_zh: '电压', display_name_en: 'Voltage', data_type: 'number', field_type: 'fixed', sort_order: 2, is_required: true },
+      { field_key: 'current', display_name_zh: '电流', display_name_en: 'Current', data_type: 'number', field_type: 'fixed', sort_order: 3, is_required: true },
+      { field_key: 'power', display_name_zh: '功率', display_name_en: 'Power', data_type: 'number', field_type: 'fixed', sort_order: 4, is_required: true },
+      { field_key: 'breaker_status', display_name_zh: '分合闸状态', display_name_en: 'Breaker Status', data_type: 'boolean', field_type: 'fixed', sort_order: 5, is_required: true },
+      { field_key: 'breaker_open_command', display_name_zh: '分闸指令', display_name_en: 'Breaker Open Command', data_type: 'boolean', field_type: 'fixed', sort_order: 6, is_required: true },
+      { field_key: 'breaker_close_command', display_name_zh: '合闸指令', display_name_en: 'Breaker Close Command', data_type: 'boolean', field_type: 'fixed', sort_order: 7, is_required: true },
+    ],
+    []
+  )
+
+  // 分离固定字段和动态字段（合并配置和预设）
   const { fixedFields, dynamicFields, commandFields } = useMemo(() => {
     const fixed: BMSFieldConfig[] = []
     const dynamic: BMSFieldConfig[] = []
     const commands: BMSFieldConfig[] = []
 
-    fieldConfigs.forEach((field) => {
-      if (field.field_type === 'fixed') {
-        if (field.field_key === 'breaker_open_command' || field.field_key === 'breaker_close_command') {
-          commands.push(field)
-        } else {
-          fixed.push(field)
-        }
+    // 创建字段配置映射
+    const configMap = new Map(fieldConfigs.map((field) => [field.field_key, field]))
+
+    // 处理固定字段：优先使用配置，如果没有则使用预设
+    sysFixedFieldPresets.forEach((preset) => {
+      const config = configMap.get(preset.field_key)
+      const field = (config || {
+        ...preset,
+        id: 0, // 临时ID，用于key
+        bms_instance_id: instanceId,
+        page_type: 'SYS',
+        unit_zh: '',
+        unit_en: '',
+        is_required: true,
+        is_readable: true,
+        is_writable: preset.field_key?.includes('command') ?? false,
+        source_type: config?.source_type || '-',
+        description_zh: '',
+        description_en: '',
+        created_at: '',
+        updated_at: '',
+      }) as BMSFieldConfig
+
+      if (preset.field_key === 'breaker_open_command' || preset.field_key === 'breaker_close_command') {
+        commands.push(field)
       } else {
+        fixed.push(field)
+      }
+    })
+
+    // 处理动态字段（排除固定字段）
+    const presetKeys = new Set(sysFixedFieldPresets.map((p) => p.field_key))
+    fieldConfigs.forEach((field) => {
+      if (!presetKeys.has(field.field_key) && field.field_type !== 'fixed') {
         dynamic.push(field)
       }
     })
@@ -84,7 +124,7 @@ export function BMSSysTabLevel2({
       dynamicFields: dynamic,
       commandFields: commands,
     }
-  }, [fieldConfigs])
+  }, [fieldConfigs, sysFixedFieldPresets, instanceId])
 
   // 获取字段显示值（从 WebSocket 缓存或占位）
   const getFieldValue = (field: BMSFieldConfig): string | number | boolean | null => {
@@ -115,7 +155,7 @@ export function BMSSysTabLevel2({
       const hasFault = value === true || value === 1
       const unknown = value === null || value === undefined
       return (
-        <div key={field.id} className="bg-muted/50 rounded-lg p-4 flex flex-col justify-end">
+        <div key={field.id || field.field_key} className="bg-muted/50 rounded-lg p-4 flex flex-col justify-end">
           <div className="text-xs text-muted-foreground mb-1">{displayName}</div>
           {unknown ? (
             <Badge variant="secondary" className="w-full justify-center">
@@ -138,7 +178,7 @@ export function BMSSysTabLevel2({
       const isClosed = value === true || value === 1
       const unknown = value === null || value === undefined
       return (
-        <div key={field.id} className="flex items-center gap-2">
+        <div key={field.id || field.field_key} className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">{displayName}:</span>
           {unknown ? (
             <Badge variant="secondary">--</Badge>
@@ -159,7 +199,7 @@ export function BMSSysTabLevel2({
 
     // 普通数值字段
     return (
-      <div key={field.id} className="bg-muted/50 rounded-lg p-4">
+      <div key={field.id || field.field_key} className="bg-muted/50 rounded-lg p-4">
         <div className="text-xs text-muted-foreground mb-1">{displayName}</div>
         <div className="text-2xl font-bold">
           {value !== null ? `${value} ${unit || ''}` : '--'}
@@ -175,7 +215,7 @@ export function BMSSysTabLevel2({
     const unit = getUnitText(field)
 
     return (
-      <div key={field.id}>
+      <div key={field.id || field.field_key}>
         <div className="text-xs text-muted-foreground mb-1">{displayName}</div>
         <div className="text-lg font-semibold">
           {value !== null ? `${value} ${unit ? ' ' + unit : ''}` : '--'}
@@ -288,7 +328,7 @@ export function BMSSysTabLevel2({
                 if (isOpenCommand) {
                   return (
                     <Button
-                      key={field.id}
+                      key={field.id || field.field_key}
                       variant="destructive"
                       onClick={() => onBreakerControl?.('open', field.field_key)}
                     >
@@ -299,7 +339,7 @@ export function BMSSysTabLevel2({
                 if (isCloseCommand) {
                   return (
                     <Button
-                      key={field.id}
+                      key={field.id || field.field_key}
                       className="bg-green-500 hover:bg-green-600 text-white"
                       onClick={() => onBreakerControl?.('close', field.field_key)}
                     >
