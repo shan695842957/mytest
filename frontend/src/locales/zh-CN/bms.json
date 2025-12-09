@@ -89,5 +89,27 @@
       "no_realtime_tip": "实时值依赖 WebSocket 数据，未收到时显示空值。",
       "topology_coming_soon": "拓扑图功能开发中，将根据层级配置显示簇节点"
     }
-  }
+  },
+  "bcu": {
+    "no_fields_configured": "暂无字段配置，请在配置页面添加字段",
+    "no_realtime_tip": "实时值依赖 WebSocket 数据，未收到时显示空值。"
+  },
+  "bau": {
+    "no_fields_configured": "暂无字段配置，请在配置页面添加字段",
+    "no_realtime_tip": "实时值依赖 WebSocket 数据，未收到时显示空值。"
+  },
+  "bmu": {
+    "no_fields_configured": "暂无字段配置，请在配置页面添加字段",
+    "no_temperature_fields": "暂无温度字段配置",
+    "no_realtime_tip": "实时值依赖 WebSocket 数据，未收到时显示空值。"
+  },
+  "evt": {
+    "no_events": "暂无事件记录",
+    "no_active_telecontrols": "暂无激活的遥信量",
+    "event_log_coming_soon": "事件记录功能开发中，将显示系统遥控信息",
+    "no_realtime_tip": "实时值依赖 WebSocket 数据，未收到时显示空值。"
+  },
+  "yes": "是",
+  "no": "否",
+  "fault_reset_success": "故障复位成功"
 }

@@ -22,6 +22,9 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { BMSSysTabLevel2 } from '@/components/bms/BMSSysTabLevel2'
+import { BMSBcuTabLevel2 } from '@/components/bms/BMSBcuTabLevel2'
+import { BMSBmuTabLevel2 } from '@/components/bms/BMSBmuTabLevel2'
+import { BMSEvtTab } from '@/components/bms/BMSEvtTab'
 import { toast } from 'sonner'
 import type {
   ClusterBasicInfoResponse,
@@ -647,397 +650,58 @@ export default function BMSDisplayLevel2Page() {
             </TabsContent>
 
             <TabsContent value="bcu" className="mt-4">
-              <div className="space-y-6">
-                {clusterDetailInfo ? (
-                  <>
-                    {/* 遥测数据 */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{t('telemetry_data')}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                          {clusterDetailInfo.telemetryData.map((field) => (
-                            <Card key={field.nameEn} className="p-4">
-                              <div className="text-sm text-muted-foreground mb-1">
-                                {getDynamicFieldName(field)}
-                              </div>
-                              <div className="text-2xl font-bold">
-                                {getDynamicFieldValue(field)}
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* 遥信数据 */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{t('telecontrol_data')}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                          {clusterDetailInfo.telecontrolData.map((data) => (
-                            <div key={data.id} className="w-full">
-                              {renderTelecontrolData(data, i18n)}
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* 控制命令 */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{t('control_commands')}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <Button
-                          variant="destructive"
-                          onClick={handleFaultReset}
-                        >
-                          {t('fault_reset')}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </>
-                ) : (
-                  <Card>
-                    <CardContent className="py-8 text-center text-muted-foreground">
-                      {t('loading')}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+              {selectedBMSInstanceId ? (
+                <BMSBcuTabLevel2
+                  instanceId={selectedBMSInstanceId}
+                  realtimeValues={realtimeValues}
+                  onFaultReset={() => {
+                    // TODO: 实现故障复位API调用
+                    console.log('Fault reset for cluster')
+                  }}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center text-muted-foreground">
+                      {t('select_bms_instance_first')}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="bmu" className="mt-4">
-              <div className="space-y-6">
-                {/* 包选择器 */}
-                {packList && packList.packs.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{t('select_pack')}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm font-medium">
-                          {t('pack')}:
-                        </span>
-                        <Select
-                          value={selectedPackId}
-                          onValueChange={setSelectedPackId}
-                        >
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {packList.packs.map((pack) => (
-                              <SelectItem key={pack.id} value={pack.id}>
-                                {i18n.language === 'zh-CN' ? `包${pack.number}` : `Pack ${pack.number}`}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {packList.packs.length > 1 && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const currentIndex = packList.packs.findIndex(p => p.id === selectedPackId)
-                                if (currentIndex > 0) {
-                                  setSelectedPackId(packList.packs[currentIndex - 1].id)
-                                }
-                              }}
-                              disabled={packList.packs.findIndex(p => p.id === selectedPackId) === 0}
-                            >
-                              {t('previous')}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const currentIndex = packList.packs.findIndex(p => p.id === selectedPackId)
-                                if (currentIndex < packList.packs.length - 1) {
-                                  setSelectedPackId(packList.packs[currentIndex + 1].id)
-                                }
-                              }}
-                              disabled={packList.packs.findIndex(p => p.id === selectedPackId) === packList.packs.length - 1}
-                            >
-                              {t('next')}
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* BMU子标签页 */}
-                <Tabs value={bmuActiveSubTab} onValueChange={(v) => setBmuActiveSubTab(v as 'cell' | 'temperature')}>
-                  <TabsList>
-                    <TabsTrigger value="cell">{t('cell_information')}</TabsTrigger>
-                    <TabsTrigger value="temperature">{t('temperature_points')}</TabsTrigger>
-                  </TabsList>
-
-                  {/* 单体信息 */}
-                  <TabsContent value="cell" className="mt-4">
-                    {packCellInfo ? (
-                      <div className="space-y-4">
-                        {/* 单体配置 */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>{t('cell_configuration')}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-lg font-semibold">{packCellInfo.cellConfiguration}</p>
-                          </CardContent>
-                        </Card>
-
-                        {/* 单体数据网格 */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>{t('cell_data')}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10 gap-3">
-                              {packCellInfo.cells.map((cell) => {
-                                const voltageField = cell.dynamicFields.find(f => f.nameEn === 'Voltage' || f.nameZh === '电压')
-                                const socField = cell.dynamicFields.find(f => f.nameEn === 'SOC' || f.nameZh === 'SOC')
-                                const sohField = cell.dynamicFields.find(f => f.nameEn === 'SOH' || f.nameZh === 'SOH')
-                                
-                                const getStatusColor = (status?: string) => {
-                                  if (status === 'alarm') return 'border-red-500 bg-red-50 dark:bg-red-950/20'
-                                  if (status === 'warning') return 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
-                                  return 'border-green-500 bg-green-50 dark:bg-green-950/20'
-                                }
-                                
-                                return (
-                                  <Card
-                                    key={cell.id}
-                                    className={cn('p-3', getStatusColor(cell.status))}
-                                  >
-                                    <div className="space-y-1">
-                                      <div className="text-xs font-semibold">
-                                        {i18n.language === 'zh-CN' ? `单体${cell.number}` : `Cell ${cell.number}`}
-                                      </div>
-                                      {voltageField && (
-                                        <div className="text-xs">
-                                          {getDynamicFieldName(voltageField)}: {getDynamicFieldValue(voltageField)}
-                                        </div>
-                                      )}
-                                      {socField && (
-                                        <div className="text-xs">
-                                          {getDynamicFieldName(socField)}: {getDynamicFieldValue(socField)}
-                                        </div>
-                                      )}
-                                      {sohField && (
-                                        <div className="text-xs">
-                                          {getDynamicFieldName(sohField)}: {getDynamicFieldValue(sohField)}
-                                        </div>
-                                      )}
-                                      <div className="flex justify-end mt-1">
-                                        <div
-                                          className={cn(
-                                            'w-3 h-3 rounded-full',
-                                            cell.status === 'alarm' && 'bg-red-500',
-                                            cell.status === 'warning' && 'bg-yellow-500',
-                                            !cell.status || cell.status === 'normal' ? 'bg-green-500' : ''
-                                          )}
-                                        />
-                                      </div>
-                                    </div>
-                                  </Card>
-                                )
-                              })}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    ) : (
-                      <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                          {t('loading')}
-                        </CardContent>
-                      </Card>
-                    )}
-                  </TabsContent>
-
-                  {/* 温度测点 */}
-                  <TabsContent value="temperature" className="mt-4">
-                    {packTemperature ? (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>{t('temperature_points')}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-                            {packTemperature.temperaturePoints.map((point) => {
-                              const getStatusColor = (status?: string) => {
-                                if (status === 'alarm') return 'border-red-500 bg-red-50 dark:bg-red-950/20'
-                                if (status === 'warning') return 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
-                                return 'border-green-500 bg-green-50 dark:bg-green-950/20'
-                              }
-                              
-                              return (
-                                <Card
-                                  key={point.id}
-                                  className={cn('p-4', getStatusColor(point.status))}
-                                >
-                                  <div className="space-y-2">
-                                    <div className="text-sm font-semibold">
-                                      {i18n.language === 'zh-CN' ? `测点${point.number}` : `Point ${point.number}`}
-                                    </div>
-                                    <div className="text-2xl font-bold">
-                                      {point.temperature.toFixed(1)} {point.unit}
-                                    </div>
-                                    <div className="flex justify-end">
-                                      <div
-                                        className={cn(
-                                          'w-3 h-3 rounded-full',
-                                          point.status === 'alarm' && 'bg-red-500',
-                                          point.status === 'warning' && 'bg-yellow-500',
-                                          !point.status || point.status === 'normal' ? 'bg-green-500' : ''
-                                        )}
-                                      />
-                                    </div>
-                                  </div>
-                                </Card>
-                              )
-                            })}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                          {t('loading')}
-                        </CardContent>
-                      </Card>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </div>
+              {selectedBMSInstanceId ? (
+                <BMSBmuTabLevel2
+                  instanceId={selectedBMSInstanceId}
+                  realtimeValues={realtimeValues}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center text-muted-foreground">
+                      {t('select_bms_instance_first')}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="evt" className="mt-4">
-              <div className="space-y-6">
-                {eventLog ? (
-                  <>
-                    {/* 当前激活的遥信量 */}
-                    {eventLog.activeTelecontrols.length > 0 && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>{t('active_telecontrols')}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex flex-wrap gap-2">
-                            {eventLog.activeTelecontrols.map((telecontrol) => {
-                              const getFaultColor = (level: number) => {
-                                if (level === 4) return 'bg-red-600 hover:bg-red-700'
-                                if (level === 3) return 'bg-orange-600 hover:bg-orange-700'
-                                if (level === 2) return 'bg-yellow-600 hover:bg-yellow-700'
-                                return 'bg-gray-500 hover:bg-gray-600'
-                              }
-                              
-                              return (
-                                <Badge
-                                  key={telecontrol.id}
-                                  variant="destructive"
-                                  className={cn(
-                                    'text-xs px-3 py-1',
-                                    getFaultColor(telecontrol.faultLevel)
-                                  )}
-                                >
-                                  {i18n.language === 'zh-CN' ? telecontrol.nameZh : telecontrol.nameEn}
-                                </Badge>
-                              )
-                            })}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {/* 事件记录表格 */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{t('event_log')}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="border-b">
-                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                                  {t('time')}
-                                </th>
-                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                                  {t('category')}
-                                </th>
-                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                                  {t('details')}
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {eventLog.events.map((event) => {
-                                const getCategoryLabel = () => {
-                                  const isZh = i18n.language === 'zh-CN'
-                                  if (event.device) {
-                                    if (event.category === 'Fault') {
-                                      return isZh ? `${event.device} 故障` : `${event.device} Fault`
-                                    }
-                                    if (event.category === 'Alarm') {
-                                      return isZh ? `${event.device} 告警` : `${event.device} Alarm`
-                                    }
-                                    return isZh ? `${event.device} 状态` : `${event.device} Status`
-                                  }
-                                  if (event.category === 'Fault') {
-                                    return t('system_fault')
-                                  }
-                                  if (event.category === 'Alarm') {
-                                    return t('system_alarm')
-                                  }
-                                  return t('system_status')
-                                }
-                                
-                                const getCategoryColor = () => {
-                                  if (event.category === 'Fault') return 'bg-red-600 hover:bg-red-700'
-                                  if (event.category === 'Alarm') return 'bg-yellow-600 hover:bg-yellow-700'
-                                  return 'bg-blue-600 hover:bg-blue-700'
-                                }
-                                
-                                return (
-                                  <tr key={event.id} className="border-b hover:bg-muted/50">
-                                    <td className="p-3 text-sm">{event.timestamp}</td>
-                                    <td className="p-3">
-                                      <Badge
-                                        variant="default"
-                                        className={cn('text-xs', getCategoryColor())}
-                                      >
-                                        {getCategoryLabel()}
-                                      </Badge>
-                                    </td>
-                                    <td className="p-3 text-sm">{event.details}</td>
-                                  </tr>
-                                )
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </>
-                ) : (
-                  <Card>
-                    <CardContent className="py-8 text-center text-muted-foreground">
-                      {t('loading')}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+              {selectedBMSInstanceId ? (
+                <BMSEvtTab
+                  instanceId={selectedBMSInstanceId}
+                  realtimeValues={realtimeValues}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center text-muted-foreground">
+                      {t('select_bms_instance_first')}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

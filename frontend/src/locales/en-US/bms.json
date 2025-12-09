@@ -89,5 +89,27 @@
       "no_realtime_tip": "Real-time values depend on WebSocket data. Empty values are shown when no data is received.",
       "topology_coming_soon": "Topology diagram feature is under development. Cluster nodes will be displayed based on hierarchy configuration."
     }
-  }
+  },
+  "bcu": {
+    "no_fields_configured": "No fields configured. Please add fields in the configuration page.",
+    "no_realtime_tip": "Real-time values depend on WebSocket data. Empty values are shown when no data is received."
+  },
+  "bau": {
+    "no_fields_configured": "No fields configured. Please add fields in the configuration page.",
+    "no_realtime_tip": "Real-time values depend on WebSocket data. Empty values are shown when no data is received."
+  },
+  "bmu": {
+    "no_fields_configured": "No fields configured. Please add fields in the configuration page.",
+    "no_temperature_fields": "No temperature fields configured",
+    "no_realtime_tip": "Real-time values depend on WebSocket data. Empty values are shown when no data is received."
+  },
+  "evt": {
+    "no_events": "No event records",
+    "no_active_telecontrols": "No active telecontrols",
+    "event_log_coming_soon": "Event log feature is under development. System telecontrol information will be displayed.",
+    "no_realtime_tip": "Real-time values depend on WebSocket data. Empty values are shown when no data is received."
+  },
+  "yes": "Yes",
+  "no": "No",
+  "fault_reset_success": "Fault reset successful"
 }
