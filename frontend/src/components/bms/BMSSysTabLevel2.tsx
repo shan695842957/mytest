@@ -230,7 +230,7 @@ export function BMSSysTabLevel2({
       <Card>
         <CardHeader>
           <CardTitle>{t('cluster_basic_info')}</CardTitle>
-          <CardDescription>{t('bms.level2.sys.basic_info_desc', '包含固定字段与可配置字段')}</CardDescription>
+          <CardDescription>{t('level2.sys.basic_info_desc', '包含固定字段与可配置字段')}</CardDescription>
           {summaryChips.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {summaryChips.map((chip) => (
@@ -257,7 +257,7 @@ export function BMSSysTabLevel2({
           {dynamicFields.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-semibold text-muted-foreground">
-                {t('bms.level2.sys.dynamic_fields', '可配置字段')}
+                {t('level2.sys.dynamic_fields', '可配置字段')}
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 {dynamicFields.map(renderDynamicField)}
@@ -267,7 +267,7 @@ export function BMSSysTabLevel2({
 
           {/* 提示信息 */}
           <div className="text-xs text-muted-foreground">
-            {t('bms.level2.sys.no_realtime_tip', '实时值依赖 WebSocket 数据，未收到时显示空值。')}
+            {t('level2.sys.no_realtime_tip', '实时值依赖 WebSocket 数据，未收到时显示空值。')}
           </div>
         </CardContent>
       </Card>
@@ -320,42 +320,41 @@ export function BMSSysTabLevel2({
           <CardTitle>{t('pack_status_series', '包拓扑')}</CardTitle>
           {hierarchyConfig && (
             <CardDescription>
-              {t('sys.pack_overview_desc', {
-                count: hierarchyConfig.pack_count_per_cluster,
-                cells: hierarchyConfig.series_count * hierarchyConfig.parallel_count,
-              })}
+              {t('bms.level2.sys.topology_hint', '包之间以竖向连线表示串联关系')}
             </CardDescription>
           )}
         </CardHeader>
         <CardContent>
           {hierarchyConfig ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {packCards.map((pack) => (
-                <div
-                  key={pack.id}
-                  className="rounded-2xl border bg-card/60 p-4 shadow-sm transition hover:border-primary/40"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold">
-                      {t('pack', '包')} #{pack.id.toString().padStart(2, '0')}
+            hierarchyConfig.pack_count_per_cluster > 0 ? (
+              <div className="max-h-72 overflow-y-auto py-4">
+                <div className="flex flex-col items-center gap-4">
+                  {Array.from({ length: hierarchyConfig.pack_count_per_cluster }).map((_, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground">
+                          {t('pack', '包')} {index + 1}
+                        </span>
+                        <div className="w-24 h-10 rounded-md border border-border bg-card shadow-sm flex items-center justify-center text-sm font-medium">
+                          P{(index + 1).toString().padStart(2, '0')}
+                        </div>
+                      </div>
+                      {index < hierarchyConfig.pack_count_per_cluster - 1 && (
+                        <div className="w-px h-8 bg-border" />
+                      )}
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {hierarchyConfig.series_count}S · {hierarchyConfig.parallel_count}P
-                    </Badge>
-                  </div>
-                  <div className="mt-3 text-2xl font-bold">--</div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t('sys.pack_temperature_points', {
-                      count: hierarchyConfig.temperature_point_count ?? 0,
-                    })}
-                  </p>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="py-6 text-center text-muted-foreground">
+                {t('bms.hierarchy_config.pack_hint', '请在层级配置中设置包数量以生成拓扑图')}
+              </div>
+            )
           ) : (
             <div className="flex items-center gap-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
               <Thermometer className="h-4 w-4" />
-              {t('sys.no_hierarchy_config', '尚未配置层级信息，请在BMS管理中完善簇/包数量。')}
+              {t('sys.no_hierarchy_config', '尚未配置层级信息，请在BMS管理中完善包参数。')}
             </div>
           )}
         </CardContent>

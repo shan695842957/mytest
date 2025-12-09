@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { cn } from '@/lib/utils'
 import {
   Form,
   FormControl,
@@ -33,11 +34,13 @@ import {
 
 interface BMSHierarchyConfigFormProps {
   instanceId: number
+  architectureName?: string
 }
 
-export function BMSHierarchyConfigForm({ instanceId }: BMSHierarchyConfigFormProps) {
+export function BMSHierarchyConfigForm({ instanceId, architectureName }: BMSHierarchyConfigFormProps) {
   const { t } = useTranslation(['config', 'common'])
   const queryClient = useQueryClient()
+  const isLevelThree = (architectureName ?? '').toLowerCase() === 'level3'
 
   // 获取层级配置
   const { data: hierarchyConfigData, isLoading } = useQuery({
@@ -85,8 +88,10 @@ export function BMSHierarchyConfigForm({ instanceId }: BMSHierarchyConfigFormPro
         description_zh: hierarchyConfig.description_zh,
         description_en: hierarchyConfig.description_en,
       })
+    } else if (!isLevelThree) {
+      form.setValue('cluster_count', 1)
     }
-  }, [hierarchyConfig, form])
+  }, [hierarchyConfig, form, isLevelThree])
 
   // 创建Mutation
   const createMutation = useMutation({
@@ -119,10 +124,14 @@ export function BMSHierarchyConfigForm({ instanceId }: BMSHierarchyConfigFormPro
   })
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
+    const payload = {
+      ...data,
+      cluster_count: isLevelThree ? data.cluster_count ?? 1 : 1,
+    }
     if (isEdit) {
-      updateMutation.mutate(data as UpdateBMSHierarchyConfigRequest)
+      updateMutation.mutate(payload as UpdateBMSHierarchyConfigRequest)
     } else {
-      createMutation.mutate(data as CreateBMSHierarchyConfigRequest)
+      createMutation.mutate(payload as CreateBMSHierarchyConfigRequest)
     }
   }
 
@@ -162,32 +171,40 @@ export function BMSHierarchyConfigForm({ instanceId }: BMSHierarchyConfigFormPro
                 {t('bms.hierarchy_config.structure', '层级结构')}
               </h3>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="cluster_count"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('bms.hierarchy_config.cluster_count', '簇数量')}
-                        <span className="text-destructive ml-1">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                          min={1}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        {t('bms.hierarchy_config.cluster_count_desc', '三级架构为堆下簇数，二级架构通常为 1')}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+              <div className={cn('grid gap-4', isLevelThree ? 'md:grid-cols-2 grid-cols-1' : 'grid-cols-1')}>
+                {isLevelThree ? (
+                  <FormField
+                    control={form.control}
+                    name="cluster_count"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {t('bms.hierarchy_config.cluster_count', '簇数量')}
+                          <span className="text-destructive ml-1">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                            min={1}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          {t('bms.hierarchy_config.cluster_count_desc', '三级架构为堆下簇数，二级架构通常为 1')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <div className="rounded-lg border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
+                    {t(
+                      'bms.hierarchy_config.cluster_count_level2',
+                      '二级架构默认只有一个簇，系统会自动使用 1。'
+                    )}
+                  </div>
+                )}
                 <FormField
                   control={form.control}
                   name="pack_count_per_cluster"

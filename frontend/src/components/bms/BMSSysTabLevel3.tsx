@@ -175,16 +175,6 @@ export function BMSSysTabLevel3({
 
   const isLoading = isFieldLoading || isHierarchyLoading
 
-  const clusterCards = useMemo(() => {
-    if (!hierarchyConfig) return []
-    return Array.from({ length: hierarchyConfig.cluster_count }, (_, index) => ({
-      id: index + 1,
-      packCount: hierarchyConfig.pack_count_per_cluster,
-      series: hierarchyConfig.series_count,
-      parallel: hierarchyConfig.parallel_count,
-    }))
-  }, [hierarchyConfig])
-
   const summaryChips = useMemo(() => {
     if (!hierarchyConfig) return []
     return [
@@ -221,7 +211,7 @@ export function BMSSysTabLevel3({
       <Card>
         <CardHeader>
           <CardTitle>{t('stack_basic_info', '堆基本信息')}</CardTitle>
-          <CardDescription>{t('bms.level3.sys.basic_info_desc', '包含固定字段与可配置字段')}</CardDescription>
+          <CardDescription>{t('level3.sys.basic_info_desc', '包含固定字段与可配置字段')}</CardDescription>
           {summaryChips.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {summaryChips.map((chip) => (
@@ -248,7 +238,7 @@ export function BMSSysTabLevel3({
           {dynamicFields.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-semibold text-muted-foreground">
-                {t('bms.level3.sys.dynamic_fields', '可配置字段')}
+                {t('level3.sys.dynamic_fields', '可配置字段')}
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 {dynamicFields.map(renderDynamicField)}
@@ -258,7 +248,7 @@ export function BMSSysTabLevel3({
 
           {/* 提示信息 */}
           <div className="text-xs text-muted-foreground">
-            {t('bms.level3.sys.no_realtime_tip', '实时值依赖 WebSocket 数据，未收到时显示空值。')}
+            {t('level3.sys.no_realtime_tip', '实时值依赖 WebSocket 数据，未收到时显示空值。')}
           </div>
         </CardContent>
       </Card>
@@ -320,31 +310,35 @@ export function BMSSysTabLevel3({
         </CardHeader>
         <CardContent>
           {hierarchyConfig ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {clusterCards.map((cluster) => (
-                <div
-                  key={cluster.id}
-                  className="rounded-2xl border bg-card/60 p-4 shadow-sm transition hover:border-primary/40"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold">
-                      {t('cluster', '簇')} #{cluster.id.toString().padStart(2, '0')}
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {cluster.packCount} {t('pack', '包')}
-                    </Badge>
+            hierarchyConfig.cluster_count > 0 ? (
+              <div className="overflow-x-auto py-4">
+                <div className="min-w-[360px]">
+                  <div className="relative mb-8">
+                    <div className="h-1 w-full rounded-full bg-red-500" />
+                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-semibold uppercase tracking-[0.2em] text-red-500">
+                      {t('level3.sys.dc_bus', 'DC BUS')}
+                    </span>
                   </div>
-                  <div className="mt-3 text-2xl font-bold">--</div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t('sys.cluster_pack_info', {
-                      packs: cluster.packCount,
-                      series: cluster.series,
-                      parallel: cluster.parallel,
-                    })}
-                  </p>
+                  <div className="flex items-start gap-6 min-w-max">
+                    {Array.from({ length: hierarchyConfig.cluster_count }).map((_, index) => (
+                      <div key={index} className="flex flex-col items-center gap-2">
+                        <div className="w-px h-6 bg-red-500" />
+                        <div className="w-16 h-16 rounded-lg border-2 border-red-500 bg-card flex items-center justify-center text-sm font-semibold">
+                          C{(index + 1).toString().padStart(2, '0')}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {t('cluster', '簇')} {index + 1}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="py-6 text-center text-muted-foreground">
+                {t('bms.hierarchy_config.cluster_hint', '请在层级配置中设置簇数量以生成拓扑图')}
+              </div>
+            )
           ) : (
             <div className="flex items-center gap-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
               <Layers3 className="h-4 w-4" />
