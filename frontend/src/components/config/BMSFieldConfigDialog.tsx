@@ -525,7 +525,8 @@ export function BMSFieldConfigDialog({
               {/* 资产字段配置 */}
               {sourceType === 'asset_field' && (
                 <div className="space-y-4 pl-4 border-l-2">
-                  {isReadable && (
+                  {/* 读配置：非命令字段需要配置读源 */}
+                  {!(currentFieldKey === 'breaker_open_command' || currentFieldKey === 'breaker_close_command') && (
                     <FormField
                       control={form.control}
                       name="read_device_type_tag_id"
@@ -564,7 +565,8 @@ export function BMSFieldConfigDialog({
                     />
                   )}
 
-                  {isWritable && (
+                  {/* 写配置：命令字段需要配置写源 */}
+                  {(currentFieldKey === 'breaker_open_command' || currentFieldKey === 'breaker_close_command') && (
                     <FormField
                       control={form.control}
                       name="write_device_type_tag_id"
@@ -608,7 +610,8 @@ export function BMSFieldConfigDialog({
               {/* DI点配置 */}
               {sourceType === 'di_point' && (
                 <div className="space-y-4 pl-4 border-l-2">
-                  {isReadable && (
+                  {/* 读配置：非命令字段需要配置读源 */}
+                  {!(currentFieldKey === 'breaker_open_command' || currentFieldKey === 'breaker_close_command') && (
                     <>
                       <FormField
                         control={form.control}
@@ -681,7 +684,8 @@ export function BMSFieldConfigDialog({
                     </>
                   )}
 
-                  {isWritable && (
+                  {/* 写配置：命令字段需要配置写源 */}
+                  {(currentFieldKey === 'breaker_open_command' || currentFieldKey === 'breaker_close_command') && (
                     <>
                       <FormField
                         control={form.control}
