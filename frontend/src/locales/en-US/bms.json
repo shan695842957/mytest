@@ -68,5 +68,26 @@
   "system_fault": "System Fault",
   "system_alarm": "System Alarm",
   "system_status": "System Status",
-  "loading": "Loading..."
+  "loading": "Loading...",
+  "select_bms_instance_first": "Please select a BMS instance first to view data",
+  "breaker_opened": "Breaker opened",
+  "breaker_closed": "Breaker closed",
+  "breaker_control_failed": "Breaker control failed",
+  "cluster_topology": "Cluster Topology",
+  "level2": {
+    "sys": {
+      "basic_info_desc": "Includes fixed fields and configurable fields",
+      "dynamic_fields": "Configurable Fields",
+      "no_realtime_tip": "Real-time values depend on WebSocket data. Empty values are shown when no data is received.",
+      "topology_coming_soon": "Topology diagram feature is under development. Pack nodes will be displayed based on hierarchy configuration."
+    }
+  },
+  "level3": {
+    "sys": {
+      "basic_info_desc": "Includes fixed fields and configurable fields",
+      "dynamic_fields": "Configurable Fields",
+      "no_realtime_tip": "Real-time values depend on WebSocket data. Empty values are shown when no data is received.",
+      "topology_coming_soon": "Topology diagram feature is under development. Cluster nodes will be displayed based on hierarchy configuration."
+    }
+  }
 }

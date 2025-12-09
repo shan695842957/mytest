@@ -68,5 +68,26 @@
   "system_fault": "系统故障",
   "system_alarm": "系统告警",
   "system_status": "系统状态",
-  "loading": "加载中..."
+  "loading": "加载中...",
+  "select_bms_instance_first": "请先选择一个BMS实例以查看数据",
+  "breaker_opened": "断路器已分闸",
+  "breaker_closed": "断路器已合闸",
+  "breaker_control_failed": "断路器控制失败",
+  "cluster_topology": "簇拓扑",
+  "level2": {
+    "sys": {
+      "basic_info_desc": "包含固定字段与可配置字段",
+      "dynamic_fields": "可配置字段",
+      "no_realtime_tip": "实时值依赖 WebSocket 数据，未收到时显示空值。",
+      "topology_coming_soon": "拓扑图功能开发中，将根据层级配置显示包节点"
+    }
+  },
+  "level3": {
+    "sys": {
+      "basic_info_desc": "包含固定字段与可配置字段",
+      "dynamic_fields": "可配置字段",
+      "no_realtime_tip": "实时值依赖 WebSocket 数据，未收到时显示空值。",
+      "topology_coming_soon": "拓扑图功能开发中，将根据层级配置显示簇节点"
+    }
+  }
 }

@@ -10,7 +10,7 @@
  * - EVT: 事件记录（系统遥控信息）
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { getBMSInstanceList, type BMSInstance } from '@/api/bms'
@@ -23,6 +23,8 @@ import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BMSSysTabLevel3 } from '@/components/bms/BMSSysTabLevel3'
+import { toast } from 'sonner'
 import type {
   StackBasicInfoResponse,
   ClusterListResponse,
@@ -495,7 +497,11 @@ export default function BMSDisplayLevel3Page() {
   const [activeTab, setActiveTab] = useState('sys')
   const [selectedBMSInstanceId, setSelectedBMSInstanceId] = useState<number | null>(null)
   
-  // 堆基本信息
+  // WebSocket 缓存数据（key: field_key, value: 实时值）
+  // TODO: 接入真实 WebSocket，从 asset_state 获取数据
+  const [realtimeValues, setRealtimeValues] = useState<Record<string, any>>({})
+  
+  // 堆基本信息（保留用于其他 Tab）
   const [stackBasicInfo, setStackBasicInfo] = useState<StackBasicInfoResponse | null>(null)
   const [stackBreakerClosed, setStackBreakerClosed] = useState(false)
   
@@ -647,6 +653,24 @@ export default function BMSDisplayLevel3Page() {
   }, [activeTab, selectedBMSInstanceId])
   
   // 控制堆断路器
+  // 控制堆断路器（SYS Tab 使用）
+  const handleBreakerControl = async (action: 'open' | 'close', fieldKey: string) => {
+    try {
+      // TODO: 调用后端API写入值
+      // 根据 fieldKey 找到对应的字段配置，获取 write_device_type_tag_id, write_comm_instance_id, write_point_id
+      // 以及 write_value（0 或 1）
+      // await writeBMSFieldValue(selectedBMSInstanceId, fieldKey, writeValue)
+      
+      toast.success(
+        action === 'open' ? t('breaker_opened') : t('breaker_closed')
+      )
+    } catch (error) {
+      console.error('Breaker control error:', error)
+      toast.error(t('breaker_control_failed'))
+    }
+  }
+  
+  // 控制堆断路器（其他 Tab 使用，保留兼容）
   const handleStackBreakerControl = async (action: 'close' | 'open') => {
     // TODO: 调用后端API
     await controlBreaker({
@@ -901,125 +925,22 @@ export default function BMSDisplayLevel3Page() {
             </TabsList>
 
             <TabsContent value="sys" className="mt-4">
-              {stackBasicInfo && (
-                <div className="space-y-6">
-                  {/* Stack Basic Information */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{t('stack_basic_info')}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* Fault Status - 固定字段（修复：告警状态→故障状态，对齐样式） */}
-                        <div className="bg-muted/50 rounded-lg p-4 flex flex-col justify-end">
-                          <div className="text-xs text-muted-foreground mb-1">
-                            {t('fault_status')}
-                          </div>
-                          <Badge
-                            variant={stackBasicInfo.fixedFields.fault ? 'destructive' : 'secondary'}
-                            className="w-full justify-center"
-                          >
-                            {stackBasicInfo.fixedFields.fault
-                              ? t('fault')
-                              : t('normal')}
-                          </Badge>
-                        </div>
-
-                        {/* Stack Voltage - 固定字段 */}
-                        <div className="bg-muted/50 rounded-lg p-4">
-                          <div className="text-xs text-muted-foreground mb-1">
-                            {t('stack_voltage')}
-                          </div>
-                          <div className="text-2xl font-bold">
-                            {stackBasicInfo.fixedFields.voltage} V
-                          </div>
-                        </div>
-
-                        {/* Stack Current - 固定字段 */}
-                        <div className="bg-muted/50 rounded-lg p-4">
-                          <div className="text-xs text-muted-foreground mb-1">
-                            {t('stack_current')}
-                          </div>
-                          <div className="text-2xl font-bold">
-                            {stackBasicInfo.fixedFields.current} A
-                          </div>
-                        </div>
-
-                        {/* Power - 固定字段 */}
-                        <div className="bg-muted/50 rounded-lg p-4">
-                          <div className="text-xs text-muted-foreground mb-1">
-                            {t('power')}
-                          </div>
-                          <div className="text-2xl font-bold">
-                            {stackBasicInfo.fixedFields.power} kW
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Breaker Status - 固定字段 */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          {t('breaker_status')}:
-                        </span>
-                        {stackBreakerClosed ? (
-                          <Badge variant="default" className="bg-green-500">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            {t('closed')}
-                          </Badge>
-                        ) : (
-                          <Badge variant="destructive">
-                            <XCircle className="w-3 h-3 mr-1" />
-                            {t('open')}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Dynamic Fields - 动态字段 */}
-                      {stackBasicInfo.dynamicFields.length > 0 && (
-                        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                          {stackBasicInfo.dynamicFields.map((field) => (
-                            <div key={field.nameEn}>
-                              <div className="text-xs text-muted-foreground mb-1">
-                                {getDynamicFieldName(field)}
-                              </div>
-                              <div className="text-lg font-semibold">
-                                {getDynamicFieldValue(field)}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Separator />
-
-                  {/* Breaker Control - 固定功能 */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{t('breaker_control')}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex gap-4">
-                        <Button
-                          onClick={() => handleStackBreakerControl('close')}
-                          className="bg-green-500 hover:bg-green-600 text-white"
-                          disabled={stackBreakerClosed}
-                        >
-                          {t('close_breaker')}
-                        </Button>
-                        <Button
-                          onClick={() => handleStackBreakerControl('open')}
-                          variant="destructive"
-                          disabled={!stackBreakerClosed}
-                        >
-                          {t('open_breaker')}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Separator />
+              {selectedBMSInstanceId ? (
+                <BMSSysTabLevel3
+                  instanceId={selectedBMSInstanceId}
+                  realtimeValues={realtimeValues}
+                  onBreakerControl={handleBreakerControl}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center text-muted-foreground">
+                      {t('select_bms_instance_first')}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
 
                   {/* Cluster Status - Parallel Connection with Busbar */}
                   {clusterList && (
