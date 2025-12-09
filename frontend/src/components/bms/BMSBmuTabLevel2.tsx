@@ -97,7 +97,7 @@ export function BMSBmuTabLevel2({
       return '--'
     }
     
-    if (field.data_type === 'boolean') {
+    if (typeof value === 'boolean') {
       return value ? t('yes') : t('no')
     }
     

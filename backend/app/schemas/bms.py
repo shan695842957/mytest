@@ -189,12 +189,8 @@ class BMSFieldConfigBase(BaseModel):
     display_name_zh: str = Field(..., description="中文显示名")
     display_name_en: str = Field(..., description="英文显示名")
     field_type: str = Field(..., description="字段类型：'fixed' | 'dynamic'")
-    data_type: str = Field(..., description="数据类型：'boolean' | 'number' | 'enum'")
     unit_zh: str = Field(default="", description="中文单位")
     unit_en: str = Field(default="", description="英文单位")
-    is_required: bool = Field(default=False, description="是否必填（固定字段为1）")
-    is_readable: bool = Field(default=True, description="是否可读（1=可读，0=只写）")
-    is_writable: bool = Field(default=False, description="是否可写（1=可写，0=只读）")
     source_type: str = Field(..., description="字段来源类型：'asset_field' | 'custom' | 'di_point'")
     read_device_type_tag_id: Optional[int] = Field(None, description="读：资产字段ID")
     write_device_type_tag_id: Optional[int] = Field(None, description="写：资产字段ID")
@@ -218,9 +214,6 @@ class BMSFieldConfigUpdate(BaseModel):
     display_name_en: Optional[str] = None
     unit_zh: Optional[str] = None
     unit_en: Optional[str] = None
-    is_required: Optional[bool] = None
-    is_readable: Optional[bool] = None
-    is_writable: Optional[bool] = None
     source_type: Optional[str] = None
     read_device_type_tag_id: Optional[int] = None
     write_device_type_tag_id: Optional[int] = None
@@ -600,8 +593,6 @@ class BMSFieldValue(BaseModel):
     value: Optional[Any] = None  # 值可能是数字、布尔、字符串等
     unit_zh: str = ""
     unit_en: str = ""
-    data_type: str  # 'boolean' | 'number' | 'enum'
-    is_writable: bool = False
 
 
 class BMSTeleindicationValue(BaseModel):
@@ -657,12 +648,8 @@ class BMSFieldConfigImport(BaseModel):
     display_name_zh: str
     display_name_en: str
     field_type: str
-    data_type: str
     unit_zh: str = ""
     unit_en: str = ""
-    is_required: bool = False
-    is_readable: bool = True
-    is_writable: bool = False
     source_type: str
     read_device_type_tag_id: Optional[int] = None
     write_device_type_tag_id: Optional[int] = None

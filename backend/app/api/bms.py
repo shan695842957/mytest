@@ -796,8 +796,7 @@ async def export_field_configs(
     # 写入表头
     writer.writerow([
         "page_type", "field_key", "display_name_zh", "display_name_en",
-        "field_type", "data_type", "unit_zh", "unit_en",
-        "is_required", "is_readable", "is_writable", "source_type",
+        "field_type", "unit_zh", "unit_en", "source_type",
         "read_device_type_tag_id", "write_device_type_tag_id",
         "read_comm_instance_id", "read_point_id",
         "write_comm_instance_id", "write_point_id",
@@ -808,11 +807,7 @@ async def export_field_configs(
     for fc in field_configs:
         writer.writerow([
             fc.page_type, fc.field_key, fc.display_name_zh, fc.display_name_en,
-            fc.field_type, fc.data_type, fc.unit_zh, fc.unit_en,
-            "1" if fc.is_required else "0",
-            "1" if fc.is_readable else "0",
-            "1" if fc.is_writable else "0",
-            fc.source_type,
+            fc.field_type, fc.unit_zh, fc.unit_en, fc.source_type,
             str(fc.read_device_type_tag_id) if fc.read_device_type_tag_id else "",
             str(fc.write_device_type_tag_id) if fc.write_device_type_tag_id else "",
             str(fc.read_comm_instance_id) if fc.read_comm_instance_id else "",
@@ -916,12 +911,8 @@ async def import_field_configs(
                 display_name_zh=row.get("display_name_zh", "").strip(),
                 display_name_en=row.get("display_name_en", "").strip(),
                 field_type=row.get("field_type", "dynamic").strip(),
-                data_type=row.get("data_type", "number").strip(),
                 unit_zh=row.get("unit_zh", "").strip(),
                 unit_en=row.get("unit_en", "").strip(),
-                is_required=row.get("is_required", "0").strip() == "1",
-                is_readable=row.get("is_readable", "1").strip() == "1",
-                is_writable=row.get("is_writable", "0").strip() == "1",
                 source_type=row.get("source_type", "asset_field").strip(),
                 read_device_type_tag_id=int(row["read_device_type_tag_id"]) if row.get("read_device_type_tag_id") else None,
                 write_device_type_tag_id=int(row["write_device_type_tag_id"]) if row.get("write_device_type_tag_id") else None,
@@ -1020,8 +1011,6 @@ async def get_bms_sys_realtime_data(
             "value": value,
             "unit_zh": fc.unit_zh,
             "unit_en": fc.unit_en,
-            "data_type": fc.data_type,
-            "is_writable": fc.is_writable,
         }
         
         if fc.field_type == 'fixed':

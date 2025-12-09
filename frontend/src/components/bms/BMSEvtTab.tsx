@@ -57,7 +57,7 @@ export function BMSEvtTab({
       return '--'
     }
     
-    if (field.data_type === 'boolean') {
+    if (typeof value === 'boolean') {
       return value ? t('yes') : t('no')
     }
     

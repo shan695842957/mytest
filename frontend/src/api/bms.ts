@@ -227,12 +227,8 @@ export interface BMSFieldConfig {
   display_name_zh: string
   display_name_en: string
   field_type: string
-  data_type: string
   unit_zh: string
   unit_en: string
-  is_required: boolean
-  is_readable: boolean
-  is_writable: boolean
   source_type: string
   read_device_type_tag_id?: number
   write_device_type_tag_id?: number
@@ -253,12 +249,8 @@ export interface CreateBMSFieldConfigRequest {
   display_name_zh: string
   display_name_en: string
   field_type: string
-  data_type: string
   unit_zh?: string
   unit_en?: string
-  is_required?: boolean
-  is_readable?: boolean
-  is_writable?: boolean
   source_type: string
   read_device_type_tag_id?: number
   write_device_type_tag_id?: number
@@ -276,9 +268,6 @@ export interface UpdateBMSFieldConfigRequest {
   display_name_en?: string
   unit_zh?: string
   unit_en?: string
-  is_required?: boolean
-  is_readable?: boolean
-  is_writable?: boolean
   source_type?: string
   read_device_type_tag_id?: number
   write_device_type_tag_id?: number

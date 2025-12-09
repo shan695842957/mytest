@@ -220,19 +220,15 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
     display_name_zh TEXT NOT NULL,                 -- 中文显示名
     display_name_en TEXT NOT NULL,                 -- 英文显示名
     field_type TEXT NOT NULL,                      -- 字段类型：'fixed' | 'dynamic'
-    data_type TEXT NOT NULL,                      -- 数据类型：'boolean' | 'number' | 'enum'
     unit_zh TEXT NOT NULL DEFAULT '',              -- 中文单位
     unit_en TEXT NOT NULL DEFAULT '',              -- 英文单位
-    is_required BOOLEAN NOT NULL DEFAULT 0,       -- 是否必填（固定字段为1）
-    is_readable BOOLEAN NOT NULL DEFAULT 1,       -- 是否可读（1=可读，0=只写）
-    is_writable BOOLEAN NOT NULL DEFAULT 0,       -- 是否可写（1=可写，0=只读）
     source_type TEXT NOT NULL,                     -- 字段来源类型：'asset_field'（资产字段）| 'custom'（自定义字段）| 'di_point'（DI点）
     read_device_type_tag_id INTEGER,               -- 读：资产字段ID（外键关联 device_type_tags.id）
-    write_device_type_tag_id INTEGER,              -- 写：资产字段ID（外键关联 device_type_tags.id，仅当 is_writable=1 时使用）
+    write_device_type_tag_id INTEGER,              -- 写：资产字段ID（外键关联 device_type_tags.id）
     read_comm_instance_id INTEGER,                 -- 读：通信实例ID（外键关联 comm_instances.id）
     read_point_id INTEGER,                         -- 读：点表点ID（外键关联 point_table_points.id）
-    write_comm_instance_id INTEGER,                -- 写：通信实例ID（外键关联 comm_instances.id，仅当 is_writable=1 时使用）
-    write_point_id INTEGER,                        -- 写：点表点ID（外键关联 point_table_points.id，仅当 is_writable=1 时使用）
+    write_comm_instance_id INTEGER,                -- 写：通信实例ID（外键关联 comm_instances.id）
+    write_point_id INTEGER,                        -- 写：点表点ID（外键关联 point_table_points.id）
     sort_order INTEGER NOT NULL DEFAULT 0,          -- 排序索引（避免使用 index 关键字）
     description_zh TEXT NOT NULL DEFAULT '',       -- 中文描述
     description_en TEXT NOT NULL DEFAULT '',       -- 英文描述
@@ -252,14 +248,6 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
         (source_type = 'asset_field' AND read_device_type_tag_id IS NOT NULL) OR
         (source_type = 'custom') OR
         (source_type = 'di_point' AND read_comm_instance_id IS NOT NULL AND read_point_id IS NOT NULL)
-    ),
-    -- 检查约束：可写字段必须可读（写入后需要读取反馈）
-    CHECK (is_writable = 0 OR is_readable = 1),
-    -- 检查约束：可写字段必须配置写数据来源
-    CHECK (
-        is_writable = 0 OR
-        (source_type = 'asset_field' AND write_device_type_tag_id IS NOT NULL) OR
-        (source_type = 'di_point' AND write_comm_instance_id IS NOT NULL AND write_point_id IS NOT NULL)
     ),
     UNIQUE(bms_instance_id, page_type, field_key)
 );

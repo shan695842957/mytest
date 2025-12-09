@@ -151,10 +151,8 @@ CREATE TABLE IF NOT EXISTS bms_field_configs (
     display_name_zh TEXT NOT NULL,                  -- 中文显示名
     display_name_en TEXT NOT NULL,                  -- 英文显示名
     field_type TEXT NOT NULL,                       -- 字段类型：'fixed' | 'dynamic'
-    data_type TEXT NOT NULL,                        -- 数据类型：'boolean' | 'number' | 'enum'
     unit_zh TEXT NOT NULL DEFAULT '',               -- 中文单位
     unit_en TEXT NOT NULL DEFAULT '',               -- 英文单位
-    is_required BOOLEAN NOT NULL DEFAULT 0,        -- 是否必填（固定字段为1）
     -- 字段来源类型（明确字段的数据来源）
     source_type TEXT NOT NULL,                      -- 字段来源类型：'asset_field'（资产字段）| 'custom'（自定义字段）| 'di_point'（DI点）
     -- 当 source_type='asset_field' 时使用（外键关联，不使用名称依赖）
@@ -754,7 +752,7 @@ GET    /api/bms/instances/{id}/hierarchy-summary     # 根据 hierarchy-config �
 
 ### 6.1 固定字段处理
 
-- **固定字段定义**：所有BMS厂家都能提供的字段，在配置表中标记为 `field_type='fixed'` 和 `is_required=1`
+- **固定字段定义**：所有BMS厂家都能提供的字段，在配置表中标记为 `field_type='fixed'`
 - **固定字段列表**（SYS页面）：
   - `fault`（告警状态）- 只读，STATUS类型
   - `voltage`（电压）- 只读，MEASURE类型
@@ -770,7 +768,7 @@ GET    /api/bms/instances/{id}/hierarchy-summary     # 根据 hierarchy-config �
 
 ### 6.2 可配置字段处理
 
-- 可配置字段（如 SOC、SOH、SOS）在配置表中标记为 `field_type='dynamic'` 和 `is_required=0`
+- 可配置字段（如 SOC、SOH、SOS）在配置表中标记为 `field_type='dynamic'`
 - 可配置字段的数据来源在配置表中直接定义：
   - **资产字段**（主要）：通过外键 `device_type_tag_id` 关联到 `device_type_tags.id`
   - **DI 点**：某些 BMS 的 DO 量，通过外键 `comm_instance_id` 和 `point_id` 关联

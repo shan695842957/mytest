@@ -67,7 +67,7 @@ export function BMSBauTabLevel3({
       return '--'
     }
     
-    if (field.data_type === 'boolean') {
+    if (typeof value === 'boolean') {
       return value ? t('yes') : t('no')
     }
     

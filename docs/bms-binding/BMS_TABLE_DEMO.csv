@@ -48,48 +48,48 @@ id,asset_id,architecture_id,instance_name,display_name_zh,display_name_en,enable
 #   - read_comm_instance_id / read_point_id: 当 source_type='di_point' 时，外键关联 comm_instances.id 和 point_table_points.id
 # 固定字段：fault, voltage, current, power, breaker_status, breaker_open_command, breaker_close_command
 # 可配置字段：soc, soh, sos（根据供应商配置）
-id,bms_instance_id,page_type,field_key,display_name_zh,display_name_en,field_type,data_type,unit_zh,unit_en,is_required,source_type,read_device_type_tag_id,write_device_type_tag_id,read_comm_instance_id,read_point_id,write_comm_instance_id,write_point_id,write_value,sort_order,description_zh,description_en,created_at,updated_at
+id,bms_instance_id,page_type,field_key,display_name_zh,display_name_en,field_type,unit_zh,unit_en,source_type,read_device_type_tag_id,write_device_type_tag_id,read_comm_instance_id,read_point_id,write_comm_instance_id,write_point_id,write_value,sort_order,description_zh,description_en,created_at,updated_at
 # ========== 二级架构 SYS 页面字段 ==========
 # 固定字段
-10,1,SYS,fault,告警状态,Fault Status,fixed,boolean,,,1,asset_field,1101,NULL,NULL,NULL,NULL,NULL,,1,告警状态（所有BMS厂家都能提供）,Fault Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-11,1,SYS,voltage,簇电压,Cluster Voltage,fixed,number,V,V,1,asset_field,1102,NULL,NULL,NULL,NULL,NULL,,2,簇电压（所有BMS厂家都能提供）,Cluster Voltage (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-12,1,SYS,current,簇电流,Cluster Current,fixed,number,A,A,1,asset_field,1103,NULL,NULL,NULL,NULL,NULL,,3,簇电流（所有BMS厂家都能提供）,Cluster Current (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-13,1,SYS,power,簇功率,Cluster Power,fixed,number,kW,kW,1,asset_field,1104,NULL,NULL,NULL,NULL,NULL,,4,簇功率（所有BMS厂家都能提供，可能通过计算）,Cluster Power (available from all BMS vendors, may be calculated),2025-01-01 00:00:00,2025-01-01 00:00:00
-14,1,SYS,breaker_status,断路器状态,Breaker Status,fixed,boolean,,,1,asset_field,1105,NULL,NULL,NULL,NULL,NULL,,5,断路器状态（所有BMS厂家都能提供）,Breaker Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-15,1,SYS,breaker_open_command,断路器分闸,Breaker Open Command,fixed,boolean,,,1,asset_field,1105,1106,NULL,NULL,NULL,NULL,0,6,断路器分闸（分闸=0）,Breaker Open Command (open=0),2025-01-01 00:00:00,2025-01-01 00:00:00
-16,1,SYS,breaker_close_command,断路器合闸,Breaker Close Command,fixed,boolean,,,1,asset_field,1105,1106,NULL,NULL,NULL,NULL,1,7,断路器合闸（合闸=1）,Breaker Close Command (close=1),2025-01-01 00:00:00,2025-01-01 00:00:00
+10,1,SYS,fault,告警状态,Fault Status,fixed,,,asset_field,1101,NULL,NULL,NULL,NULL,NULL,,1,告警状态（所有BMS厂家都能提供）,Fault Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+11,1,SYS,voltage,簇电压,Cluster Voltage,fixed,V,V,asset_field,1102,NULL,NULL,NULL,NULL,NULL,,2,簇电压（所有BMS厂家都能提供）,Cluster Voltage (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+12,1,SYS,current,簇电流,Cluster Current,fixed,A,A,asset_field,1103,NULL,NULL,NULL,NULL,NULL,,3,簇电流（所有BMS厂家都能提供）,Cluster Current (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+13,1,SYS,power,簇功率,Cluster Power,fixed,kW,kW,asset_field,1104,NULL,NULL,NULL,NULL,NULL,,4,簇功率（所有BMS厂家都能提供，可能通过计算）,Cluster Power (available from all BMS vendors, may be calculated),2025-01-01 00:00:00,2025-01-01 00:00:00
+14,1,SYS,breaker_status,断路器状态,Breaker Status,fixed,,,asset_field,1105,NULL,NULL,NULL,NULL,NULL,,5,断路器状态（所有BMS厂家都能提供）,Breaker Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+15,1,SYS,breaker_open_command,断路器分闸,Breaker Open Command,fixed,,,asset_field,1105,1106,NULL,NULL,NULL,NULL,0,6,断路器分闸（分闸=0）,Breaker Open Command (open=0),2025-01-01 00:00:00,2025-01-01 00:00:00
+16,1,SYS,breaker_close_command,断路器合闸,Breaker Close Command,fixed,,,asset_field,1105,1106,NULL,NULL,NULL,NULL,1,7,断路器合闸（合闸=1）,Breaker Close Command (close=1),2025-01-01 00:00:00,2025-01-01 00:00:00
 # 动态字段
-17,1,SYS,soc,荷电状态,State of Charge,dynamic,number,%,%,0,asset_field,1107,NULL,NULL,NULL,NULL,NULL,,8,SOC（取决于供应商）,SOC (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
-18,1,SYS,soh,健康状态,State of Health,dynamic,number,%,%,0,asset_field,1108,NULL,NULL,NULL,NULL,NULL,,9,SOH（取决于供应商）,SOH (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+17,1,SYS,soc,荷电状态,State of Charge,dynamic,%,%,asset_field,1107,NULL,NULL,NULL,NULL,NULL,,8,SOC（取决于供应商）,SOC (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+18,1,SYS,soh,健康状态,State of Health,dynamic,%,%,asset_field,1108,NULL,NULL,NULL,NULL,NULL,,9,SOH（取决于供应商）,SOH (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
 # ========== 三级架构 SYS 页面字段 ==========
 # 固定字段
-20,2,SYS,fault,告警状态,Fault Status,fixed,boolean,,,1,asset_field,1001,NULL,NULL,NULL,NULL,NULL,,1,告警状态（所有BMS厂家都能提供）,Fault Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-21,2,SYS,voltage,堆电压,Stack Voltage,fixed,number,V,V,1,asset_field,1002,NULL,NULL,NULL,NULL,NULL,,2,堆电压（所有BMS厂家都能提供）,Stack Voltage (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-22,2,SYS,current,堆电流,Stack Current,fixed,number,A,A,1,asset_field,1003,NULL,NULL,NULL,NULL,NULL,,3,堆电流（所有BMS厂家都能提供）,Stack Current (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-23,2,SYS,power,堆功率,Stack Power,fixed,number,kW,kW,1,asset_field,1004,NULL,NULL,NULL,NULL,NULL,,4,堆功率（所有BMS厂家都能提供，可能通过计算）,Stack Power (available from all BMS vendors, may be calculated),2025-01-01 00:00:00,2025-01-01 00:00:00
-24,2,SYS,breaker_status,分合闸状态,Breaker Status,fixed,boolean,,,1,asset_field,1005,NULL,NULL,NULL,NULL,NULL,,5,分合闸状态（所有BMS厂家都能提供）,Breaker Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
-25,2,SYS,breaker_open_command,分闸指令,Breaker Open Command,fixed,boolean,,,1,asset_field,1005,1006,NULL,NULL,NULL,NULL,0,6,分闸指令（分闸=0）,Breaker Open Command (open=0),2025-01-01 00:00:00,2025-01-01 00:00:00
-26,2,SYS,breaker_close_command,合闸指令,Breaker Close Command,fixed,boolean,,,1,asset_field,1005,1006,NULL,NULL,NULL,NULL,1,7,合闸指令（合闸=1）,Breaker Close Command (close=1),2025-01-01 00:00:00,2025-01-01 00:00:00
+20,2,SYS,fault,告警状态,Fault Status,fixed,,,asset_field,1001,NULL,NULL,NULL,NULL,NULL,,1,告警状态（所有BMS厂家都能提供）,Fault Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+21,2,SYS,voltage,堆电压,Stack Voltage,fixed,V,V,asset_field,1002,NULL,NULL,NULL,NULL,NULL,,2,堆电压（所有BMS厂家都能提供）,Stack Voltage (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+22,2,SYS,current,堆电流,Stack Current,fixed,A,A,asset_field,1003,NULL,NULL,NULL,NULL,NULL,,3,堆电流（所有BMS厂家都能提供）,Stack Current (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+23,2,SYS,power,堆功率,Stack Power,fixed,kW,kW,asset_field,1004,NULL,NULL,NULL,NULL,NULL,,4,堆功率（所有BMS厂家都能提供，可能通过计算）,Stack Power (available from all BMS vendors, may be calculated),2025-01-01 00:00:00,2025-01-01 00:00:00
+24,2,SYS,breaker_status,分合闸状态,Breaker Status,fixed,,,asset_field,1005,NULL,NULL,NULL,NULL,NULL,,5,分合闸状态（所有BMS厂家都能提供）,Breaker Status (available from all BMS vendors),2025-01-01 00:00:00,2025-01-01 00:00:00
+25,2,SYS,breaker_open_command,分闸指令,Breaker Open Command,fixed,,,asset_field,1005,1006,NULL,NULL,NULL,NULL,0,6,分闸指令（分闸=0）,Breaker Open Command (open=0),2025-01-01 00:00:00,2025-01-01 00:00:00
+26,2,SYS,breaker_close_command,合闸指令,Breaker Close Command,fixed,,,asset_field,1005,1006,NULL,NULL,NULL,NULL,1,7,合闸指令（合闸=1）,Breaker Close Command (close=1),2025-01-01 00:00:00,2025-01-01 00:00:00
 # 动态字段
-27,2,SYS,soc,荷电状态,State of Charge,dynamic,number,%,%,0,asset_field,1007,NULL,NULL,NULL,NULL,NULL,,8,SOC（取决于供应商）,SOC (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
-28,2,SYS,soe,能量状态,State of Energy,dynamic,number,kWh,kWh,0,asset_field,1008,NULL,NULL,NULL,NULL,NULL,,9,SOE（取决于供应商）,SOE (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
-29,2,SYS,soh,健康状态,State of Health,dynamic,number,%,%,0,asset_field,1009,NULL,NULL,NULL,NULL,NULL,,10,SOH（取决于供应商）,SOH (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+27,2,SYS,soc,荷电状态,State of Charge,dynamic,%,%,asset_field,1007,NULL,NULL,NULL,NULL,NULL,,8,SOC（取决于供应商）,SOC (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+28,2,SYS,soe,能量状态,State of Energy,dynamic,kWh,kWh,asset_field,1008,NULL,NULL,NULL,NULL,NULL,,9,SOE（取决于供应商）,SOE (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
+29,2,SYS,soh,健康状态,State of Health,dynamic,%,%,asset_field,1009,NULL,NULL,NULL,NULL,NULL,,10,SOH（取决于供应商）,SOH (vendor dependent),2025-01-01 00:00:00,2025-01-01 00:00:00
 # ========== 二级架构 BCU 页面遥测量 ==========
-30,1,BCU,cluster_voltage,簇电压,Cluster Voltage,dynamic,number,V,V,0,1,0,asset_field,1201,NULL,NULL,NULL,NULL,NULL,1,簇电压,Cluster Voltage,2025-01-01 00:00:00,2025-01-01 00:00:00
-31,1,BCU,cluster_current,簇电流,Cluster Current,dynamic,number,A,A,0,1,0,asset_field,1202,NULL,NULL,NULL,NULL,NULL,2,簇电流,Cluster Current,2025-01-01 00:00:00,2025-01-01 00:00:00
-32,1,BCU,cluster_power,簇功率,Cluster Power,dynamic,number,kW,kW,0,1,0,asset_field,1203,NULL,NULL,NULL,NULL,NULL,3,簇功率,Cluster Power,2025-01-01 00:00:00,2025-01-01 00:00:00
-33,1,BCU,cluster_temperature,簇温度,Cluster Temperature,dynamic,number,℃,℃,0,1,0,asset_field,1204,NULL,NULL,NULL,NULL,NULL,4,簇温度,Cluster Temperature,2025-01-01 00:00:00,2025-01-01 00:00:00
+30,1,BCU,cluster_voltage,簇电压,Cluster Voltage,dynamic,V,V,asset_field,1201,NULL,NULL,NULL,NULL,NULL,,1,簇电压,Cluster Voltage,2025-01-01 00:00:00,2025-01-01 00:00:00
+31,1,BCU,cluster_current,簇电流,Cluster Current,dynamic,A,A,asset_field,1202,NULL,NULL,NULL,NULL,NULL,,2,簇电流,Cluster Current,2025-01-01 00:00:00,2025-01-01 00:00:00
+32,1,BCU,cluster_power,簇功率,Cluster Power,dynamic,kW,kW,asset_field,1203,NULL,NULL,NULL,NULL,NULL,,3,簇功率,Cluster Power,2025-01-01 00:00:00,2025-01-01 00:00:00
+33,1,BCU,cluster_temperature,簇温度,Cluster Temperature,dynamic,℃,℃,asset_field,1204,NULL,NULL,NULL,NULL,NULL,,4,簇温度,Cluster Temperature,2025-01-01 00:00:00,2025-01-01 00:00:00
 # ========== 三级架构 BCU 页面遥测量 ==========
-40,2,BCU,cluster_voltage,簇电压,Cluster Voltage,dynamic,number,V,V,0,1,0,asset_field,2001,NULL,NULL,NULL,NULL,NULL,1,簇电压,Cluster Voltage,2025-01-01 00:00:00,2025-01-01 00:00:00
-41,2,BCU,cluster_current,簇电流,Cluster Current,dynamic,number,A,A,0,1,0,asset_field,2002,NULL,NULL,NULL,NULL,NULL,2,簇电流,Cluster Current,2025-01-01 00:00:00,2025-01-01 00:00:00
-42,2,BCU,cluster_power,簇功率,Cluster Power,dynamic,number,kW,kW,0,1,0,asset_field,2003,NULL,NULL,NULL,NULL,NULL,3,簇功率,Cluster Power,2025-01-01 00:00:00,2025-01-01 00:00:00
-43,2,BCU,cluster_soc,簇SOC,Cluster SOC,dynamic,number,%,%,0,1,0,asset_field,2004,NULL,NULL,NULL,NULL,NULL,4,簇SOC,Cluster SOC,2025-01-01 00:00:00,2025-01-01 00:00:00
+40,2,BCU,cluster_voltage,簇电压,Cluster Voltage,dynamic,V,V,asset_field,2001,NULL,NULL,NULL,NULL,NULL,,1,簇电压,Cluster Voltage,2025-01-01 00:00:00,2025-01-01 00:00:00
+41,2,BCU,cluster_current,簇电流,Cluster Current,dynamic,A,A,asset_field,2002,NULL,NULL,NULL,NULL,NULL,,2,簇电流,Cluster Current,2025-01-01 00:00:00,2025-01-01 00:00:00
+42,2,BCU,cluster_power,簇功率,Cluster Power,dynamic,kW,kW,asset_field,2003,NULL,NULL,NULL,NULL,NULL,,3,簇功率,Cluster Power,2025-01-01 00:00:00,2025-01-01 00:00:00
+43,2,BCU,cluster_soc,簇SOC,Cluster SOC,dynamic,%,%,asset_field,2004,NULL,NULL,NULL,NULL,NULL,,4,簇SOC,Cluster SOC,2025-01-01 00:00:00,2025-01-01 00:00:00
 # ========== 三级架构 BAU 页面遥测量 ==========
-50,2,BAU,stack_voltage,堆电压,Stack Voltage,dynamic,number,V,V,0,1,0,asset_field,3001,NULL,NULL,NULL,NULL,NULL,1,堆电压,Stack Voltage,2025-01-01 00:00:00,2025-01-01 00:00:00
-51,2,BAU,stack_current,堆电流,Stack Current,dynamic,number,A,A,0,1,0,asset_field,3002,NULL,NULL,NULL,NULL,NULL,2,堆电流,Stack Current,2025-01-01 00:00:00,2025-01-01 00:00:00
-52,2,BAU,stack_power,堆功率,Stack Power,dynamic,number,kW,kW,0,1,0,asset_field,3003,NULL,NULL,NULL,NULL,NULL,3,堆功率,Stack Power,2025-01-01 00:00:00,2025-01-01 00:00:00
-53,2,BAU,stack_temperature,堆温度,Stack Temperature,dynamic,number,℃,℃,0,1,0,asset_field,3004,NULL,NULL,NULL,NULL,NULL,4,堆温度,Stack Temperature,2025-01-01 00:00:00,2025-01-01 00:00:00
-54,2,BAU,stack_energy,堆能量,Stack Energy,dynamic,number,kWh,kWh,0,1,0,asset_field,3005,NULL,NULL,NULL,NULL,NULL,5,堆能量,Stack Energy,2025-01-01 00:00:00,2025-01-01 00:00:00
+50,2,BAU,stack_voltage,堆电压,Stack Voltage,dynamic,V,V,asset_field,3001,NULL,NULL,NULL,NULL,NULL,,1,堆电压,Stack Voltage,2025-01-01 00:00:00,2025-01-01 00:00:00
+51,2,BAU,stack_current,堆电流,Stack Current,dynamic,A,A,asset_field,3002,NULL,NULL,NULL,NULL,NULL,,2,堆电流,Stack Current,2025-01-01 00:00:00,2025-01-01 00:00:00
+52,2,BAU,stack_power,堆功率,Stack Power,dynamic,kW,kW,asset_field,3003,NULL,NULL,NULL,NULL,NULL,,3,堆功率,Stack Power,2025-01-01 00:00:00,2025-01-01 00:00:00
+53,2,BAU,stack_temperature,堆温度,Stack Temperature,dynamic,℃,℃,asset_field,3004,NULL,NULL,NULL,NULL,NULL,,4,堆温度,Stack Temperature,2025-01-01 00:00:00,2025-01-01 00:00:00
+54,2,BAU,stack_energy,堆能量,Stack Energy,dynamic,kWh,kWh,asset_field,3005,NULL,NULL,NULL,NULL,NULL,,5,堆能量,Stack Energy,2025-01-01 00:00:00,2025-01-01 00:00:00
 
 # ============================================
 # 5. bms_teleindication_configs（BMS 遥信量配置表 - 实例级别）
@@ -382,8 +382,8 @@ id,bms_instance_id,cluster_count,pack_count_per_cluster,series_count,parallel_co
 # 说明：
 # 1. 所有配置表都关联到 bms_instances（每个实例独立配置）
 # 2. 字段配置表直接包含数据来源信息（外键关联，不使用名称依赖）
-# 3. 固定字段通过 field_type='fixed' 标识，is_required=1，系统初始化时自动创建
-# 4. 可配置字段通过 field_type='dynamic' 标识，is_required=0，用户可配置
+# 3. 固定字段通过 field_type='fixed' 标识，系统初始化时自动创建
+# 4. 可配置字段通过 field_type='dynamic' 标识，用户可配置
 # 5. 拓扑图字段通过 bms_topology_field_configs 配置，display_position 控制显示位置（header/card/footer）
 # 6. sort_order 控制同一位置内的显示顺序
 # 7. 拓扑图字段的 field_key 独立定义，不一定与主页面字段相同（如主页面是 stack_voltage，拓扑图是 cluster_voltage）

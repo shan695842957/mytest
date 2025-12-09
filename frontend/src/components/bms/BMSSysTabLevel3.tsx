@@ -12,7 +12,7 @@ import {
   type BMSFieldConfig,
   type BMSHierarchyConfig,
 } from '@/api/bms'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, Layers3, XCircle } from 'lucide-react'
@@ -56,15 +56,15 @@ export function BMSSysTabLevel3({
   const hierarchyConfig = hierarchyData?.data as BMSHierarchyConfig | undefined
 
   // SYS页面固定字段预设（与配置页面保持一致）
-  const sysFixedFieldPresets: Array<Partial<BMSFieldConfig> & { field_key: string; display_name_zh: string; display_name_en: string; data_type: string; sort_order: number }> = useMemo(
+  const sysFixedFieldPresets: Array<Partial<BMSFieldConfig> & { field_key: string; display_name_zh: string; display_name_en: string; sort_order: number }> = useMemo(
     () => [
-      { field_key: 'fault', display_name_zh: '告警状态', display_name_en: 'Fault Status', data_type: 'boolean', field_type: 'fixed', sort_order: 1, is_required: true },
-      { field_key: 'voltage', display_name_zh: '电压', display_name_en: 'Voltage', data_type: 'number', field_type: 'fixed', sort_order: 2, is_required: true },
-      { field_key: 'current', display_name_zh: '电流', display_name_en: 'Current', data_type: 'number', field_type: 'fixed', sort_order: 3, is_required: true },
-      { field_key: 'power', display_name_zh: '功率', display_name_en: 'Power', data_type: 'number', field_type: 'fixed', sort_order: 4, is_required: true },
-      { field_key: 'breaker_status', display_name_zh: '分合闸状态', display_name_en: 'Breaker Status', data_type: 'boolean', field_type: 'fixed', sort_order: 5, is_required: true },
-      { field_key: 'breaker_open_command', display_name_zh: '分闸指令', display_name_en: 'Breaker Open Command', data_type: 'boolean', field_type: 'fixed', sort_order: 6, is_required: true },
-      { field_key: 'breaker_close_command', display_name_zh: '合闸指令', display_name_en: 'Breaker Close Command', data_type: 'boolean', field_type: 'fixed', sort_order: 7, is_required: true },
+      { field_key: 'fault', display_name_zh: '告警状态', display_name_en: 'Fault Status', field_type: 'fixed', sort_order: 1 },
+      { field_key: 'voltage', display_name_zh: '电压', display_name_en: 'Voltage', field_type: 'fixed', sort_order: 2 },
+      { field_key: 'current', display_name_zh: '电流', display_name_en: 'Current', field_type: 'fixed', sort_order: 3 },
+      { field_key: 'power', display_name_zh: '功率', display_name_en: 'Power', field_type: 'fixed', sort_order: 4 },
+      { field_key: 'breaker_status', display_name_zh: '分合闸状态', display_name_en: 'Breaker Status', field_type: 'fixed', sort_order: 5 },
+      { field_key: 'breaker_open_command', display_name_zh: '分闸指令', display_name_en: 'Breaker Open Command', field_type: 'fixed', sort_order: 6 },
+      { field_key: 'breaker_close_command', display_name_zh: '合闸指令', display_name_en: 'Breaker Close Command', field_type: 'fixed', sort_order: 7 },
     ],
     []
   )
@@ -88,9 +88,6 @@ export function BMSSysTabLevel3({
         page_type: 'SYS',
         unit_zh: '',
         unit_en: '',
-        is_required: true,
-        is_readable: true,
-        is_writable: preset.field_key?.includes('command') ?? false,
         source_type: config?.source_type || '-',
         description_zh: '',
         description_en: '',
@@ -225,24 +222,6 @@ export function BMSSysTabLevel3({
 
   const isLoading = isFieldLoading || isHierarchyLoading
 
-  const summaryChips = useMemo(() => {
-    if (!hierarchyConfig) return []
-    return [
-      {
-        label: t('sys.cluster_total', '簇数量'),
-        value: hierarchyConfig.cluster_count,
-      },
-      {
-        label: t('sys.pack_total', '每簇包数量'),
-        value: hierarchyConfig.pack_count_per_cluster,
-      },
-      {
-        label: t('sys.series_parallel', '串并配置'),
-        value: `${hierarchyConfig.series_count}S × ${hierarchyConfig.parallel_count}P`,
-      },
-    ]
-  }, [hierarchyConfig, t])
-
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -261,20 +240,6 @@ export function BMSSysTabLevel3({
       <Card>
         <CardHeader>
           <CardTitle>{t('stack_basic_info', '堆基本信息')}</CardTitle>
-          <CardDescription>{t('level3.sys.basic_info_desc', '包含固定字段与可配置字段')}</CardDescription>
-          {summaryChips.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {summaryChips.map((chip) => (
-                <div
-                  key={chip.label}
-                  className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
-                >
-                  {chip.label}:{' '}
-                  <span className="font-semibold text-foreground">{chip.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </CardHeader>
         <CardContent className="space-y-4">
           {/* 固定字段网格 */}
@@ -287,19 +252,11 @@ export function BMSSysTabLevel3({
           {/* 动态字段网格 */}
           {dynamicFields.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-muted-foreground">
-                {t('level3.sys.dynamic_fields', '可配置字段')}
-              </h4>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 {dynamicFields.map(renderDynamicField)}
               </div>
             </div>
           )}
-
-          {/* 提示信息 */}
-          <div className="text-xs text-muted-foreground">
-            {t('level3.sys.no_realtime_tip', '实时值依赖 WebSocket 数据，未收到时显示空值。')}
-          </div>
         </CardContent>
       </Card>
 
@@ -349,14 +306,6 @@ export function BMSSysTabLevel3({
       <Card>
         <CardHeader>
           <CardTitle>{t('cluster_topology', '簇拓扑')}</CardTitle>
-          {hierarchyConfig && (
-            <CardDescription>
-              {t('sys.cluster_overview_desc', {
-                count: hierarchyConfig.cluster_count,
-                packs: hierarchyConfig.pack_count_per_cluster,
-              })}
-            </CardDescription>
-          )}
         </CardHeader>
         <CardContent>
           {hierarchyConfig ? (
@@ -364,7 +313,7 @@ export function BMSSysTabLevel3({
               <div className="overflow-x-auto py-4">
                 <div className="min-w-[360px]">
                   <div className="relative mb-8">
-                    <div className="h-1 w-full rounded-full bg-red-500" />
+                      <div className="h-1 w-full rounded-full bg-red-500" />
                     <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-semibold uppercase tracking-[0.2em] text-red-500">
                       {t('level3.sys.dc_bus', 'DC BUS')}
                     </span>
@@ -372,8 +321,8 @@ export function BMSSysTabLevel3({
                   <div className="flex items-start gap-6 min-w-max">
                     {Array.from({ length: hierarchyConfig.cluster_count }).map((_, index) => (
                       <div key={index} className="flex flex-col items-center gap-2">
-                        <div className="w-px h-6 bg-red-500" />
-                        <div className="w-16 h-16 rounded-lg border-2 border-red-500 bg-card flex items-center justify-center text-sm font-semibold">
+                          <div className="w-px h-8 bg-red-500" />
+                          <div className="w-20 h-20 rounded-lg border-2 border-red-500 bg-card flex items-center justify-center text-sm font-semibold">
                           C{(index + 1).toString().padStart(2, '0')}
                         </div>
                         <span className="text-xs text-muted-foreground">

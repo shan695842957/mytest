@@ -120,15 +120,15 @@ export default function BMSConfigPage() {
   
   const instance = instanceData?.data
   const fieldConfigs = (fieldConfigsData?.data as BMSFieldConfig[] | null | undefined) || []
-  const sysFixedFieldPresets: Array<Partial<BMSFieldConfig> & { field_key: string; display_name_zh: string; display_name_en: string; data_type: string; sort_order: number }> = useMemo(
+  const sysFixedFieldPresets: Array<Partial<BMSFieldConfig> & { field_key: string; display_name_zh: string; display_name_en: string; sort_order: number }> = useMemo(
     () => [
-      { field_key: 'fault', display_name_zh: '告警状态', display_name_en: 'Fault Status', data_type: 'boolean', field_type: 'fixed', sort_order: 1, is_required: true },
-      { field_key: 'voltage', display_name_zh: '电压', display_name_en: 'Voltage', data_type: 'number', field_type: 'fixed', sort_order: 2, is_required: true },
-      { field_key: 'current', display_name_zh: '电流', display_name_en: 'Current', data_type: 'number', field_type: 'fixed', sort_order: 3, is_required: true },
-      { field_key: 'power', display_name_zh: '功率', display_name_en: 'Power', data_type: 'number', field_type: 'fixed', sort_order: 4, is_required: true },
-      { field_key: 'breaker_status', display_name_zh: '分合闸状态', display_name_en: 'Breaker Status', data_type: 'boolean', field_type: 'fixed', sort_order: 5, is_required: true },
-      { field_key: 'breaker_open_command', display_name_zh: '分闸指令', display_name_en: 'Breaker Open Command', data_type: 'boolean', field_type: 'fixed', sort_order: 6, is_required: true },
-      { field_key: 'breaker_close_command', display_name_zh: '合闸指令', display_name_en: 'Breaker Close Command', data_type: 'boolean', field_type: 'fixed', sort_order: 7, is_required: true },
+      { field_key: 'fault', display_name_zh: '告警状态', display_name_en: 'Fault Status', field_type: 'fixed', sort_order: 1 },
+      { field_key: 'voltage', display_name_zh: '电压', display_name_en: 'Voltage', field_type: 'fixed', sort_order: 2 },
+      { field_key: 'current', display_name_zh: '电流', display_name_en: 'Current', field_type: 'fixed', sort_order: 3 },
+      { field_key: 'power', display_name_zh: '功率', display_name_en: 'Power', field_type: 'fixed', sort_order: 4 },
+      { field_key: 'breaker_status', display_name_zh: '分合闸状态', display_name_en: 'Breaker Status', field_type: 'fixed', sort_order: 5 },
+      { field_key: 'breaker_open_command', display_name_zh: '分闸指令', display_name_en: 'Breaker Open Command', field_type: 'fixed', sort_order: 6 },
+      { field_key: 'breaker_close_command', display_name_zh: '合闸指令', display_name_en: 'Breaker Close Command', field_type: 'fixed', sort_order: 7 },
     ],
     []
   )
@@ -142,8 +142,6 @@ export default function BMSConfigPage() {
         existed || {
           ...preset,
           source_type: '-',
-          is_readable: true,
-          is_writable: preset.field_key?.includes('command') ?? false,
           field_type: 'fixed',
         }
       )
@@ -268,7 +266,6 @@ export default function BMSConfigPage() {
                         <TableHead>{t('bms.field_config.table.field_key')}</TableHead>
                         <TableHead>{t('bms.field_config.table.display_name')}</TableHead>
                         <TableHead>{t('bms.field_config.table.field_type')}</TableHead>
-                        <TableHead>{t('bms.field_config.table.data_type')}</TableHead>
                         <TableHead>{t('bms.field_config.table.source_type')}</TableHead>
                         <TableHead>{t('bms.field_config.table.sort_order')}</TableHead>
                         <TableHead className="text-right">{t('common.actions')}</TableHead>
@@ -295,7 +292,6 @@ export default function BMSConfigPage() {
                               {config.field_type === 'fixed' ? t('bms.field_config.fixed') : t('bms.field_config.dynamic')}
                             </Badge>
                           </TableCell>
-                          <TableCell>{config.data_type}</TableCell>
                           <TableCell>
                             <Badge variant="outline">{config.source_type || '-'}</Badge>
                           </TableCell>

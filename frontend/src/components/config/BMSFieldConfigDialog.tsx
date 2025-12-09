@@ -34,7 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 import {
@@ -140,10 +139,8 @@ export function BMSFieldConfigDialog({
     field_key: z.string().min(1, t('validation.required', { ns: 'common' })),
     display_name_zh: z.string().min(1, t('validation.required', { ns: 'common' })),
     display_name_en: z.string().min(1, t('validation.required', { ns: 'common' })),
-    data_type: z.enum(['boolean', 'number', 'enum']),
     unit_zh: z.string().optional(),
     unit_en: z.string().optional(),
-    is_required: z.boolean().optional(),
     source_type: z.enum(['asset_field', 'custom', 'di_point']),
     // 资产字段相关
     read_device_type_tag_id: z.number().optional(),
@@ -194,10 +191,8 @@ export function BMSFieldConfigDialog({
       field_key: '',
       display_name_zh: '',
       display_name_en: '',
-      data_type: 'number',
       unit_zh: '',
       unit_en: '',
-      is_required: false,
       source_type: 'asset_field',
       read_device_type_tag_id: undefined,
       write_device_type_tag_id: undefined,
@@ -225,10 +220,8 @@ export function BMSFieldConfigDialog({
         field_key: fieldConfig.field_key,
         display_name_zh: fieldConfig.display_name_zh,
         display_name_en: fieldConfig.display_name_en,
-        data_type: fieldConfig.data_type as 'boolean' | 'number' | 'enum',
         unit_zh: fieldConfig.unit_zh,
         unit_en: fieldConfig.unit_en,
-        is_required: fieldConfig.is_required,
         source_type: fieldConfig.source_type as 'asset_field' | 'custom' | 'di_point',
         read_device_type_tag_id: fieldConfig.read_device_type_tag_id ?? undefined,
         write_device_type_tag_id: fieldConfig.write_device_type_tag_id ?? undefined,
@@ -245,10 +238,8 @@ export function BMSFieldConfigDialog({
         field_key: '',
         display_name_zh: '',
         display_name_en: '',
-        data_type: 'number',
         unit_zh: '',
         unit_en: '',
-        is_required: false,
         source_type: 'asset_field',
         read_device_type_tag_id: undefined,
         write_device_type_tag_id: undefined,
@@ -324,7 +315,6 @@ export function BMSFieldConfigDialog({
       ...values,
       page_type: pageType,
       field_type: isSysFixed ? 'fixed' : 'dynamic',
-      is_required: isSysFixed ? true : (values.is_required ?? false),
     }
     if (isEdit && fieldConfig?.id) {
       updateMutation.mutate(payload as UpdateBMSFieldConfigRequest)
@@ -416,29 +406,6 @@ export function BMSFieldConfigDialog({
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="data_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('bms.field_config.data_type', '数据类型')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={lockedFixedMeta}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="boolean">Boolean</SelectItem>
-                          <SelectItem value="number">Number</SelectItem>
-                          <SelectItem value="enum">Enum</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <div className="grid grid-cols-2 gap-2">
                   <FormField
                     control={form.control}
@@ -792,30 +759,6 @@ export function BMSFieldConfigDialog({
                         />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="is_required"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          {t('bms.field_config.is_required', '必填字段')}
-                        </FormLabel>
-                        <FormDescription>
-                          {t('bms.field_config.is_required_desc', '固定字段通常为必填')}
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={lockedFixedMeta}
-                        />
-                      </FormControl>
                     </FormItem>
                   )}
                 />
