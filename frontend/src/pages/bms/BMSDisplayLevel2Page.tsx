@@ -9,7 +9,7 @@
  * - EVT: 事件记录（系统遥控信息）
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { getBMSInstanceList, type BMSInstance } from '@/api/bms'
@@ -17,11 +17,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CheckCircle2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BMSSysTabLevel2 } from '@/components/bms/BMSSysTabLevel2'
 import { toast } from 'sonner'
@@ -67,12 +65,6 @@ const fetchClusterBasicInfo = async (): Promise<ClusterBasicInfoResponse> => {
       breakerClosed: true,
     },
     dynamicFields: [
-      { nameEn: 'SOC', nameZh: 'SOC', valueEn: 12.7, valueZh: 12.7, unitEn: '%', unitZh: '%' },
-      { nameEn: 'SOE', nameZh: 'SOE', valueEn: 0.0, valueZh: 0.0, unitEn: '%', unitZh: '%' },
-      { nameEn: 'SOH', nameZh: 'SOH', valueEn: 93, valueZh: 93, unitEn: '%', unitZh: '%' },
-      { nameEn: 'SOS', nameZh: 'SOS', valueEn: 50.0, valueZh: 50.0, unitEn: '%', unitZh: '%' },
-      { nameEn: 'Consistency', nameZh: '一致性', valueEn: 91, valueZh: 91, unitEn: '%', unitZh: '%' },
-      { nameEn: 'Insulation', nameZh: '绝缘', valueEn: 980, valueZh: 980, unitEn: 'kΩ', unitZh: 'kΩ' },
     ],
   }
 }
@@ -140,82 +132,8 @@ const fetchClusterDetailInfo = async (): Promise<ClusterDetailInfoResponse> => {
   // 临时数据（与三级架构BCU类似）
   return {
     telemetryData: [
-      { nameEn: 'SOC', nameZh: 'SOC', valueEn: 12.7, valueZh: 12.7, unitEn: '%', unitZh: '%' },
-      { nameEn: 'SOE', nameZh: 'SOE', valueEn: 0.0, valueZh: 0.0, unitEn: '%', unitZh: '%' },
-      { nameEn: 'SOH', nameZh: 'SOH', valueEn: 93, valueZh: 93, unitEn: '%', unitZh: '%' },
-      { nameEn: 'SOS', nameZh: 'SOS', valueEn: 50.0, valueZh: 50.0, unitEn: '%', unitZh: '%' },
-      { nameEn: 'Consistency', nameZh: '一致性', valueEn: 91, valueZh: 91, unitEn: '%', unitZh: '%' },
-      { nameEn: 'Cluster Voltage', nameZh: '簇电压', valueEn: 1250.5, valueZh: 1250.5, unitEn: 'V', unitZh: 'V' },
-      { nameEn: 'Cluster Current', nameZh: '簇电流', valueEn: 1320.0, valueZh: 1320.0, unitEn: 'A', unitZh: 'A' },
-      { nameEn: 'Power', nameZh: '功率', valueEn: 1650.6, valueZh: 1650.6, unitEn: 'kW', unitZh: 'kW' },
-      { nameEn: 'Max Cell Voltage', nameZh: '最大单体电压', valueEn: 3209, valueZh: 3209, unitEn: 'mV', unitZh: 'mV' },
-      { nameEn: 'Min Cell Voltage', nameZh: '最小单体电压', valueEn: 3200, valueZh: 3200, unitEn: 'mV', unitZh: 'mV' },
-      { nameEn: 'Max Cell Temp', nameZh: '最大单体温度', valueEn: 13.0, valueZh: 13.0, unitEn: '°C', unitZh: '°C' },
-      { nameEn: 'Min Cell Temp', nameZh: '最小单体温度', valueEn: 12.8, valueZh: 12.8, unitEn: '°C', unitZh: '°C' },
     ],
     telecontrolData: [
-      // 布尔类型
-      { id: 'total_overvoltage', nameZh: '总过压', nameEn: 'Total Overvoltage', active: false, faultLevel: 1 },
-      { id: 'total_undervoltage', nameZh: '总欠压', nameEn: 'Total Undervoltage', active: false, faultLevel: 1 },
-      { id: 'insulation_failure', nameZh: '绝缘故障', nameEn: 'Insulation Failure', active: true, faultLevel: 4 },
-      { id: 'soc_high', nameZh: 'SOC过高', nameEn: 'SOC High', active: false, faultLevel: 2 },
-      { id: 'soc_low', nameZh: 'SOC过低', nameEn: 'SOC Low', active: true, faultLevel: 3 },
-      { id: 'cell_overvoltage', nameZh: '单体过压', nameEn: 'Cell Overvoltage', active: false, faultLevel: 2 },
-      { id: 'cell_undervoltage', nameZh: '单体欠压', nameEn: 'Cell Undervoltage', active: false, faultLevel: 2 },
-      { id: 'cell_overtemp', nameZh: '单体过温', nameEn: 'Cell Overtemp', active: false, faultLevel: 2 },
-      { id: 'cell_undertemp', nameZh: '单体欠温', nameEn: 'Cell Undertemp', active: false, faultLevel: 2 },
-      { id: 'voltage_diff', nameZh: '电压差', nameEn: 'Voltage Diff', active: false, faultLevel: 1 },
-      { id: 'temp_diff', nameZh: '温度差', nameEn: 'Temp Diff', active: false, faultLevel: 1 },
-      { id: 'temp_sensor', nameZh: '温度传感器', nameEn: 'Temp Sensor', active: true, faultLevel: 4 },
-      { id: 'voltage_sensor', nameZh: '电压传感器', nameEn: 'Voltage Sensor', active: true, faultLevel: 4 },
-      { id: 'current_sensor', nameZh: '电流传感器', nameEn: 'Current Sensor', active: true, faultLevel: 4 },
-      { id: 'dc_contactor', nameZh: '直流接触器', nameEn: 'DC Contactor', active: true, faultLevel: 4 },
-      { id: 'fuse', nameZh: '熔断器', nameEn: 'Fuse', active: true, faultLevel: 4 },
-      // 枚举类型示例
-      {
-        id: 'run_status',
-        nameZh: '运行状态',
-        nameEn: 'Run Status',
-        currentValue: 1,
-        faultLevel: 2,
-        enumValues: [
-          { value: 0, labelZh: '待机', labelEn: 'Standby' },
-          { value: 1, labelZh: '故障', labelEn: 'Fault' },
-          { value: 2, labelZh: '开机', labelEn: 'Running' },
-        ],
-      },
-      // 复杂位域示例
-      {
-        id: 'complex_bitfield',
-        nameZh: '复杂位域',
-        nameEn: 'Complex Bitfield',
-        rawValue: 0x8F01, // bit0, bit7, bit12~bit15 为1
-        booleanBits: [
-          { bitIndex: 0, nameZh: '报警1', nameEn: 'Alarm 1', active: true, faultLevel: 2 },
-          { bitIndex: 1, nameZh: '报警2', nameEn: 'Alarm 2', active: false, faultLevel: 1 },
-          { bitIndex: 2, nameZh: '报警3', nameEn: 'Alarm 3', active: false, faultLevel: 1 },
-          { bitIndex: 3, nameZh: '报警4', nameEn: 'Alarm 4', active: false, faultLevel: 1 },
-          { bitIndex: 4, nameZh: '报警5', nameEn: 'Alarm 5', active: false, faultLevel: 1 },
-          { bitIndex: 5, nameZh: '报警6', nameEn: 'Alarm 6', active: false, faultLevel: 1 },
-          { bitIndex: 6, nameZh: '报警7', nameEn: 'Alarm 7', active: false, faultLevel: 1 },
-          { bitIndex: 7, nameZh: '报警8', nameEn: 'Alarm 8', active: true, faultLevel: 3 },
-        ],
-        reservedBits: { startBit: 8, endBit: 11 },
-        enumBit: {
-          startBit: 12,
-          endBit: 15,
-          nameZh: '运行模式',
-          nameEn: 'Run Mode',
-          currentValue: 8, // 0x8 = 8
-          faultLevel: 2,
-          enumValues: [
-            { value: 0, labelZh: '待机', labelEn: 'Standby' },
-            { value: 1, labelZh: '运行', labelEn: 'Running' },
-            { value: 2, labelZh: '故障', labelEn: 'Fault' },
-            { value: 8, labelZh: '维护', labelEn: 'Maintenance' },
-          ],
-        },
-      },
     ] as TelecontrolData[],
   }
 }
@@ -246,28 +164,11 @@ const fetchEventLog = async (): Promise<EventLogResponse> => {
   
   // 临时数据
   const events: EventLog[] = [
-    { id: '1', timestamp: '2025/11/22 08:13:29', category: 'Fault', details: 'BEMU Communication Timeout', device: 'BEMU' },
-    { id: '2', timestamp: '2025/11/22 08:09:29', category: 'Alarm', details: 'BEMU Communication Timeout', device: 'BEMU' },
-    { id: '3', timestamp: '2025/11/22 08:08:34', category: 'Status', details: 'System Alarm - Open All Contactors' },
-    { id: '4', timestamp: '2025/11/22 08:08:31', category: 'Fault', details: 'Insulation Failure, 0kohm', device: 'BCMU7' },
-    { id: '5', timestamp: '2025/11/22 08:08:31', category: 'Status', details: 'Insulation Detection Enabled', device: 'BCMU7' },
-    { id: '6', timestamp: '2025/11/22 08:08:31', category: 'Status', details: 'Fault Occurred 400', device: 'BCMU7' },
-    { id: '7', timestamp: '2025/11/22 08:08:31', category: 'Fault', details: 'Insulation Failure, 0kohm', device: 'BCMU6' },
-    { id: '8', timestamp: '2025/11/22 08:08:31', category: 'Status', details: 'Insulation Detection Enabled', device: 'BCMU6' },
-    { id: '9', timestamp: '2025/11/22 08:08:31', category: 'Status', details: 'Fault Occurred 400', device: 'BCMU6' },
-    { id: '10', timestamp: '2025/11/22 08:08:30', category: 'Fault', details: 'Insulation Failure, 0kohm', device: 'BCMU5' },
-    { id: '11', timestamp: '2025/11/22 08:08:30', category: 'Status', details: 'Insulation Detection Enabled', device: 'BCMU5' },
-    { id: '12', timestamp: '2025/11/22 08:08:30', category: 'Status', details: 'Fault Occurred 400', device: 'BCMU5' },
+
   ]
   
   const activeTelecontrols: ActiveTelecontrol[] = [
-    { id: 'insulation_failure', nameZh: '绝缘故障', nameEn: 'Insulation Failure', active: true, faultLevel: 4 },
-    { id: 'soc_low', nameZh: 'SOC过低', nameEn: 'SOC Low', active: true, faultLevel: 3 },
-    { id: 'temp_sensor', nameZh: '温度传感器', nameEn: 'Temp Sensor', active: true, faultLevel: 4 },
-    { id: 'voltage_sensor', nameZh: '电压传感器', nameEn: 'Voltage Sensor', active: true, faultLevel: 4 },
-    { id: 'current_sensor', nameZh: '电流传感器', nameEn: 'Current Sensor', active: true, faultLevel: 4 },
-    { id: 'dc_contactor', nameZh: '直流接触器', nameEn: 'DC Contactor', active: true, faultLevel: 4 },
-    { id: 'fuse', nameZh: '熔断器', nameEn: 'Fuse', active: true, faultLevel: 4 },
+
   ]
   
   return {
