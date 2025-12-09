@@ -6,11 +6,16 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { getBMSFieldConfigList, type BMSFieldConfig } from '@/api/bms'
+import {
+  getBMSFieldConfigList,
+  getBMSHierarchyConfig,
+  type BMSFieldConfig,
+  type BMSHierarchyConfig,
+} from '@/api/bms'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, XCircle } from 'lucide-react'
+import { CheckCircle2, Layers3, XCircle } from 'lucide-react'
 
 interface BMSSysTabLevel3Props {
   instanceId: number
@@ -28,13 +33,27 @@ export function BMSSysTabLevel3({
   const { t, i18n } = useTranslation('bms')
 
   // 获取 SYS 页面字段配置
-  const { data: fieldConfigsData, isLoading } = useQuery({
+  const {
+    data: fieldConfigsData,
+    isLoading: isFieldLoading,
+  } = useQuery({
     queryKey: ['bms-field-configs', instanceId, 'SYS'],
     queryFn: () => getBMSFieldConfigList(instanceId, 'SYS'),
     enabled: !!instanceId,
   })
 
+  // 获取层级配置，用于簇概览
+  const {
+    data: hierarchyData,
+    isLoading: isHierarchyLoading,
+  } = useQuery({
+    queryKey: ['bms-hierarchy-config', instanceId],
+    queryFn: () => getBMSHierarchyConfig(instanceId),
+    enabled: !!instanceId,
+  })
+
   const fieldConfigs = (fieldConfigsData?.data as BMSFieldConfig[] | null | undefined) || []
+  const hierarchyConfig = hierarchyData?.data as BMSHierarchyConfig | undefined
 
   // 分离固定字段和动态字段
   const { fixedFields, dynamicFields, commandFields } = useMemo(() => {
@@ -154,6 +173,36 @@ export function BMSSysTabLevel3({
     )
   }
 
+  const isLoading = isFieldLoading || isHierarchyLoading
+
+  const clusterCards = useMemo(() => {
+    if (!hierarchyConfig) return []
+    return Array.from({ length: hierarchyConfig.cluster_count }, (_, index) => ({
+      id: index + 1,
+      packCount: hierarchyConfig.pack_count_per_cluster,
+      series: hierarchyConfig.series_count,
+      parallel: hierarchyConfig.parallel_count,
+    }))
+  }, [hierarchyConfig])
+
+  const summaryChips = useMemo(() => {
+    if (!hierarchyConfig) return []
+    return [
+      {
+        label: t('sys.cluster_total', '簇数量'),
+        value: hierarchyConfig.cluster_count,
+      },
+      {
+        label: t('sys.pack_total', '每簇包数量'),
+        value: hierarchyConfig.pack_count_per_cluster,
+      },
+      {
+        label: t('sys.series_parallel', '串并配置'),
+        value: `${hierarchyConfig.series_count}S × ${hierarchyConfig.parallel_count}P`,
+      },
+    ]
+  }, [hierarchyConfig, t])
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -173,6 +222,19 @@ export function BMSSysTabLevel3({
         <CardHeader>
           <CardTitle>{t('stack_basic_info', '堆基本信息')}</CardTitle>
           <CardDescription>{t('bms.level3.sys.basic_info_desc', '包含固定字段与可配置字段')}</CardDescription>
+          {summaryChips.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {summaryChips.map((chip) => (
+                <div
+                  key={chip.label}
+                  className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
+                >
+                  {chip.label}:{' '}
+                  <span className="font-semibold text-foreground">{chip.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           {/* 固定字段网格 */}
@@ -243,15 +305,52 @@ export function BMSSysTabLevel3({
         </Card>
       )}
 
-      {/* 拓扑图区域（暂时占位，后续实现） */}
+      {/* 簇拓扑概览 */}
       <Card>
         <CardHeader>
           <CardTitle>{t('cluster_topology', '簇拓扑')}</CardTitle>
+          {hierarchyConfig && (
+            <CardDescription>
+              {t('sys.cluster_overview_desc', {
+                count: hierarchyConfig.cluster_count,
+                packs: hierarchyConfig.pack_count_per_cluster,
+              })}
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-muted-foreground">
-            {t('bms.level3.sys.topology_coming_soon', '拓扑图功能开发中，将根据层级配置显示簇节点')}
-          </div>
+          {hierarchyConfig ? (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {clusterCards.map((cluster) => (
+                <div
+                  key={cluster.id}
+                  className="rounded-2xl border bg-card/60 p-4 shadow-sm transition hover:border-primary/40"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold">
+                      {t('cluster', '簇')} #{cluster.id.toString().padStart(2, '0')}
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {cluster.packCount} {t('pack', '包')}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 text-2xl font-bold">--</div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('sys.cluster_pack_info', {
+                      packs: cluster.packCount,
+                      series: cluster.series,
+                      parallel: cluster.parallel,
+                    })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+              <Layers3 className="h-4 w-4" />
+              {t('sys.no_hierarchy_config', '尚未配置层级信息，请在BMS管理中完善簇/包数量。')}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

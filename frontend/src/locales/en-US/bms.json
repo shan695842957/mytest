@@ -74,6 +74,17 @@
   "breaker_closed": "Breaker closed",
   "breaker_control_failed": "Breaker control failed",
   "cluster_topology": "Cluster Topology",
+  "sys": {
+    "series_parallel": "Series / Parallel",
+    "pack_total": "Pack Count",
+    "cluster_total": "Cluster Count",
+    "temperature_points": "Temperature Points",
+    "pack_overview_desc": "{{count}} packs in total, each pack contains {{cells}} cells.",
+    "cluster_overview_desc": "{{count}} clusters in total. Each cluster contains {{packs}} packs.",
+    "pack_temperature_points": "Temperature probes: {{count}}",
+    "cluster_pack_info": "{{packs}} packs · each pack {{series}}S × {{parallel}}P",
+    "no_hierarchy_config": "Hierarchy information is not configured yet. Please complete it in BMS management."
+  },
   "level2": {
     "sys": {
       "basic_info_desc": "Includes fixed fields and configurable fields",

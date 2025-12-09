@@ -74,6 +74,17 @@
   "breaker_closed": "断路器已合闸",
   "breaker_control_failed": "断路器控制失败",
   "cluster_topology": "簇拓扑",
+  "sys": {
+    "series_parallel": "串并配置",
+    "pack_total": "包数量",
+    "cluster_total": "簇数量",
+    "temperature_points": "温度测点",
+    "pack_overview_desc": "共 {{count}} 个包，单包共 {{cells}} 节单体。",
+    "cluster_overview_desc": "共 {{count}} 个簇，每簇包含 {{packs}} 个包。",
+    "pack_temperature_points": "温度测点：{{count}} 个",
+    "cluster_pack_info": "每簇 {{packs}} 包 · 每包 {{series}}S × {{parallel}}P",
+    "no_hierarchy_config": "尚未配置层级信息，请在 BMS 管理中完善簇/包数量。"
+  },
   "level2": {
     "sys": {
       "basic_info_desc": "包含固定字段与可配置字段",
