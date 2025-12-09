@@ -310,29 +310,29 @@ export function BMSSysTabLevel3({
         <CardContent>
           {hierarchyConfig ? (
             hierarchyConfig.cluster_count > 0 ? (
-              <div className="overflow-x-auto py-4">
-                <div className="min-w-[360px]">
-                  <div className="relative mb-8">
+                <div className="overflow-x-auto py-6">
+                  <div className="min-w-[420px]">
+                    <div className="relative mb-10">
                       <div className="h-1 w-full rounded-full bg-red-500" />
-                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-semibold uppercase tracking-[0.2em] text-red-500">
-                      {t('level3.sys.dc_bus', 'DC BUS')}
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-6 min-w-max">
-                    {Array.from({ length: hierarchyConfig.cluster_count }).map((_, index) => (
-                      <div key={index} className="flex flex-col items-center gap-2">
-                          <div className="w-px h-8 bg-red-500" />
-                          <div className="w-20 h-20 rounded-lg border-2 border-red-500 bg-card flex items-center justify-center text-sm font-semibold">
-                          C{(index + 1).toString().padStart(2, '0')}
+                      <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-semibold uppercase tracking-[0.2em] text-red-500">
+                        {t('level3.sys.dc_bus', 'DC BUS')}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-8 min-w-max">
+                      {Array.from({ length: hierarchyConfig.cluster_count }).map((_, index) => (
+                        <div key={index} className="flex flex-col items-center gap-3">
+                          <div className="w-px h-10 bg-red-500" />
+                          <div className="w-28 h-24 rounded-lg border-2 border-red-500 bg-card flex items-center justify-center text-base font-semibold">
+                            C{(index + 1).toString().padStart(2, '0')}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {t('cluster', '簇')} {index + 1}
+                          </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {t('cluster', '簇')} {index + 1}
-                        </span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
             ) : (
               <div className="py-6 text-center text-muted-foreground">
                 {t('bms.hierarchy_config.cluster_hint', '请在层级配置中设置簇数量以生成拓扑图')}

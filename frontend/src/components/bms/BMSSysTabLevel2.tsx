@@ -319,21 +319,21 @@ export function BMSSysTabLevel2({
         <CardContent>
           {hierarchyConfig ? (
             hierarchyConfig.pack_count_per_cluster > 0 ? (
-                <div className="max-h-72 overflow-y-auto py-4">
-                  <div className="flex flex-col items-center gap-6">
+              <div className="max-h-96 overflow-y-auto py-6">
+                <div className="flex flex-col items-center gap-8">
                   {Array.from({ length: hierarchyConfig.pack_count_per_cluster }).map((_, index) => (
                     <div key={index} className="flex flex-col items-center">
                       <div className="flex items-center gap-3">
                         <span className="text-xs text-muted-foreground">
                           {t('pack', '包')} {index + 1}
                         </span>
-                          <div className="w-32 h-16 rounded-md border border-border bg-card shadow-sm flex items-center justify-center text-sm font-medium">
-                            P{(index + 1).toString().padStart(2, '0')}
-                          </div>
+                        <div className="w-44 h-20 rounded-md border border-border bg-card shadow-sm flex items-center justify-center text-base font-semibold">
+                          P{(index + 1).toString().padStart(2, '0')}
+                        </div>
                       </div>
-                        {index < hierarchyConfig.pack_count_per_cluster - 1 && (
-                          <div className="w-px h-10 bg-border mt-2" />
-                        )}
+                      {index < hierarchyConfig.pack_count_per_cluster - 1 && (
+                        <div className="w-px h-14 bg-border mt-2" />
+                      )}
                     </div>
                   ))}
                 </div>
