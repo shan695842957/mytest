@@ -71,6 +71,8 @@ const TopologyPage = lazy(() => import('@/pages/topology/TopologyPage'))
 // 测试页面
 const LightPanelTestPage = lazy(() => import('@/pages/test/LightPanelTestPage'))
 const HistoryTestPage = lazy(() => import('@/pages/test/HistoryTestPage'))
+const BMSLevel2MonitorPage = lazy(() => import('@/pages/test/BMSLevel2MonitorPage'))
+const BMSLevel3MonitorPage = lazy(() => import('@/pages/test/BMSLevel3MonitorPage'))
 const BMSDisplayLevel2Page = lazy(() => import('@/pages/bms/BMSDisplayLevel2Page'))
 const BMSDisplayLevel3Page = lazy(() => import('@/pages/bms/BMSDisplayLevel3Page'))
 
@@ -431,6 +433,14 @@ export const routes: RouteObject[] = [
               {
                 path: 'history',
                 element: <HistoryTestPage />,
+              },
+              {
+                path: 'bms-level2',
+                element: <BMSLevel2MonitorPage />,
+              },
+              {
+                path: 'bms-level3',
+                element: <BMSLevel3MonitorPage />,
               },
             ],
           },
